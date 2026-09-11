@@ -1,0 +1,6 @@
+/target/
+/config/local.toml
+/.env
+/.env.*
+/.DS_Store
+*.log

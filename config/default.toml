@@ -1,0 +1,38 @@
+[server]
+# 本地开发默认只监听回环地址；部署时按需调整。
+listen_addr = "127.0.0.1:8080"
+shutdown_timeout_ms = 5000
+
+[logging]
+filter = "info"
+
+[upstreams]
+# 均为完整接口 URL，不自动追加 /info、/exchange 或 /ws。
+# 未配置的对应路由返回 503；不会回退到其他服务。
+# state_info = "http://127.0.0.1:7100/info"
+# indexer_info = "http://127.0.0.1:9090/info"
+# exchange = "http://127.0.0.1:18080/exchange"
+# indexer_ws = "ws://127.0.0.1:9090/ws"
+
+[http]
+connect_timeout_ms = 3000
+request_timeout_ms = 10000
+body_timeout_ms = 5000
+write_timeout_ms = 10000
+max_connections = 1024
+max_request_body_bytes = 4194304
+max_response_body_bytes = 16777216
+max_in_flight = 128
+
+[websocket]
+handshake_timeout_ms = 5000
+max_connections = 1024
+# 每个方向的固定拷贝缓冲，不缓存业务消息、不限制单帧大小。
+tunnel_buffer_bytes = 8192
+# 0 表示允许静默订阅；非零时按双向字节活动计算空闲时间。
+idle_timeout_ms = 0
+
+[access]
+# 浏览器接入前配置真实 Origin（无尾部斜杠），如 ["http://localhost:8080"]。
+# [] 拒绝携带 Origin 的请求；["*"] 显式允许任意来源。不启用 Cookie 凭证模式。
+allowed_origins = []
