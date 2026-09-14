@@ -60,7 +60,7 @@
 
 [config/default.toml](config/default.toml) 已配置同机 indexer：REST 为 `http://localhost:9090/info`，WS 为 `ws://localhost:9090/ws`。
 状态 APIServer 已配置为 `http://localhost:3300/info`，状态查询由网关直接转发。
-网关和三个后端部署在同一台机器，后端地址统一使用 `localhost`；indexer 当前无额外鉴权或来源 IP 白名单。
+下游地址保留现有 `localhost` 配置；只有共享同一网络命名空间时才可用。独立容器部署时，运维需替换为实际可达的服务名或地址及端口，不能仅因同一台服务器就使用 `localhost`。indexer 当前无额外鉴权或来源 IP 白名单。
 交易池使用 `http://localhost:18080/exchange`，不配置交易池 `/info` 地址。
 可以复制默认配置为本地配置，用 `--config` 指定。
 地址必须是**完整接口 URL**，不自动追加路径：
@@ -88,8 +88,23 @@ cargo run
 cargo run -- --config config/local.toml
 ```
 
-默认监听 `127.0.0.1:8080`。目前入站为 HTTP/1.1；HTTPS/WSS、HTTP/2 入口需要后续确认的前置设施或单独 TLS 实现。
+默认监听 `0.0.0.0:8888`，即网关在容器内的所有 IPv4 接口上接收请求；本地运行时也会监听全部 IPv4 接口，如只供本机使用可在本地配置中改成 `127.0.0.1:8888`。
+目前入站为 HTTP/1.1；HTTPS/WSS、HTTP/2 入口需要后续确认的前置设施或单独 TLS 实现。
 出站支持 HTTP/HTTPS 和 WS/WSS，使用系统信任根，不绕过 TLS 证书验证。
+
+### 配置与运维端口映射
+
+- 程序启动时读取 `--config` 指定的文件；未指定时读取工作目录下的 [config/default.toml](config/default.toml)。配置修改后需重启才生效。
+- 网关容器端口为 `8888`。宿主机映射端口由运维另行设置，例如 `36016:8888`；`36016` 仅为示例，不写入 `listen_addr`。
+- 运维可以挂载部署配置并通过 `--config` 指定，实际加载的配置才决定监听及后端地址；容器映射的目标端口必须与监听端口一致。
+- `allowed_origins` 保留前端提供的 `http://localhost:8080` 和 `http://127.0.0.1:8080`，它们是浏览器页面来源，与网关监听／映射端口无关。
+
+### Docker 部署
+
+已提供 [Dockerfile](Dockerfile)、[.dockerignore](.dockerignore) 和可选的 [compose.yaml](compose.yaml)。
+镜像采用多阶段编译、非 root 运行，HTTP/WS 共用容器端口 `8888`，不需要第二个端口。
+运维通过 Compose 设置宿主机映射端口、挂载实际 TOML 配置、加入已有后端网络；前端 Origin 保持不变。
+具体流程及命令见 [Docker 部署交接](docs/docker.md)。容器构建／启动的实测情况应与本地 Rust 测试分开确认。
 
 ### 开发初始限制
 
@@ -160,4 +175,4 @@ cargo clippy --offline --locked --all-targets -j 2 -- -D warnings
 4. 生产证书、域名、可信代理、容量与超时配置。
 5. `userRateLimit`、`exchangeStatus`、Bootstrap、维护模式、业务幂等、统一业务错误：按约定暂不实现，这些 info 类型目前返回 400。
 
-没有数据库、缓存、重试队列、主动健康轮询、业务聚合或部署脚本。
+没有数据库、缓存、重试队列、主动下游健康轮询或业务聚合；Docker 健康检查只访问网关自身。

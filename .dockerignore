@@ -1,0 +1,10 @@
+# Allowlist: do not send local config, credentials, Git history or build outputs.
+**
+!Dockerfile
+!.dockerignore
+!Cargo.toml
+!Cargo.lock
+!src/
+!src/**
+!config/
+!config/default.toml

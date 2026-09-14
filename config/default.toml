@@ -1,6 +1,6 @@
 [server]
-# 本地开发默认只监听回环地址；部署时按需调整。
-listen_addr = "127.0.0.1:8080"
+# 网关自身在容器内监听 8888；宿主机映射端口由运维配置。
+listen_addr = "0.0.0.0:8888"
 shutdown_timeout_ms = 5000
 
 [logging]
@@ -9,7 +9,8 @@ filter = "info"
 [upstreams]
 # 均为完整接口 URL，不自动追加 /info、/exchange 或 /ws。
 # 未配置的对应路由返回 503；不会回退到其他服务。
-# 网关与后端同机部署；indexer 无额外鉴权或来源 IP 白名单。
+# 以下 localhost 地址保持现有值；独立容器部署时，由运维替换为实际可达的后端地址。
+# indexer 无额外鉴权或来源 IP 白名单。
 state_info = "http://localhost:3300/info"
 indexer_info = "http://localhost:9090/info"
 indexer_ws = "ws://localhost:9090/ws"

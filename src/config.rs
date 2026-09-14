@@ -211,7 +211,7 @@ mod tests {
     #[test]
     fn default_config_is_valid() {
         let config = Config::parse(EXAMPLE).unwrap();
-        assert_eq!(config.server.listen_addr, "127.0.0.1:8080".parse().unwrap());
+        assert_eq!(config.server.listen_addr, "0.0.0.0:8888".parse().unwrap());
         assert_eq!(config.logging.filter, "info");
         assert_eq!(
             config.upstreams.indexer_info.as_ref().map(Url::as_str),
@@ -237,7 +237,7 @@ mod tests {
 
     #[test]
     fn rejects_invalid_listen_address() {
-        assert!(Config::parse(&EXAMPLE.replace("127.0.0.1:8080", "not-an-address")).is_err());
+        assert!(Config::parse(&EXAMPLE.replace("0.0.0.0:8888", "not-an-address")).is_err());
     }
 
     #[test]

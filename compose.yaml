@@ -1,0 +1,35 @@
+services:
+  api-gateway:
+    image: ${GATEWAY_IMAGE:-api-gateway:local}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      # Host port is an example; operations may override both host IP and port.
+      - "${GATEWAY_BIND_IP:-127.0.0.1}:${GATEWAY_HOST_PORT:-36016}:8888"
+    volumes:
+      - type: bind
+        source: ${GATEWAY_CONFIG:?Set GATEWAY_CONFIG to the deployment TOML file}
+        target: /app/config/default.toml
+        read_only: true
+        bind:
+          create_host_path: false
+    networks:
+      - backend
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  backend:
+    external: true
+    name: ${GATEWAY_NETWORK:?Set GATEWAY_NETWORK to the existing backend Docker network}
