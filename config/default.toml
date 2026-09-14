@@ -9,13 +9,17 @@ filter = "info"
 [upstreams]
 # 均为完整接口 URL，不自动追加 /info、/exchange 或 /ws。
 # 未配置的对应路由返回 503；不会回退到其他服务。
-# 以下 localhost 地址保持现有值；独立容器部署时，由运维替换为实际可达的后端地址。
-# indexer 无额外鉴权或来源 IP 白名单。
-state_info = "http://localhost:3300/info"
-indexer_info = "http://localhost:9090/info"
-indexer_ws = "ws://localhost:9090/ws"
+# 状态容器 bybchain-api-server-api-server-1 使用 bybchain-api-server_default 网络。
+# 通过宿主机 36020 -> 状态容器 8888 访问，无需加入后端网络。
+state_info = "http://host.docker.internal:36020/info"
+# indexer 容器 biya-indexer 使用 biya-indexer_default 网络，通过宿主机映射访问。
+# 9090 和 36018 均映射至容器 8888，统一使用 36018；36019 -> 8889 不用于转发。
+indexer_info = "http://host.docker.internal:36018/info"
+indexer_ws = "ws://host.docker.internal:36018/ws"
 # 交易池只接收 /exchange，不处理 /info。
-exchange = "http://localhost:18080/exchange"
+# 已部署容器：bybchain-exchange-apiserver-dev-bridge2，bridge 网络。
+# 通过宿主机 36014 -> 交易容器 8888 访问；compose.yaml 提供 host-gateway 解析。
+exchange = "http://host.docker.internal:36014/exchange"
 
 [http]
 connect_timeout_ms = 3000

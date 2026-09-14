@@ -7,16 +7,18 @@ services:
     restart: unless-stopped
     ports:
       # Host port is an example; operations may override both host IP and port.
-      - "${GATEWAY_BIND_IP:-127.0.0.1}:${GATEWAY_HOST_PORT:-36016}:8888"
+      - "${GATEWAY_BIND_IP:-0.0.0.0}:${GATEWAY_HOST_PORT:-36016}:8888"
     volumes:
       - type: bind
-        source: ${GATEWAY_CONFIG:?Set GATEWAY_CONFIG to the deployment TOML file}
+        source: ${GATEWAY_CONFIG:-./config/default.toml}
         target: /app/config/default.toml
         read_only: true
         bind:
           create_host_path: false
-    networks:
-      - backend
+    # The deployed exchange service uses Docker's built-in bridge, without name DNS.
+    network_mode: bridge
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     read_only: true
     cap_drop:
       - ALL
@@ -28,8 +30,4 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-
-networks:
-  backend:
-    external: true
-    name: ${GATEWAY_NETWORK:?Set GATEWAY_NETWORK to the existing backend Docker network}
+      # Uses the existing built-in bridge; no additional Docker network is created.

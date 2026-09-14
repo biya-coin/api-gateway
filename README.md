@@ -58,28 +58,30 @@
 
 ## 配置与启动
 
-[config/default.toml](config/default.toml) 已配置同机 indexer：REST 为 `http://localhost:9090/info`，WS 为 `ws://localhost:9090/ws`。
-状态 APIServer 已配置为 `http://localhost:3300/info`，状态查询由网关直接转发。
-下游地址保留现有 `localhost` 配置；只有共享同一网络命名空间时才可用。独立容器部署时，运维需替换为实际可达的服务名或地址及端口，不能仅因同一台服务器就使用 `localhost`。indexer 当前无额外鉴权或来源 IP 白名单。
-交易池使用 `http://localhost:18080/exchange`，不配置交易池 `/info` 地址。
-可以复制默认配置为本地配置，用 `--config` 指定。
+[config/default.toml](config/default.toml) 已按当前服务器的交易容器配置：`bybchain-exchange-apiserver-dev-bridge2` 使用默认 `bridge` 网络，宿主机 `36014` 映射至容器 `8888`。
+网关通过 `http://host.docker.internal:36014/exchange` 转发，Compose 使用 `host-gateway` 将该名称解析到宿主机；不依赖默认 bridge 不提供的容器名 DNS，也不写死容器 IP。
+`127.0.0.1:18281 -> 8889` 不用于网关交易转发，不配置交易池 `/info` 地址。
+indexer 容器 `biya-indexer` 使用 `biya-indexer_default` 网络，宿主机 `9090` 和 `36018` 均映射至容器 `8888`。网关统一经宿主机 `36018` 访问其 `/info` 和 `/ws`，无需加入 indexer 网络；`36019 -> 8889` 不用于转发。
+状态容器 `bybchain-api-server-api-server-1` 使用 `bybchain-api-server_default` 网络，宿主机 `36020` 映射至容器 `8888`。网关经宿主机 `36020` 访问其 `/info`，无需加入状态服务网络；原有类型归属不变。
+Compose 默认直接挂载 [config/default.toml](config/default.toml)，无需先设置环境变量。也可以用 `GATEWAY_CONFIG` 指定自己的部署文件。
 地址必须是**完整接口 URL**，不自动追加路径：
 
 ```toml
 [upstreams]
-state_info = "http://localhost:3300/info"
-indexer_info = "http://localhost:9090/info"
-indexer_ws = "ws://localhost:9090/ws"
-exchange = "http://localhost:18080/exchange"
+exchange = "http://host.docker.internal:36014/exchange"
+indexer_info = "http://host.docker.internal:36018/info"
+indexer_ws = "ws://host.docker.internal:36018/ws"
+state_info = "http://host.docker.internal:36020/info"
 
 [access]
 allowed_origins = ["http://localhost:8080", "http://127.0.0.1:8080"]
 ```
 
-三个后端地址已配置，当前前端开发 Origin 已配置为上述两个本机地址。后端无鉴权或 IP 白名单不等于放开网关自身的浏览器 Origin 策略。
+目前启用已部署的交易后端、indexer 和状态 APIServer，当前前端开发 Origin 保持上述两个本机地址。后端无鉴权或 IP 白名单不等于放开网关自身的浏览器 Origin 策略。
 自定义配置省略 `exchange` 时，`/exchange` 返回 `503`，不会改用其他后端。
 禁止把后端指向网关自身或造成循环依赖。
 URL 不允许嵌入账号密码、查询参数、片段；WS 可用 WS/WSS。
+`host.docker.internal` 是此 Docker 部署的地址；Linux 宿主机直接运行二进制时，可在自己的配置中使用 `http://127.0.0.1:36014/exchange`。不要在容器内用 `localhost` 指代宿主机。
 
 ```sh
 cargo run -- --check-config
@@ -103,7 +105,7 @@ cargo run -- --config config/local.toml
 
 已提供 [Dockerfile](Dockerfile)、[.dockerignore](.dockerignore) 和可选的 [compose.yaml](compose.yaml)。
 镜像采用多阶段编译、非 root 运行，HTTP/WS 共用容器端口 `8888`，不需要第二个端口。
-运维通过 Compose 设置宿主机映射端口、挂载实际 TOML 配置、加入已有后端网络；前端 Origin 保持不变。
+Compose 默认挂载项目配置、使用内置 `bridge` 网络并配置宿主机解析；网关宿主机映射为 `0.0.0.0:36016 -> 8888`，监听所有 IPv4 网卡，可通过环境变量覆盖映射或配置路径；前端 Origin 保持不变。公网访问还需服务器防火墙及云安全组放行 TCP `36016`。
 具体流程及命令见 [Docker 部署交接](docs/docker.md)。容器构建／启动的实测情况应与本地 Rust 测试分开确认。
 
 ### 开发初始限制
@@ -169,8 +171,8 @@ cargo clippy --offline --locked --all-targets -j 2 -- -D warnings
 
 ## 后续待接入
 
-1. 三个后端部署版本及实际接口联调；地址均已配置，尚未在目标机器实测或提交真实交易。
-2. 状态 APIServer 接口补齐、indexer 调整后的数据流；路由存在不等于后端已实现。
+1. 目标服务器的交易端口转发连通性；配置来自实际容器信息，尚未在目标机器实测或提交真实交易。
+2. 目标服务器的状态 APIServer、indexer HTTP/WS 连通性；默认地址已配置，尚未在目标机器实测。
 3. 真实前端 SDK/schema、浏览器跨域、WSS/TLS 和压缩协商验收。
 4. 生产证书、域名、可信代理、容量与超时配置。
 5. `userRateLimit`、`exchangeStatus`、Bootstrap、维护模式、业务幂等、统一业务错误：按约定暂不实现，这些 info 类型目前返回 400。

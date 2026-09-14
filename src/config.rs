@@ -215,19 +215,19 @@ mod tests {
         assert_eq!(config.logging.filter, "info");
         assert_eq!(
             config.upstreams.indexer_info.as_ref().map(Url::as_str),
-            Some("http://localhost:9090/info")
+            Some("http://host.docker.internal:36018/info")
         );
         assert_eq!(
             config.upstreams.indexer_ws.as_ref().map(Url::as_str),
-            Some("ws://localhost:9090/ws")
+            Some("ws://host.docker.internal:36018/ws")
         );
         assert_eq!(
             config.upstreams.state_info.as_ref().map(Url::as_str),
-            Some("http://localhost:3300/info")
+            Some("http://host.docker.internal:36020/info")
         );
         assert_eq!(
             config.upstreams.exchange.as_ref().map(Url::as_str),
-            Some("http://localhost:18080/exchange")
+            Some("http://host.docker.internal:36014/exchange")
         );
         assert_eq!(
             config.access.allowed_origins,
