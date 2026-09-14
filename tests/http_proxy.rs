@@ -218,12 +218,13 @@ fn chunked(chunks: impl IntoIterator<Item = Bytes>) -> Body {
 }
 
 #[tokio::test]
-async fn all_22_approved_info_types_reach_their_only_upstream() {
+async fn all_23_approved_info_types_reach_their_only_upstream() {
     bounded(async {
         assert_eq!(
             STATE_TYPES,
             &[
                 "meta",
+                "extraAgents",
                 "recentTrades",
                 "clearinghouseState",
                 "activeAssetData",

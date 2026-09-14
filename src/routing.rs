@@ -23,6 +23,7 @@ pub const INDEXER_TYPES: &[&str] = &[
 
 pub const STATE_TYPES: &[&str] = &[
     "meta",
+    "extraAgents",
     "recentTrades",
     "clearinghouseState",
     "activeAssetData",
