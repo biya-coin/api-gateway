@@ -213,6 +213,26 @@ mod tests {
         let config = Config::parse(EXAMPLE).unwrap();
         assert_eq!(config.server.listen_addr, "127.0.0.1:8080".parse().unwrap());
         assert_eq!(config.logging.filter, "info");
+        assert_eq!(
+            config.upstreams.indexer_info.as_ref().map(Url::as_str),
+            Some("http://localhost:9090/info")
+        );
+        assert_eq!(
+            config.upstreams.indexer_ws.as_ref().map(Url::as_str),
+            Some("ws://localhost:9090/ws")
+        );
+        assert_eq!(
+            config.upstreams.state_info.as_ref().map(Url::as_str),
+            Some("http://localhost:3300/info")
+        );
+        assert_eq!(
+            config.upstreams.exchange.as_ref().map(Url::as_str),
+            Some("http://localhost:18080/exchange")
+        );
+        assert_eq!(
+            config.access.allowed_origins,
+            ["http://localhost:8080", "http://127.0.0.1:8080"]
+        );
     }
 
     #[test]
@@ -254,6 +274,15 @@ mod tests {
         assert!(config.validate().is_err());
         config.upstreams.indexer_ws = Some("wss://localhost/ws".parse().unwrap());
         config.upstreams.state_info = Some("https://localhost/prefix/info".parse().unwrap());
+        assert!(config.validate().is_ok());
+    }
+
+    #[test]
+    fn exchange_requires_http_and_can_be_omitted() {
+        let mut config = Config::parse(EXAMPLE).unwrap();
+        config.upstreams.exchange = Some("ws://localhost:18080/exchange".parse().unwrap());
+        assert!(config.validate().is_err());
+        config.upstreams.exchange = None;
         assert!(config.validate().is_ok());
     }
 

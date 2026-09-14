@@ -259,6 +259,8 @@ async fn tunnel_preserves_handshake_frames_and_close_in_both_directions() {
 async fn invalid_handshake_missing_backend_and_origin_are_rejected() {
     bounded(async {
         let mut cfg = Config::parse(include_str!("../config/default.toml")).unwrap();
+        // Missing-backend coverage must not contact the configured deployment endpoint.
+        cfg.upstreams.indexer_ws = None;
         cfg.access.allowed_origins = vec!["https://dex.example".into()];
         let gateway = Service::gateway(cfg).await;
         assert_eq!(request(&gateway).send().await.unwrap().status(), 503);

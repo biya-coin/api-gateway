@@ -88,8 +88,15 @@ mod tests {
             "null",
             "bad",
             r#"{"type":1}"#,
+            r#"{"type":"health"}"#,
             r#"{"type":"exchangeStatus"}"#,
             r#"{"type":"userRateLimit"}"#,
+            r#"{"type":"stateInfo"}"#,
+            r#"{"type":"block","height":1}"#,
+            r#"{"type":"bridgeSnapshot"}"#,
+            r#"{"type":"bridgeDepositStatus"}"#,
+            r#"{"type":"bridgeWithdrawalStatus"}"#,
+            r#"{"type":"accountOverview"}"#,
             r#"{"type":"meta","type":"orderStatus"}"#,
         ] {
             assert_eq!(info_backend(body.as_bytes()), None, "{body}");

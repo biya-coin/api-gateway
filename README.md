@@ -12,7 +12,7 @@
 | `GET /ws`（Upgrade） | 整条 WebSocket 连接代理到 indexer |
 | `GET /healthz` | `200` / `ok`，只表示网关存活，不代表后端或链就绪 |
 
-依据 2026-09-11 联调文档及本次确认的职责边界，白名单共 22 个 type：
+依据联调文档及最新职责确认，`/info` 白名单共 22 个 type，仅分流到状态 APIServer 和 indexer：
 
 | 后端 | `/info type` |
 | --- | --- |
@@ -21,6 +21,19 @@
 
 `orderStatus` 只请求 indexer 一次，不回查状态服务。状态请求直接转状态 APIServer，不经 indexer。
 聚合和订阅的数据生产仍属下游，不在网关重复实现。
+
+### 交易池接口对照
+
+按 2026-09-14 最新确认，交易池只处理 `/exchange`，网关不提供交易池 `/info` 转发：
+
+- `POST /info {"type":"health"}` 不支持，返回 `400`，不调用任何下游。
+- `stateInfo`、`block`、`bridgeSnapshot`、`bridgeDepositStatus`、`bridgeWithdrawalStatus`、`accountOverview` 这六种查询仍暂不开放，网关返回 `400`。
+- `clearinghouseState`、`unifiedBalances`、`accountNonces` 直接转状态 APIServer，不增加交易池中转。
+- `GET /healthz` 继续用于网关自身存活检查，不调用后端，不代表链或交易池就绪。
+- S1 文档中的 `approveAgent`、`order`、`cancel`、`cancelByCloid`、`updateLeverage` 在交易池代码中已有签名处理分支。其 README 中“只支持 order”的描述已滞后，不作为网关过滤 action 的依据。
+- `/exchange` 的 `code:0 / accepted` 仅表示通过交易池本地校验并入池，不是上链成功。`1001/1002/1003` 等业务码及 HTTP 状态原样返回，不转译、不补 oid、不重试。
+
+以上是代码对照，不代表真实交易闭环已验收；网关不会代替交易池验签、规范化签名或修复其业务语义。
 
 ## HTTP 语义
 
@@ -45,21 +58,27 @@
 
 ## 配置与启动
 
-[config/default.toml](config/default.toml) 中后端默认留空，可以复制为本地配置，用 `--config` 指定。
+[config/default.toml](config/default.toml) 已配置同机 indexer：REST 为 `http://localhost:9090/info`，WS 为 `ws://localhost:9090/ws`。
+状态 APIServer 已配置为 `http://localhost:3300/info`，状态查询由网关直接转发。
+网关和三个后端部署在同一台机器，后端地址统一使用 `localhost`；indexer 当前无额外鉴权或来源 IP 白名单。
+交易池使用 `http://localhost:18080/exchange`，不配置交易池 `/info` 地址。
+可以复制默认配置为本地配置，用 `--config` 指定。
 地址必须是**完整接口 URL**，不自动追加路径：
 
 ```toml
 [upstreams]
-state_info = "http://127.0.0.1:7100/info"
-indexer_info = "http://127.0.0.1:9090/info"
-exchange = "http://127.0.0.1:18080/exchange"
-indexer_ws = "ws://127.0.0.1:9090/ws"
+state_info = "http://localhost:3300/info"
+indexer_info = "http://localhost:9090/info"
+indexer_ws = "ws://localhost:9090/ws"
+exchange = "http://localhost:18080/exchange"
 
 [access]
-allowed_origins = ["https://dex.example.com"]
+allowed_origins = ["http://localhost:8080", "http://127.0.0.1:8080"]
 ```
 
-以上仅是格式示例，非确认的部署地址。禁止把后端指向网关自身或造成循环依赖。
+三个后端地址已配置，当前前端开发 Origin 已配置为上述两个本机地址。后端无鉴权或 IP 白名单不等于放开网关自身的浏览器 Origin 策略。
+自定义配置省略 `exchange` 时，`/exchange` 返回 `503`，不会改用其他后端。
+禁止把后端指向网关自身或造成循环依赖。
 URL 不允许嵌入账号密码、查询参数、片段；WS 可用 WS/WSS。
 
 ```sh
@@ -92,7 +111,7 @@ cargo run -- --config config/local.toml
 
 上述不是生产容量承诺。HTTP 完整缓冲响应，部署前需按内存与并发预算调整。
 
-`allowed_origins = []` 拒绝携带 Origin 的浏览器请求；无 Origin 的 SDK／服务端请求不受影响。
+默认允许 `http://localhost:8080` 和 `http://127.0.0.1:8080` 两个前端开发 Origin；无 Origin 的 SDK／服务端请求不受影响。
 `["*"]` 显式允许任意来源，或填写准确域名（无尾部 `/`）。支持 OPTIONS，不启用 Cookie 跨域凭证模式。
 Origin 检查不是身份鉴权；Token 验证、每 IP 限流与可信代理链暂不实现。
 日志按配置过滤，不读 `RUST_LOG`，不记录请求体、签名或凭证。
@@ -135,7 +154,7 @@ cargo clippy --offline --locked --all-targets -j 2 -- -D warnings
 
 ## 后续待接入
 
-1. 真实后端地址与部署版本、交易池实际契约及结果联调。
+1. 三个后端部署版本及实际接口联调；地址均已配置，尚未在目标机器实测或提交真实交易。
 2. 状态 APIServer 接口补齐、indexer 调整后的数据流；路由存在不等于后端已实现。
 3. 真实前端 SDK/schema、浏览器跨域、WSS/TLS 和压缩协商验收。
 4. 生产证书、域名、可信代理、容量与超时配置。

@@ -41,6 +41,8 @@ const CAPTURE_LIMIT: usize = 1024 * 1024;
 
 fn config() -> Config {
     let mut config = Config::parse(include_str!("../config/default.toml")).unwrap();
+    // Deployment defaults must never become live test backends.
+    config.upstreams = Default::default();
     config.http.connect_timeout_ms = 1_000;
     config.http.request_timeout_ms = 5_000;
     config.http.body_timeout_ms = 1_000;
@@ -252,9 +254,11 @@ async fn all_22_approved_info_types_reach_their_only_upstream() {
         );
         let mut state = MockUpstream::fixed("state").await;
         let mut indexer = MockUpstream::fixed("indexer").await;
+        let mut exchange = MockUpstream::fixed("exchange").await;
         let mut config = config();
         config.upstreams.state_info = Some(state.endpoint("/state/info"));
         config.upstreams.indexer_info = Some(indexer.endpoint("/indexer/info"));
+        config.upstreams.exchange = Some(exchange.endpoint("/exchange"));
         let app = router(config).unwrap();
 
         for (types, marker, path, upstream) in [
@@ -276,6 +280,74 @@ async fn all_22_approved_info_types_reach_their_only_upstream() {
         }
         state.assert_no_requests();
         indexer.assert_no_requests();
+        exchange.assert_no_requests();
+    })
+    .await;
+}
+
+#[tokio::test]
+async fn info_health_is_rejected_and_gateway_liveness_never_calls_upstreams() {
+    bounded(async {
+        let mut state = MockUpstream::fixed("must not query state").await;
+        let mut indexer = MockUpstream::fixed("must not query indexer").await;
+        let mut exchange = MockUpstream::fixed("must not query exchange").await;
+        let mut config = config();
+        config.upstreams.state_info = Some(state.endpoint("/info"));
+        config.upstreams.indexer_info = Some(indexer.endpoint("/info"));
+        config.upstreams.exchange = Some(exchange.endpoint("/exchange"));
+        let app = router(config).unwrap();
+        let response = send(&app, Request::get("/healthz").body(Body::empty()).unwrap()).await;
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(bytes(response).await.as_ref(), b"ok");
+
+        assert_error(
+            send(&app, post("/info", r#"{ "type": "health" }"#)).await,
+            StatusCode::BAD_REQUEST,
+            "invalid_or_unknown_info_type",
+        )
+        .await;
+        exchange.assert_no_requests();
+        state.assert_no_requests();
+        indexer.assert_no_requests();
+    })
+    .await;
+}
+
+#[tokio::test]
+async fn s1_exchange_actions_and_local_admission_results_are_forwarded_verbatim() {
+    bounded(async {
+        // Signature fixtures exercise transport only; the gateway must not verify them.
+        let actions = [
+            r#"{"type":"approveAgent","hyperliquidChain":"Testnet","signatureChainId":"0x66eee","agentAddress":"0x4242424242424242424242424242424242424242","agentName":null,"nonce":1}"#,
+            r#"{"type":"order","orders":[{"a":0,"b":true,"p":"65000","s":"0.001","r":false,"t":{"limit":{"tif":"Gtc"}},"c":"0x11111111111111111111111111111111"}],"grouping":"na"}"#,
+            r#"{"type":"cancel","cancels":[{"a":0,"o":123}]}"#,
+            r#"{"type":"cancelByCloid","cancels":[{"asset":0,"cloid":"0x11111111111111111111111111111111"}]}"#,
+            r#"{"type":"updateLeverage","asset":0,"isCross":true,"leverage":10}"#,
+        ];
+        for response_body in [
+            r#"{"code":0,"message":"accepted","tx_hash":"0x1234"}"#,
+            r#"{"code":1001,"message":"invalid parameter"}"#,
+            r#"{"code":1002,"message":"duplicate transaction"}"#,
+            r#"{"code":1003,"message":"invalid signature"}"#,
+        ] {
+            let mut exchange = MockUpstream::fixed(response_body).await;
+            let mut config = config();
+            config.upstreams.exchange = Some(exchange.endpoint("/exchange"));
+            // No query backends are needed to forward signed writes.
+            let app = router(config).unwrap();
+            for action in actions {
+                let payload = format!(
+                    "{{\n \"action\": {action}, \"nonce\": 1, \"signature\": {{\"r\":\"0xA\",\"s\":\"0xabc\",\"v\":27}}, \"vaultAddress\": null, \"expiresAfter\": 2\n}}"
+                );
+                let response = send(&app, post("/exchange", payload.clone())).await;
+                assert_eq!(response.status(), StatusCode::OK);
+                assert_eq!(bytes(response).await.as_ref(), response_body.as_bytes());
+                let received = exchange.next_request().await;
+                assert_eq!(received.uri.path(), "/exchange");
+                assert_eq!(received.body.as_ref(), payload.as_bytes());
+                exchange.assert_no_requests();
+            }
+        }
     })
     .await;
 }
@@ -461,6 +533,7 @@ async fn invalid_unknown_and_duplicate_info_types_are_rejected_before_forwarding
         let mut config = config();
         config.upstreams.state_info = Some(upstream.endpoint("/state"));
         config.upstreams.indexer_info = Some(upstream.endpoint("/indexer"));
+        config.upstreams.exchange = Some(upstream.endpoint("/exchange"));
         let app = router(config).unwrap();
         for body in [
             "{}",
@@ -469,8 +542,16 @@ async fn invalid_unknown_and_duplicate_info_types_are_rejected_before_forwarding
             "not json",
             r#"{"type":1}"#,
             r#"{"type":"notApproved"}"#,
+            r#"{"type":"health"}"#,
             r#"{"type":"exchangeStatus"}"#,
             r#"{"type":"userRateLimit"}"#,
+            r#"{"type":"stateInfo"}"#,
+            r#"{"type":"block","height":1}"#,
+            r#"{"type":"bridgeSnapshot"}"#,
+            r#"{"type":"bridgeDepositStatus"}"#,
+            r#"{"type":"bridgeWithdrawalStatus"}"#,
+            r#"{"type":"accountOverview"}"#,
+            r#"{"type":"health","type":"meta"}"#,
             r#"{"type":"meta","type":"orderStatus"}"#,
             r#"{"type":"meta","type":"meta"}"#,
         ] {

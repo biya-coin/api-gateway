@@ -9,10 +9,12 @@ filter = "info"
 [upstreams]
 # 均为完整接口 URL，不自动追加 /info、/exchange 或 /ws。
 # 未配置的对应路由返回 503；不会回退到其他服务。
-# state_info = "http://127.0.0.1:7100/info"
-# indexer_info = "http://127.0.0.1:9090/info"
-# exchange = "http://127.0.0.1:18080/exchange"
-# indexer_ws = "ws://127.0.0.1:9090/ws"
+# 网关与后端同机部署；indexer 无额外鉴权或来源 IP 白名单。
+state_info = "http://localhost:3300/info"
+indexer_info = "http://localhost:9090/info"
+indexer_ws = "ws://localhost:9090/ws"
+# 交易池只接收 /exchange，不处理 /info。
+exchange = "http://localhost:18080/exchange"
 
 [http]
 connect_timeout_ms = 3000
@@ -33,6 +35,6 @@ tunnel_buffer_bytes = 8192
 idle_timeout_ms = 0
 
 [access]
-# 浏览器接入前配置真实 Origin（无尾部斜杠），如 ["http://localhost:8080"]。
-# [] 拒绝携带 Origin 的请求；["*"] 显式允许任意来源。不启用 Cookie 凭证模式。
-allowed_origins = []
+# 前端当前使用这两个开发 Origin；正式域名后续再加入。
+# 不启用 Cookie 凭证模式。
+allowed_origins = ["http://localhost:8080", "http://127.0.0.1:8080"]

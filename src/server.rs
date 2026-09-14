@@ -194,7 +194,9 @@ mod tests {
     use super::*;
 
     fn config() -> Config {
-        Config::parse(include_str!("../config/default.toml")).unwrap()
+        let mut config = Config::parse(include_str!("../config/default.toml")).unwrap();
+        config.upstreams = Default::default();
+        config
     }
 
     #[tokio::test]
