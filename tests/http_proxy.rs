@@ -814,6 +814,87 @@ async fn disconnected_write_is_sent_only_once() {
 }
 
 #[tokio::test]
+async fn default_origins_allow_preflight_and_requests_but_reject_other_origins() {
+    bounded(async {
+        let mut upstream = MockUpstream::fixed("[]").await;
+        let mut config = config();
+        config.upstreams.state_info = Some(upstream.endpoint("/info"));
+        config.upstreams.exchange = Some(upstream.endpoint("/exchange"));
+        let app = router(config).unwrap();
+        for path in ["/info", "/exchange"] {
+            for origin in [
+                "http://localhost:8080",
+                "http://127.0.0.1:8080",
+                "http://101.36.123.139:35002",
+            ] {
+                let preflight = Request::builder()
+                    .method(Method::OPTIONS)
+                    .uri(path)
+                    .header(header::ORIGIN, origin)
+                    .header(header::ACCESS_CONTROL_REQUEST_METHOD, "POST")
+                    .header(header::ACCESS_CONTROL_REQUEST_HEADERS, "content-type")
+                    .body(Body::empty())
+                    .unwrap();
+                let response = send(&app, preflight).await;
+                assert_eq!(response.status(), StatusCode::OK);
+                assert_eq!(
+                    response.headers()[header::ACCESS_CONTROL_ALLOW_ORIGIN],
+                    origin
+                );
+                assert_eq!(
+                    response.headers()[header::ACCESS_CONTROL_ALLOW_HEADERS],
+                    "content-type"
+                );
+                upstream.assert_no_requests();
+
+                let body =
+                    r#"{"type":"extraAgents","user":"0x0000000000000000000000000000000000000001"}"#;
+                let mut request = post(path, body);
+                request
+                    .headers_mut()
+                    .insert(header::ORIGIN, HeaderValue::from_static(origin));
+                let response = send(&app, request).await;
+                assert_eq!(response.status(), StatusCode::OK);
+                assert_eq!(
+                    response.headers()[header::ACCESS_CONTROL_ALLOW_ORIGIN],
+                    origin
+                );
+                assert!(!response
+                    .headers()
+                    .contains_key(header::ACCESS_CONTROL_ALLOW_CREDENTIALS));
+                assert_eq!(bytes(response).await.as_ref(), b"[]");
+                let received = upstream.next_request().await;
+                assert_eq!(received.uri.path(), path);
+                assert_eq!(received.headers[header::ORIGIN], origin);
+                assert_eq!(received.body.as_ref(), body.as_bytes());
+            }
+            for origin in [
+                "https://101.36.123.139:35002",
+                "http://101.36.123.139:35003",
+            ] {
+                for method in [Method::POST, Method::OPTIONS] {
+                    let request = Request::builder()
+                        .method(method)
+                        .uri(path)
+                        .header(header::ORIGIN, origin)
+                        .header(header::ACCESS_CONTROL_REQUEST_METHOD, "POST")
+                        .body(Body::from(r#"{"type":"meta"}"#))
+                        .unwrap();
+                    assert_error(
+                        send(&app, request).await,
+                        StatusCode::FORBIDDEN,
+                        "origin_not_allowed",
+                    )
+                    .await;
+                }
+            }
+        }
+        upstream.assert_no_requests();
+    })
+    .await;
+}
+
+#[tokio::test]
 async fn cors_preflight_and_origin_rejection_never_call_upstream() {
     bounded(async {
         const ALLOWED: &str = "https://app.example";

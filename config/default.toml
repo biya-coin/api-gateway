@@ -40,6 +40,6 @@ tunnel_buffer_bytes = 8192
 idle_timeout_ms = 0
 
 [access]
-# 前端当前使用这两个开发 Origin；正式域名后续再加入。
+# 允许本地开发页面和已部署的 HTTP 前端；Origin 必须包含协议和端口。
 # 不启用 Cookie 凭证模式。
-allowed_origins = ["http://localhost:8080", "http://127.0.0.1:8080"]
+allowed_origins = ["http://localhost:8080", "http://127.0.0.1:8080", "http://101.36.123.139:35002"]

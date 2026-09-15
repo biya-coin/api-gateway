@@ -74,10 +74,10 @@ indexer_ws = "ws://host.docker.internal:36018/ws"
 state_info = "http://host.docker.internal:36020/info"
 
 [access]
-allowed_origins = ["http://localhost:8080", "http://127.0.0.1:8080"]
+allowed_origins = ["http://localhost:8080", "http://127.0.0.1:8080", "http://101.36.123.139:35002"]
 ```
 
-目前启用已部署的交易后端、indexer 和状态 APIServer，当前前端开发 Origin 保持上述两个本机地址。后端无鉴权或 IP 白名单不等于放开网关自身的浏览器 Origin 策略。
+目前启用已部署的交易后端、indexer 和状态 APIServer，前端 Origin 允许上述两个本地开发地址及已部署的 HTTP 前端地址。后端无鉴权或 IP 白名单不等于放开网关自身的浏览器 Origin 策略。
 自定义配置省略 `exchange` 时，`/exchange` 返回 `503`，不会改用其他后端。
 禁止把后端指向网关自身或造成循环依赖。
 URL 不允许嵌入账号密码、查询参数、片段；WS 可用 WS/WSS。
@@ -99,7 +99,7 @@ cargo run -- --config config/local.toml
 - 程序启动时读取 `--config` 指定的文件；未指定时读取工作目录下的 [config/default.toml](config/default.toml)。配置修改后需重启才生效。
 - 网关容器端口为 `8888`。宿主机映射端口由运维另行设置，例如 `36016:8888`；`36016` 仅为示例，不写入 `listen_addr`。
 - 运维可以挂载部署配置并通过 `--config` 指定，实际加载的配置才决定监听及后端地址；容器映射的目标端口必须与监听端口一致。
-- `allowed_origins` 保留前端提供的 `http://localhost:8080` 和 `http://127.0.0.1:8080`，它们是浏览器页面来源，与网关监听／映射端口无关。
+- `allowed_origins` 包含 `http://localhost:8080`、`http://127.0.0.1:8080` 和 `http://101.36.123.139:35002`，它们是浏览器页面来源，与网关监听／映射端口无关。
 
 ### Docker 部署
 
@@ -128,7 +128,7 @@ Compose 默认挂载项目配置、使用内置 `bridge` 网络并配置宿主�
 
 上述不是生产容量承诺。HTTP 完整缓冲响应，部署前需按内存与并发预算调整。
 
-默认允许 `http://localhost:8080` 和 `http://127.0.0.1:8080` 两个前端开发 Origin；无 Origin 的 SDK／服务端请求不受影响。
+默认允许 `http://localhost:8080`、`http://127.0.0.1:8080` 和 `http://101.36.123.139:35002`。Origin 按协议、主机和端口精确匹配，HTTP 白名单不同时放行 HTTPS；无 Origin 的 SDK／服务端请求不受影响。
 `["*"]` 显式允许任意来源，或填写准确域名（无尾部 `/`）。支持 OPTIONS，不启用 Cookie 跨域凭证模式。
 Origin 检查不是身份鉴权；Token 验证、每 IP 限流与可信代理链暂不实现。
 日志按配置过滤，不读 `RUST_LOG`，不记录请求体、签名或凭证。
