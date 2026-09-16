@@ -12,11 +12,11 @@
 | `GET /ws`（Upgrade） | 按订阅类型分流：`assetCtxs`、`clearinghouseState` 转状态服务，其余转 indexer |
 | `GET /healthz` | `200` / `ok`，只表示网关存活，不代表后端或链就绪 |
 
-依据联调文档及最新职责确认，`/info` 白名单共 23 个 type，仅分流到状态 APIServer 和 indexer：
+依据联调文档及最新职责确认，`/info` 白名单共 24 个 type，仅分流到状态 APIServer 和 indexer：
 
 | 后端 | `/info type` |
 | --- | --- |
-| **状态 APIServer** | `meta`、`metaAndAssetCtxs`、`extraAgents`、`clearinghouseState`、`activeAssetData`、`openOrders`、`frontendOpenOrders`、`orderStatus`、`userFees`、`unifiedBalances`、`accountNonces`、`marketSnapshot` |
+| **状态 APIServer** | `meta`、`metaAndAssetCtxs`、`extraAgents`、`clearinghouseState`、`activeAssetData`、`openOrders`、`frontendOpenOrders`、`orderStatus`、`userFees`、`unifiedBalances`、`accountNonces`、`marketSnapshot`、`exchangeStatus` |
 | **indexer** | `allMids`、`recentTrades`、`l2Book`、`webData2`、`candleSnapshot`、`historicalOrders`、`userFills`、`userFillsByTime`、`userFunding`、`fundingHistory`、`userNonFundingLedgerUpdates` |
 
 `orderStatus` 只请求状态 APIServer 一次，不回退到 indexer；下游未实现或业务错误也原样透传。状态请求直接转状态 APIServer，不经 indexer。
@@ -79,10 +79,10 @@ state_info = "http://host.docker.internal:36020/info"
 state_ws = "ws://host.docker.internal:36020/ws"
 
 [access]
-allowed_origins = ["http://localhost:8080", "http://127.0.0.1:8080", "http://101.36.123.139:35002"]
+allowed_origins = ["http://localhost:8080", "http://127.0.0.1:8080", "https://dev.dex.biya.io"]
 ```
 
-目前启用已部署的交易后端、indexer 和状态 APIServer，前端 Origin 允许上述两个本地开发地址及已部署的 HTTP 前端地址。后端无鉴权或 IP 白名单不等于放开网关自身的浏览器 Origin 策略。
+目前启用已部署的交易后端、indexer 和状态 APIServer，前端 Origin 允许上述两个本地开发地址及 HTTPS 前端域名，不再放行原公网 IP 页面来源。后端无鉴权或 IP 白名单不等于放开网关自身的浏览器 Origin 策略。
 自定义配置省略 `exchange` 时，`/exchange` 返回 `503`，不会改用其他后端。
 旧配置仍可加载，但必须增加 `upstreams.state_ws` 才能使用迁移后的两类 WS 订阅；缺少此地址时返回 WS 错误，不再送往 indexer。两个 WS 地址都未配置时，前端握手返回 HTTP `503`。
 `websocket.max_connections` 限制前端 WS 数量；每条最多增加两条上游 WS，运维需按最多两倍上游连接数预留容量。
@@ -106,7 +106,7 @@ cargo run -- --config config/local.toml
 - 程序启动时读取 `--config` 指定的文件；未指定时读取工作目录下的 [config/default.toml](config/default.toml)。配置修改后需重启才生效。
 - 网关容器端口为 `8888`。宿主机映射端口由运维另行设置，例如 `36016:8888`；`36016` 仅为示例，不写入 `listen_addr`。
 - 运维可以挂载部署配置并通过 `--config` 指定，实际加载的配置才决定监听及后端地址；容器映射的目标端口必须与监听端口一致。
-- `allowed_origins` 包含 `http://localhost:8080`、`http://127.0.0.1:8080` 和 `http://101.36.123.139:35002`，它们是浏览器页面来源，与网关监听／映射端口无关。
+- `allowed_origins` 包含 `http://localhost:8080`、`http://127.0.0.1:8080` 和 `https://dev.dex.biya.io`，它们是浏览器页面来源，与网关监听／映射端口无关。此白名单变更不启用网关自身的 HTTPS/WSS 监听。
 
 ### Docker 部署
 
@@ -136,7 +136,7 @@ Compose 默认挂载项目配置、使用内置 `bridge` 网络并配置宿主�
 
 上述不是生产容量承诺。HTTP 完整缓冲响应，部署前需按内存与并发预算调整。
 
-默认允许 `http://localhost:8080`、`http://127.0.0.1:8080` 和 `http://101.36.123.139:35002`。Origin 按协议、主机和端口精确匹配，HTTP 白名单不同时放行 HTTPS；无 Origin 的 SDK／服务端请求不受影响。
+默认允许 `http://localhost:8080`、`http://127.0.0.1:8080` 和 `https://dev.dex.biya.io`。Origin 按协议、主机和端口精确匹配，不放行该域名的 HTTP 来源或 `:35002` 来源；无 Origin 的 SDK／服务端请求不受影响。
 `["*"]` 显式允许任意来源，或填写准确域名（无尾部 `/`）。支持 OPTIONS，不启用 Cookie 跨域凭证模式。
 Origin 检查不是身份鉴权；Token 验证、每 IP 限流与可信代理链暂不实现。
 日志按配置过滤，不读 `RUST_LOG`，不记录请求体、签名或凭证。
@@ -192,6 +192,6 @@ cargo clippy --offline --locked --all-targets -j 2 -- -D warnings
 2. 目标服务器的状态 APIServer、indexer HTTP/WS 连通性；默认地址已配置，尚未在目标机器实测。
 3. 状态服务 `/ws` 实现及真实前端 SDK/schema、浏览器跨域、WSS/TLS 验收；本次不支持压缩／子协议协商。
 4. 生产证书、域名、可信代理、容量与超时配置。
-5. `userRateLimit`、`exchangeStatus`、Bootstrap、维护模式、业务幂等、统一业务错误：按约定暂不实现，这些 info 类型目前返回 400。
+5. `userRateLimit` 查询、Bootstrap、维护模式、业务幂等、统一业务错误：按约定暂不实现；`userRateLimit` 类型目前返回 400。`exchangeStatus` 已转发到状态 APIServer，业务实现由下游负责。
 
 没有数据库、缓存、重试队列、主动下游健康轮询或业务聚合；Docker 健康检查只访问网关自身。

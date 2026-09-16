@@ -33,6 +33,7 @@ pub const STATE_TYPES: &[&str] = &[
     "unifiedBalances",
     "accountNonces",
     "marketSnapshot",
+    "exchangeStatus",
 ];
 
 /// WS subscription ownership is independent from POST /info ownership.
@@ -114,7 +115,6 @@ mod tests {
             "bad",
             r#"{"type":1}"#,
             r#"{"type":"health"}"#,
-            r#"{"type":"exchangeStatus"}"#,
             r#"{"type":"userRateLimit"}"#,
             r#"{"type":"stateInfo"}"#,
             r#"{"type":"block","height":1}"#,

@@ -422,6 +422,49 @@ async fn state_only_subscription_needs_no_indexer_and_missing_state_never_falls_
 }
 
 #[tokio::test]
+async fn default_origins_allow_https_frontend_and_local_development_for_websocket() {
+    bounded(async {
+        let mut upstream = Mock::start().await;
+        let mut cfg = config();
+        cfg.upstreams.indexer_ws = Some(upstream.service.endpoint());
+        let gateway = Service::gateway(cfg).await;
+        for origin in [
+            "http://localhost:8080",
+            "http://127.0.0.1:8080",
+            "https://dev.dex.biya.io",
+        ] {
+            let response = request(&gateway)
+                .header("origin", origin)
+                .send()
+                .await
+                .unwrap();
+            assert_eq!(response.status(), 101, "{origin}");
+            assert_eq!(response.headers()["access-control-allow-origin"], origin);
+        }
+        for origin in [
+            "http://101.36.123.139:35002",
+            "http://dev.dex.biya.io",
+            "https://dev.dex.biya.io:35002",
+            "https://dev.dex.biya.io.evil.example",
+        ] {
+            assert_eq!(
+                request(&gateway)
+                    .header("origin", origin)
+                    .send()
+                    .await
+                    .unwrap()
+                    .status(),
+                403,
+                "{origin}"
+            );
+        }
+        assert!(upstream.connections.try_recv().is_err());
+        gateway.shutdown().await;
+    })
+    .await;
+}
+
+#[tokio::test]
 async fn invalid_handshake_missing_backends_and_origin_are_rejected() {
     bounded(async {
         let mut cfg = config();

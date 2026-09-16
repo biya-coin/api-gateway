@@ -36,10 +36,11 @@
 | `unifiedBalances` | 通常包含 `user` | 查询统一账户余额 |
 | `accountNonces` | 通常包含 `user` | 查询账户 nonce |
 | `marketSnapshot` | 通常包含市场标识 | 查询市场状态快照 |
+| `exchangeStatus` | 由状态服务定义 | 查询交易状态；参数及响应语义由状态 APIServer 负责 |
 
 网关当前只按 `type` 选择后端，其余请求字段原样转发，不在网关重新解析或组装业务响应。
 
-`orderStatus` 只访问状态 APIServer 一次，不回退到 indexer。网关不校验下游是否实现该接口；下游未实现或业务错误也原样透传。
+`orderStatus`、`exchangeStatus` 只访问状态 APIServer 一次，不回退到 indexer。网关不校验下游是否实现该接口；下游未实现或业务错误也原样透传。
 
 `extraAgents` 由状态 APIServer 从已同步到副本头部的 `SessionRegistry` 读取。它只返回当前仍有效且已命名的 agent；默认钥匙、已撤销、未生效或已过期的 agent 不返回。请求格式为：
 
@@ -68,7 +69,7 @@
 
 - 除 HTTP 查询外，网关将 `assetCtxs`、`clearinghouseState` 的 WS 订阅／取消订阅发往状态服务 `/ws`。后端入口及数据推送由状态服务团队实现，网关不使用 HTTP 轮询代替订阅。
 - `GET /healthz` 是网关自身存活检查，不会转发到状态服务。
-- 以下类型不属于当前网关开放的状态查询白名单：`stateInfo`、`block`、`bridgeSnapshot`、`bridgeDepositStatus`、`bridgeWithdrawalStatus`、`accountOverview`、`userRateLimit`、`exchangeStatus`。
+- 以下类型不属于当前网关开放的状态查询白名单：`stateInfo`、`block`、`bridgeSnapshot`、`bridgeDepositStatus`、`bridgeWithdrawalStatus`、`accountOverview`、`userRateLimit`。
 - 状态服务源码还包含其他内部或未由网关开放的查询类型。它们不能直接通过网关访问，除非先更新网关路由白名单。
 - 当前服务器联调时，`clearinghouseState` 已验证可返回 `200`；`meta` 曾由实际状态服务返回 `501`（`unsupported info type`）。这属于下游实现状态，网关会原样透传，不代表网关自动补齐该接口。
 

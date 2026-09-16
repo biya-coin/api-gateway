@@ -245,7 +245,7 @@ mod tests {
             [
                 "http://localhost:8080",
                 "http://127.0.0.1:8080",
-                "http://101.36.123.139:35002"
+                "https://dev.dex.biya.io"
             ]
         );
     }

@@ -7,13 +7,13 @@
 | [Dockerfile](../Dockerfile) | 容器内编译 Rust，运行镜像只保留程序、默认配置和运行依赖 |
 | [.dockerignore](../.dockerignore) | 构建只上传源码及必要文件，不包含本地配置、凭证、Git 历史和 target |
 | [compose.yaml](../compose.yaml) | 默认配置挂载、端口映射、内置 bridge 网络及宿主机名称解析 |
-| [config/default.toml](../config/default.toml) | 配置模板，监听 `0.0.0.0:8888`；允许两个本地开发 Origin 及 `http://101.36.123.139:35002` |
+| [config/default.toml](../config/default.toml) | 配置模板，监听 `0.0.0.0:8888`；允许两个本地开发 Origin 及 `https://dev.dex.biya.io` |
 
 ## 三种配置的关系
 
 - **程序配置**：`listen_addr = "0.0.0.0:8888"`，表示容器内网关自己监听 `8888`。
 - **Docker 映射**：例如 `36016:8888`，表示服务器 `36016` 转进容器 `8888`。宿主机端口由运维确认，不改程序监听值。
-- **Origin**：浏览器打开前端页面的地址，不是上述两个网关端口。默认允许 `http://localhost:8080`、`http://127.0.0.1:8080` 和 `http://101.36.123.139:35002`，协议及端口须精确匹配。
+- **Origin**：浏览器打开前端页面的地址，不是上述两个网关端口。默认允许 `http://localhost:8080`、`http://127.0.0.1:8080` 和 `https://dev.dex.biya.io`，协议及端口须精确匹配，不带尾部 `/`。原公网 IP 来源已移除；新增 HTTPS Origin 不改变网关监听协议。
 
 HTTP、WebSocket、网关存活检查共用 `8888`，不需要 `8889`。
 Compose 默认将映射端口绑定到宿主机 `0.0.0.0`，监听所有 IPv4 网卡。公网访问需服务器防火墙及云安全组放行 TCP `36016`，客户端使用服务器公网 IP 或域名访问，不使用 `0.0.0.0` 作为目标地址。需要限制监听范围时，可通过 `GATEWAY_BIND_IP` 指定网卡地址。

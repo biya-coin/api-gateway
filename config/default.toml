@@ -44,6 +44,7 @@ max_message_bytes = 4194304
 idle_timeout_ms = 0
 
 [access]
-# 允许本地开发页面和已部署的 HTTP 前端；Origin 必须包含协议和端口。
+# 允许本地开发页面和 HTTPS 前端域名；Origin 精确匹配，不带路径或尾部 /。
+# 域名使用默认 HTTPS 端口，不将服务器内部映射端口加入 Origin。
 # 不启用 Cookie 凭证模式。
-allowed_origins = ["http://localhost:8080", "http://127.0.0.1:8080", "http://101.36.123.139:35002"]
+allowed_origins = ["http://localhost:8080", "http://127.0.0.1:8080", "https://dev.dex.biya.io"]

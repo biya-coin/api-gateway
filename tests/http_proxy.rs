@@ -218,7 +218,7 @@ fn chunked(chunks: impl IntoIterator<Item = Bytes>) -> Body {
 }
 
 #[tokio::test]
-async fn all_23_approved_info_types_reach_their_only_upstream() {
+async fn all_24_approved_info_types_reach_their_only_upstream() {
     bounded(async {
         assert_eq!(
             STATE_TYPES,
@@ -235,6 +235,7 @@ async fn all_23_approved_info_types_reach_their_only_upstream() {
                 "unifiedBalances",
                 "accountNonces",
                 "marketSnapshot",
+                "exchangeStatus",
             ]
         );
         assert_eq!(
@@ -549,7 +550,6 @@ async fn invalid_unknown_and_duplicate_info_types_are_rejected_before_forwarding
             r#"{"type":1}"#,
             r#"{"type":"notApproved"}"#,
             r#"{"type":"health"}"#,
-            r#"{"type":"exchangeStatus"}"#,
             r#"{"type":"userRateLimit"}"#,
             r#"{"type":"stateInfo"}"#,
             r#"{"type":"block","height":1}"#,
@@ -580,6 +580,7 @@ async fn missing_upstreams_return_503_without_using_another_configured_backend()
         for (missing, path, body) in [
             ("state", "/info", r#"{"type":"meta"}"#),
             ("state", "/info", r#"{"type":"orderStatus"}"#),
+            ("state", "/info", r#"{"type":"exchangeStatus"}"#),
             ("indexer", "/info", r#"{"type":"allMids"}"#),
             ("exchange", "/exchange", r#"{"nonce":1}"#),
         ] {
@@ -831,7 +832,7 @@ async fn default_origins_allow_preflight_and_requests_but_reject_other_origins()
             for origin in [
                 "http://localhost:8080",
                 "http://127.0.0.1:8080",
-                "http://101.36.123.139:35002",
+                "https://dev.dex.biya.io",
             ] {
                 let preflight = Request::builder()
                     .method(Method::OPTIONS)
@@ -875,8 +876,12 @@ async fn default_origins_allow_preflight_and_requests_but_reject_other_origins()
                 assert_eq!(received.body.as_ref(), body.as_bytes());
             }
             for origin in [
+                "http://101.36.123.139:35002",
                 "https://101.36.123.139:35002",
                 "http://101.36.123.139:35003",
+                "http://dev.dex.biya.io",
+                "https://dev.dex.biya.io:35002",
+                "https://dev.dex.biya.io.evil.example",
             ] {
                 for method in [Method::POST, Method::OPTIONS] {
                     let request = Request::builder()
