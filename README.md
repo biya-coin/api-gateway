@@ -16,8 +16,8 @@
 
 | 后端 | `/info type` |
 | --- | --- |
-| **状态 APIServer** | `meta`、`extraAgents`、`recentTrades`、`clearinghouseState`、`activeAssetData`、`openOrders`、`frontendOpenOrders`、`userFees`、`unifiedBalances`、`accountNonces`、`marketSnapshot` |
-| **indexer** | `metaAndAssetCtxs`、`allMids`、`l2Book`、`webData2`、`candleSnapshot`、`historicalOrders`、`orderStatus`、`userFills`、`userFillsByTime`、`userFunding`、`fundingHistory`、`userNonFundingLedgerUpdates` |
+| **状态 APIServer** | `meta`、`metaAndAssetCtxs`、`extraAgents`、`recentTrades`、`clearinghouseState`、`activeAssetData`、`openOrders`、`frontendOpenOrders`、`userFees`、`unifiedBalances`、`accountNonces`、`marketSnapshot` |
+| **indexer** | `allMids`、`l2Book`、`webData2`、`candleSnapshot`、`historicalOrders`、`orderStatus`、`userFills`、`userFillsByTime`、`userFunding`、`fundingHistory`、`userNonFundingLedgerUpdates` |
 
 `orderStatus` 只请求 indexer 一次，不回查状态服务。状态请求直接转状态 APIServer，不经 indexer。
 聚合和订阅的数据生产仍属下游，不在网关重复实现。

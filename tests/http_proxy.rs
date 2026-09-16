@@ -224,6 +224,7 @@ async fn all_23_approved_info_types_reach_their_only_upstream() {
             STATE_TYPES,
             &[
                 "meta",
+                "metaAndAssetCtxs",
                 "extraAgents",
                 "recentTrades",
                 "clearinghouseState",
@@ -239,7 +240,6 @@ async fn all_23_approved_info_types_reach_their_only_upstream() {
         assert_eq!(
             INDEXER_TYPES,
             &[
-                "metaAndAssetCtxs",
                 "allMids",
                 "l2Book",
                 "webData2",

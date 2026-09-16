@@ -25,6 +25,7 @@
 | `type` | 主要参数 | 用途 |
 | --- | --- | --- |
 | `meta` | 可选 `dex` | 市场元数据、交易品种列表和基础配置 |
+| `metaAndAssetCtxs` | 可选 `dex` | 返回市场元数据及市场上下文 |
 | `extraAgents` | `user` | 查询用户当前有效且已命名的 API wallet／agent |
 | `recentTrades` | 通常包含市场标识 | 查询最近成交 |
 | `clearinghouseState` | `user`，可选 `dex` | 查询用户持仓、保证金、账户权益和未实现盈亏 |
@@ -79,7 +80,6 @@ Indexer 同时负责 HTTP 查询和 WebSocket 实时订阅。
 
 | `type` | 主要参数 | 用途 |
 | --- | --- | --- |
-| `metaAndAssetCtxs` | 可选 `dex` | 返回市场元数据及市场上下文 |
 | `allMids` | 通常无额外参数 | 查询全部市场的中间价 |
 | `l2Book` | `coin`，可选 `nSigFigs`、`nLevels`、`mantissa` | 查询 L2 聚合订单簿 |
 | `webData2` | `user` | 返回前端页面加载所需的账户和市场聚合数据 |

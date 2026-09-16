@@ -7,7 +7,6 @@ pub enum InfoBackend {
 }
 
 pub const INDEXER_TYPES: &[&str] = &[
-    "metaAndAssetCtxs",
     "allMids",
     "l2Book",
     "webData2",
@@ -23,6 +22,7 @@ pub const INDEXER_TYPES: &[&str] = &[
 
 pub const STATE_TYPES: &[&str] = &[
     "meta",
+    "metaAndAssetCtxs",
     "extraAgents",
     "recentTrades",
     "clearinghouseState",
