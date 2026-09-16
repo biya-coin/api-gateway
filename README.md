@@ -9,17 +9,17 @@
 | --- | --- |
 | `POST /info` | 检查顶层唯一字符串 `type`，按下表转发 |
 | `POST /exchange` | 原始请求体直接转交易池服务，不解析 action |
-| `GET /ws`（Upgrade） | 整条 WebSocket 连接代理到 indexer |
+| `GET /ws`（Upgrade） | 按订阅类型分流：`assetCtxs`、`clearinghouseState` 转状态服务，其余转 indexer |
 | `GET /healthz` | `200` / `ok`，只表示网关存活，不代表后端或链就绪 |
 
 依据联调文档及最新职责确认，`/info` 白名单共 23 个 type，仅分流到状态 APIServer 和 indexer：
 
 | 后端 | `/info type` |
 | --- | --- |
-| **状态 APIServer** | `meta`、`metaAndAssetCtxs`、`extraAgents`、`recentTrades`、`clearinghouseState`、`activeAssetData`、`openOrders`、`frontendOpenOrders`、`userFees`、`unifiedBalances`、`accountNonces`、`marketSnapshot` |
-| **indexer** | `allMids`、`l2Book`、`webData2`、`candleSnapshot`、`historicalOrders`、`orderStatus`、`userFills`、`userFillsByTime`、`userFunding`、`fundingHistory`、`userNonFundingLedgerUpdates` |
+| **状态 APIServer** | `meta`、`metaAndAssetCtxs`、`extraAgents`、`clearinghouseState`、`activeAssetData`、`openOrders`、`frontendOpenOrders`、`orderStatus`、`userFees`、`unifiedBalances`、`accountNonces`、`marketSnapshot` |
+| **indexer** | `allMids`、`recentTrades`、`l2Book`、`webData2`、`candleSnapshot`、`historicalOrders`、`userFills`、`userFillsByTime`、`userFunding`、`fundingHistory`、`userNonFundingLedgerUpdates` |
 
-`orderStatus` 只请求 indexer 一次，不回查状态服务。状态请求直接转状态 APIServer，不经 indexer。
+`orderStatus` 只请求状态 APIServer 一次，不回退到 indexer；下游未实现或业务错误也原样透传。状态请求直接转状态 APIServer，不经 indexer。
 聚合和订阅的数据生产仍属下游，不在网关重复实现。
 
 ### 交易池接口对照
@@ -47,14 +47,18 @@
 
 ## WebSocket 语义
 
-- 验证 HTTP/1.1 GET 握手，先连接 indexer，成功后才返回 `101`。
-- 保留握手 Key/Accept、协商子协议、压缩扩展和端到端头。
-- Upgrade 后透明双向复制字节，不解码或改写订阅、JSON 心跳、RFC Ping/Pong、Close、二进制、分片和压缩负载。
-- 每方向固定大小缓冲，不存储事件、不合并连接、不静默重连。
-- 任一端断开就关闭另一端；正常 Close 帧透传，异常或服务停止直接关闭传输，不伪造业务结果。
-- 空闲超时默认关闭，可按双向字节活动启用；安静的订阅不等于故障。
-- 网关不解析帧，因此没有单帧／解压后消息大小校验，该限制交 indexer 和客户端执行。
-- 不新增 indexer 未提供的 WS `post` 能力。
+- 前端仍只需连接 `/ws`，可以在一条连接中发送多个订阅。网关检查 HTTP/1.1 GET 握手、Origin 和容量后返回 `101`；它不代表后端连接或订阅已成功。
+- `subscribe` 和 `unsubscribe` 都按 `subscription.type` 分流：`assetCtxs`、`clearinghouseState` **仅发状态服务**；其余字符串类型发 indexer，由下游判断是否支持。HTTP `/info` 路由不受 WS 规则影响。
+- 首次向某后端发送订阅／取消订阅时才建立该后端连接；每条前端连接最多拥有一条 indexer WS 和一条状态 WS，不跨客户端共享。只订阅 indexer 时不连接状态服务，反之亦然。
+- 只解析 JSON 路由字段，转发原始完整文本，保留未知字段、数字精度和空白；拒绝重复的 `method`、`subscription`、`subscription.type`。订阅确认、数据和业务错误由对应后端产生，消息内容原样返回。
+- `{"method":"ping"}` 由网关回复一次 `{"channel":"pong"}`，并向已连接后端发送 RFC Ping 保活。RFC Ping/Pong 在各连接上独立处理，不重复转发；心跳不证明业务数据已经就绪。
+- 使用 `tokio-tungstenite` 解析帧和重组分片；前端订阅须为文本，二进制请求以 Close `1003` 拒绝。后端文本／二进制数据内容保持不变，但不承诺保留原帧分片或掩码。
+- **不协商压缩扩展或子协议**，也不透传后端握手头／Cookie。前端可提议 `permessage-deflate`，但必须接受未启用压缩的连接。要求特定子协议或必须压缩的客户端需另行适配。
+- 后端握手复用 HTTP 客户端的 TLS、禁代理、禁重试及禁重定向策略；转发查询字符串、Authorization 等端到端请求头，过滤伪造的转发头，并为每个上游重建 WS 握手。
+- 首次后端连接失败或未配置，返回 WS `channel:error`，不回退、不自动重试，前端可继续使用另一后端或显式重试订阅。握手等待最多 `websocket.handshake_timeout_ms`，期间同一前端连接的消息处理暂停。
+- 已建立的任一后端断开时，关闭前端及另一后端，避免静默丢失订阅；不自动重连或恢复订阅。前端 Close 会关闭两条上游连接；上游正常 Close 的代码及原因转给前端。异常连接通常发送 Close `1011`，服务停止直接关闭传输。
+- 每条消息／帧默认最多 4 MiB，超限 Close `1009`；协议错误 Close `1002`。读取和写入缓冲有界，无无界消息队列，慢读反压到上游，WS 写入受 `http.write_timeout_ms` 限制。每条前端连接的内存预算需包含最多三条 WS 的分片重组及写缓冲。
+- 空闲超时默认关闭；启用时按客户端或上游完整消息（含控制帧）活动计算，尚未完成的分片不算活动。不提供 WS `post` 交易能力。
 
 ## 配置与启动
 
@@ -62,7 +66,7 @@
 网关通过 `http://host.docker.internal:36014/exchange` 转发，Compose 使用 `host-gateway` 将该名称解析到宿主机；不依赖默认 bridge 不提供的容器名 DNS，也不写死容器 IP。
 `127.0.0.1:18281 -> 8889` 不用于网关交易转发，不配置交易池 `/info` 地址。
 indexer 容器 `biya-indexer` 使用 `biya-indexer_default` 网络，宿主机 `9090` 和 `36018` 均映射至容器 `8888`。网关统一经宿主机 `36018` 访问其 `/info` 和 `/ws`，无需加入 indexer 网络；`36019 -> 8889` 不用于转发。
-状态容器 `bybchain-api-server-api-server-1` 使用 `bybchain-api-server_default` 网络，宿主机 `36020` 映射至容器 `8888`。网关经宿主机 `36020` 访问其 `/info`，无需加入状态服务网络；原有类型归属不变。
+状态容器 `bybchain-api-server-api-server-1` 使用 `bybchain-api-server_default` 网络，宿主机 `36020` 映射至容器 `8888`。网关经宿主机 `36020` 访问其 `/info` 和 `/ws`，无需加入状态服务网络。状态服务 `/ws` 及两类订阅由后端团队实现，本项目只提供分流。
 Compose 默认直接挂载 [config/default.toml](config/default.toml)，无需先设置环境变量。也可以用 `GATEWAY_CONFIG` 指定自己的部署文件。
 地址必须是**完整接口 URL**，不自动追加路径：
 
@@ -72,6 +76,7 @@ exchange = "http://host.docker.internal:36014/exchange"
 indexer_info = "http://host.docker.internal:36018/info"
 indexer_ws = "ws://host.docker.internal:36018/ws"
 state_info = "http://host.docker.internal:36020/info"
+state_ws = "ws://host.docker.internal:36020/ws"
 
 [access]
 allowed_origins = ["http://localhost:8080", "http://127.0.0.1:8080", "http://101.36.123.139:35002"]
@@ -79,6 +84,8 @@ allowed_origins = ["http://localhost:8080", "http://127.0.0.1:8080", "http://101
 
 目前启用已部署的交易后端、indexer 和状态 APIServer，前端 Origin 允许上述两个本地开发地址及已部署的 HTTP 前端地址。后端无鉴权或 IP 白名单不等于放开网关自身的浏览器 Origin 策略。
 自定义配置省略 `exchange` 时，`/exchange` 返回 `503`，不会改用其他后端。
+旧配置仍可加载，但必须增加 `upstreams.state_ws` 才能使用迁移后的两类 WS 订阅；缺少此地址时返回 WS 错误，不再送往 indexer。两个 WS 地址都未配置时，前端握手返回 HTTP `503`。
+`websocket.max_connections` 限制前端 WS 数量；每条最多增加两条上游 WS，运维需按最多两倍上游连接数预留容量。
 禁止把后端指向网关自身或造成循环依赖。
 URL 不允许嵌入账号密码、查询参数、片段；WS 可用 WS/WSS。
 `host.docker.internal` 是此 Docker 部署的地址；Linux 宿主机直接运行二进制时，可在自己的配置中使用 `http://127.0.0.1:36014/exchange`。不要在容器内用 `localhost` 指代宿主机。
@@ -121,8 +128,9 @@ Compose 默认挂载项目配置、使用内置 `bridge` 网络并配置宿主�
 | `http.max_in_flight` | 128，包括仍持有的响应字节 |
 | `http.max_connections` | 1024，总 TCP 连接，含已升级 WS |
 | `websocket.handshake_timeout_ms` | 5000 |
-| `websocket.max_connections` | 1024 |
-| `websocket.tunnel_buffer_bytes` | 每方向 8192 字节 |
+| `websocket.max_connections` | 1024 条前端 WS，最多 2048 条上游 WS |
+| `websocket.tunnel_buffer_bytes` | 每条 WS 读取缓冲 8192 字节，沿用旧配置键 |
+| `websocket.max_message_bytes` | 4 MiB，双向单帧和完整消息上限 |
 | `websocket.idle_timeout_ms` | 0，禁用空闲超时 |
 | `server.shutdown_timeout_ms` | 5000，到期取消并等待 HTTP 任务退出，回收所有 WS |
 
@@ -135,17 +143,26 @@ Origin 检查不是身份鉴权；Token 验证、每 IP 限流与可信代理链
 
 ## 错误
 
-下游业务错误原样透传；网关自身错误为 `{"error":"machine_code"}`。
+HTTP 下游业务错误原样透传；网关自身 HTTP 错误为 `{"error":"machine_code"}`。
 
 | 条件 | HTTP |
 | --- | --- |
-| 非法／未知 info 类型、非法 WS 握手 | 400 |
+| 非法／未知 info 类型、非法前端 WS 握手 | 400 |
 | Origin 不允许 | 403 |
 | 请求体超时 | 408 |
 | 请求体超限 | 413 |
-| 后端连接／读取失败、响应超限、非法握手响应 | 502 |
-| 后端未配置、请求／WS 容量饱和、服务停止中 | 503 |
-| 后端请求／WS 握手超时 | 504 |
+| HTTP 后端连接／读取失败、响应超限 | 502 |
+| HTTP 后端未配置、两个 WS 后端均未配置、请求／WS 容量饱和、服务停止中 | 503 |
+| HTTP 后端请求超时 | 504 |
+
+WS 升级后无法再返回 HTTP 错误码。网关路由／连接错误示例：
+
+```json
+{"channel":"error","data":{"error":"upstream_not_configured","backend":"state"}}
+```
+
+`backend` 为 `state`、`indexer`；非法消息等未选定后端的错误为 `null`。
+连接错误包括 `upstream_failure`、`upstream_timeout`、`upstream_handshake_rejected`、`invalid_upstream_handshake`。后端拒绝握手的 HTTP 状态、响应体、头不透传到前端握手；业务 WS 消息则原样返回。
 
 TCP 总连接超限直接关闭新连接。写入停滞或 WS 空闲到期关闭传输，不向已开始的响应追加错误体。
 交易返回 502/504 不代表交易一定未入池，不自动重发、不判断业务最终状态。
@@ -155,7 +172,7 @@ TCP 总连接超限直接关闭新连接。写入停滞或 WS 空闲到期关闭
 - [src/routing.rs](src/routing.rs)：接口归属。
 - [src/config.rs](src/config.rs)：配置校验。
 - [src/http_proxy.rs](src/http_proxy.rs)：HTTP 转发和缓冲边界。
-- [src/websocket.rs](src/websocket.rs)：握手和隧道。
+- [src/websocket.rs](src/websocket.rs)：握手、订阅分流和连接生命周期。
 - [src/headers.rs](src/headers.rs)：头过滤。
 - [src/server.rs](src/server.rs)、[src/transport.rs](src/transport.rs)：访问、连接与停机管理。
 - [tests/http_proxy.rs](tests/http_proxy.rs)、[tests/websocket.rs](tests/websocket.rs)、[tests/lifecycle.rs](tests/lifecycle.rs)：模拟后端与生命周期测试。
@@ -173,7 +190,7 @@ cargo clippy --offline --locked --all-targets -j 2 -- -D warnings
 
 1. 目标服务器的交易端口转发连通性；配置来自实际容器信息，尚未在目标机器实测或提交真实交易。
 2. 目标服务器的状态 APIServer、indexer HTTP/WS 连通性；默认地址已配置，尚未在目标机器实测。
-3. 真实前端 SDK/schema、浏览器跨域、WSS/TLS 和压缩协商验收。
+3. 状态服务 `/ws` 实现及真实前端 SDK/schema、浏览器跨域、WSS/TLS 验收；本次不支持压缩／子协议协商。
 4. 生产证书、域名、可信代理、容量与超时配置。
 5. `userRateLimit`、`exchangeStatus`、Bootstrap、维护模式、业务幂等、统一业务错误：按约定暂不实现，这些 info 类型目前返回 400。
 

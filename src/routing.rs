@@ -8,11 +8,11 @@ pub enum InfoBackend {
 
 pub const INDEXER_TYPES: &[&str] = &[
     "allMids",
+    "recentTrades",
     "l2Book",
     "webData2",
     "candleSnapshot",
     "historicalOrders",
-    "orderStatus",
     "userFills",
     "userFillsByTime",
     "userFunding",
@@ -24,16 +24,24 @@ pub const STATE_TYPES: &[&str] = &[
     "meta",
     "metaAndAssetCtxs",
     "extraAgents",
-    "recentTrades",
     "clearinghouseState",
     "activeAssetData",
     "openOrders",
     "frontendOpenOrders",
+    "orderStatus",
     "userFees",
     "unifiedBalances",
     "accountNonces",
     "marketSnapshot",
 ];
+
+/// WS subscription ownership is independent from POST /info ownership.
+pub fn websocket_backend(subscription_type: &str) -> InfoBackend {
+    match subscription_type {
+        "assetCtxs" | "clearinghouseState" => InfoBackend::State,
+        _ => InfoBackend::Indexer,
+    }
+}
 
 pub fn info_backend(body: &[u8]) -> Option<InfoBackend> {
     // Derived serde structs also accept sequences; the wire contract requires an object.
@@ -62,6 +70,22 @@ pub fn info_backend(body: &[u8]) -> Option<InfoBackend> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn websocket_types_have_one_owner() {
+        for kind in ["assetCtxs", "clearinghouseState"] {
+            assert_eq!(websocket_backend(kind), InfoBackend::State);
+        }
+        for kind in [
+            "l2Book",
+            "allMids",
+            "activeAssetCtx",
+            "openOrders",
+            "futureType",
+        ] {
+            assert_eq!(websocket_backend(kind), InfoBackend::Indexer);
+        }
+    }
 
     #[test]
     fn documented_types_have_one_owner() {

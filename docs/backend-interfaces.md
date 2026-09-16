@@ -10,7 +10,7 @@
 
 | 后端服务 | 网关入口 | 默认后端地址 | 主要职责 |
 | --- | --- | --- | --- |
-| 状态 APIServer | `POST /info` | `http://host.docker.internal:36020/info` | 读取当前账户、市场和链上状态 |
+| 状态 APIServer | `POST /info`、`GET /ws` | `http://host.docker.internal:36020/info`、`ws://host.docker.internal:36020/ws` | 当前状态查询，以及 `assetCtxs`／`clearinghouseState` 订阅 |
 | indexer | `POST /info`、`GET /ws` | `http://host.docker.internal:36018/info`、`ws://host.docker.internal:36018/ws` | 历史查询、订单簿查询和实时行情／账户订阅 |
 | 交易池 APIServer | `POST /exchange` | `http://host.docker.internal:36014/exchange` | 接收已经签名的交易动作并进行本地校验、入池 |
 
@@ -27,17 +27,19 @@
 | `meta` | 可选 `dex` | 市场元数据、交易品种列表和基础配置 |
 | `metaAndAssetCtxs` | 可选 `dex` | 返回市场元数据及市场上下文 |
 | `extraAgents` | `user` | 查询用户当前有效且已命名的 API wallet／agent |
-| `recentTrades` | 通常包含市场标识 | 查询最近成交 |
 | `clearinghouseState` | `user`，可选 `dex` | 查询用户持仓、保证金、账户权益和未实现盈亏 |
 | `activeAssetData` | `user`、`coin` | 查询用户在指定市场的杠杆、可交易数量和标记价格等状态 |
 | `openOrders` | `user`，可选 `dex` | 查询用户当前订单 |
 | `frontendOpenOrders` | `user`，可选 `dex` | 查询前端展示格式的用户当前订单 |
+| `orderStatus` | `user`、`oid` | 查询订单状态；参数及响应语义由状态 APIServer 负责 |
 | `userFees` | 通常包含 `user` | 查询用户手续费信息 |
 | `unifiedBalances` | 通常包含 `user` | 查询统一账户余额 |
 | `accountNonces` | 通常包含 `user` | 查询账户 nonce |
 | `marketSnapshot` | 通常包含市场标识 | 查询市场状态快照 |
 
 网关当前只按 `type` 选择后端，其余请求字段原样转发，不在网关重新解析或组装业务响应。
+
+`orderStatus` 只访问状态 APIServer 一次，不回退到 indexer。网关不校验下游是否实现该接口；下游未实现或业务错误也原样透传。
 
 `extraAgents` 由状态 APIServer 从已同步到副本头部的 `SessionRegistry` 读取。它只返回当前仍有效且已命名的 agent；默认钥匙、已撤销、未生效或已过期的 agent 不返回。请求格式为：
 
@@ -64,11 +66,29 @@
 
 ### 2.2 状态服务的边界
 
-- 状态服务只提供 HTTP 查询，不提供网关侧的 WebSocket 订阅入口。
+- 除 HTTP 查询外，网关将 `assetCtxs`、`clearinghouseState` 的 WS 订阅／取消订阅发往状态服务 `/ws`。后端入口及数据推送由状态服务团队实现，网关不使用 HTTP 轮询代替订阅。
 - `GET /healthz` 是网关自身存活检查，不会转发到状态服务。
 - 以下类型不属于当前网关开放的状态查询白名单：`stateInfo`、`block`、`bridgeSnapshot`、`bridgeDepositStatus`、`bridgeWithdrawalStatus`、`accountOverview`、`userRateLimit`、`exchangeStatus`。
 - 状态服务源码还包含其他内部或未由网关开放的查询类型。它们不能直接通过网关访问，除非先更新网关路由白名单。
 - 当前服务器联调时，`clearinghouseState` 已验证可返回 `200`；`meta` 曾由实际状态服务返回 `501`（`unsupported info type`）。这属于下游实现状态，网关会原样透传，不代表网关自动补齐该接口。
+
+### 2.3 状态服务 WebSocket 约定
+
+前端仍连接网关 `/ws`，请求形状不变；同一条前端连接上的其他订阅可以继续发往 indexer。
+
+| 订阅 `type` | 参数 | 归属 |
+| --- | --- | --- |
+| `assetCtxs` | 可选 `dex` | 状态服务 `/ws` |
+| `clearinghouseState` | `user`；可选 `dex` | 状态服务 `/ws` |
+
+```json
+{"method":"subscribe","subscription":{"type":"assetCtxs","dex":""}}
+{"method":"subscribe","subscription":{"type":"clearinghouseState","user":"0x1111111111111111111111111111111111111111","dex":""}}
+```
+
+取消订阅只需将 `method` 改为 `unsubscribe`。网关保留请求文本和所有业务字段，不补默认 `dex`，不校验账户或计算数据。后端应沿用现有 `subscriptionResponse` 确认及对应 `channel` 推送格式；网关不代发订阅成功，也不转换响应 schema。
+
+网关按需连接状态服务，即便状态 `/ws` 尚未上线，单独使用 indexer 的连接不受影响。若发起状态订阅时连接失败，网关返回 `channel:error`，不会退回 indexer。连接建立后若任一上游断开，会关闭整条前端连接，由客户端重连并恢复订阅。详情见 [README 的 WebSocket 语义](../README.md#websocket-语义)。
 
 ## 3. Indexer
 
@@ -81,22 +101,22 @@ Indexer 同时负责 HTTP 查询和 WebSocket 实时订阅。
 | `type` | 主要参数 | 用途 |
 | --- | --- | --- |
 | `allMids` | 通常无额外参数 | 查询全部市场的中间价 |
+| `recentTrades` | 通常包含市场标识 | 查询最近成交 |
 | `l2Book` | `coin`，可选 `nSigFigs`、`nLevels`、`mantissa` | 查询 L2 聚合订单簿 |
 | `webData2` | `user` | 返回前端页面加载所需的账户和市场聚合数据 |
 | `candleSnapshot` | `coin`、`interval`、时间范围 | 查询 K 线快照 |
 | `historicalOrders` | `user` | 查询用户近期历史订单 |
-| `orderStatus` | `user`、`oid` | 查询用户自己的订单状态；`oid` 可以是数字订单 ID 或 cloid |
 | `userFills` | `user` | 查询用户近期成交 |
 | `userFillsByTime` | `user`、`startTime`，可选 `endTime` | 按时间范围查询用户成交 |
 | `userFunding` | `user`、`startTime`，可选 `endTime` | 按时间范围查询用户资金费 |
 | `fundingHistory` | `coin`、`startTime`，可选 `endTime` | 按时间范围查询市场资金费历史 |
 | `userNonFundingLedgerUpdates` | `user`、`startTime`，可选 `endTime` | 按时间范围查询用户非资金类账本变更 |
 
-`orderStatus` 只访问 indexer，不回退到状态 APIServer。Indexer 自己负责订单状态索引、历史文件读取、订单簿快照和数据组装。
+Indexer 自己负责订单状态索引、历史文件读取、订单簿快照和数据组装；网关的 `orderStatus` 请求不再发往 indexer。
 
 ### 3.2 WebSocket `/ws` 订阅
 
-前端通过 `GET /ws` 发起 HTTP/1.1 Upgrade。网关成功连接 indexer 后，只做双向字节隧道，不解析或改写 WebSocket 帧。
+前端通过 `GET /ws` 发起 HTTP/1.1 Upgrade。网关按订阅消息选择后端，不再将整条连接透明代理到 indexer。以下类型仍转 indexer；`assetCtxs`、`clearinghouseState` 已迁至状态服务。
 
 客户端发送的基本格式是：
 
@@ -109,7 +129,7 @@ Indexer 同时负责 HTTP 查询和 WebSocket 实时订阅。
 }
 ```
 
-取消订阅时将 `method` 改为 `unsubscribe`；连接级 JSON 心跳使用 `{"method":"ping"}`。
+取消订阅时将 `method` 改为 `unsubscribe`，仍只发到订阅所属后端。连接级 JSON 心跳 `{"method":"ping"}` 由网关回复一次 `{"channel":"pong"}`；网关向已连接后端发送 RFC Ping 保活，后端需要遵守 RFC Ping/Pong。
 
 #### 市场和订单簿订阅
 
@@ -123,7 +143,6 @@ Indexer 同时负责 HTTP 查询和 WebSocket 实时订阅。
 | `activeAssetCtx` | `coin` | 永续市场上下文，例如标记价格、资金费率相关上下文 |
 | `activeSpotAssetCtx` | `coin` | Spot 市场上下文 |
 | `allMids` | 无 | 全部市场中间价 |
-| `assetCtxs` | 可选 `dex` | 全部永续市场上下文 |
 | `candle` | `coin`、`interval` | K 线实时更新 |
 
 #### 用户和账户订阅
@@ -136,11 +155,10 @@ Indexer 同时负责 HTTP 查询和 WebSocket 实时订阅。
 | `userFundings` | `user` | 用户资金费推送 |
 | `userNonFundingLedgerUpdates` | `user` | 用户非资金类账本更新 |
 | `userHistoricalOrders` | `user` | 用户历史订单状态推送 |
-| `clearinghouseState` | `user`；可选 `dex` | 用户持仓和账户状态变化 |
 | `openOrders` | `user`；可选 `dex` | 用户当前订单变化 |
 | `activeAssetData` | `user`、`coin` | 用户在指定市场的交易状态变化 |
 
-Indexer 当前源码共定义上述 **19 种** WebSocket 订阅类型。网关不新增订阅类型，也不在网关缓存或合并订阅数据。
+上述 **17 种**订阅仍由 indexer 处理，另外 **2 种**转状态服务。Indexer 内部即使仍支持这两种订阅，网关也不会向它发送。其他字符串订阅类型继续交给 indexer 判断是否支持。网关只汇集两条后端连接的消息，不缓存或聚合业务数据。
 
 ### 3.3 Indexer 订阅行为边界
 
@@ -148,7 +166,8 @@ Indexer 当前源码共定义上述 **19 种** WebSocket 订阅类型。网关�
 - `userFills`、`userEvents`、资金费和账本类订阅需要合法的 42 字符 `0x` 用户地址。
 - `l2Book` 的 `nSigFigs`、`nLevels` 和 `mantissa` 有 indexer 自身的校验及上限。
 - `candle` 的 `interval` 必须是 indexer 支持的时间周期。
-- WebSocket 关闭、重连、订阅去重和订阅数量限制由 indexer 与客户端负责，网关不自动重连。
+- 订阅去重和业务订阅数量限制由后端与客户端负责；网关限制连接数、消息大小和写入时间，不自动重连。
+- 前端订阅为 JSON 文本；网关处理分片，不协商压缩扩展或子协议，两个后端都需接受普通无压缩 WS。
 
 ## 4. 交易池 APIServer
 
@@ -214,11 +233,12 @@ Indexer 当前源码共定义上述 **19 种** WebSocket 订阅类型。网关�
   ├─ 状态类型       -> 状态 APIServer /info
   └─ indexer 类型   -> indexer /info
 
-前端 GET /ws Upgrade
-  └─ 整条字节隧道   -> indexer /ws
+前端 GET /ws Upgrade（每条订阅消息分别路由）
+  ├─ assetCtxs / clearinghouseState -> 状态 APIServer /ws
+  └─ 其余订阅类型                  -> indexer /ws
 
 前端 POST /exchange
   └─ 原始请求体     -> 交易池 APIServer /exchange
 ```
 
-网关的关键原则是：**负责分流，不负责业务完成**。状态计算由状态 APIServer 完成，历史和订阅由 indexer 完成，验签和交易入池由交易池 APIServer 完成。
+网关的关键原则是：**负责分流，不负责业务完成**。状态计算及上述两类订阅由状态 APIServer 完成，历史和其余订阅由 indexer 完成，验签和交易入池由交易池 APIServer 完成。

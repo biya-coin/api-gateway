@@ -226,11 +226,11 @@ async fn all_23_approved_info_types_reach_their_only_upstream() {
                 "meta",
                 "metaAndAssetCtxs",
                 "extraAgents",
-                "recentTrades",
                 "clearinghouseState",
                 "activeAssetData",
                 "openOrders",
                 "frontendOpenOrders",
+                "orderStatus",
                 "userFees",
                 "unifiedBalances",
                 "accountNonces",
@@ -241,11 +241,11 @@ async fn all_23_approved_info_types_reach_their_only_upstream() {
             INDEXER_TYPES,
             &[
                 "allMids",
+                "recentTrades",
                 "l2Book",
                 "webData2",
                 "candleSnapshot",
                 "historicalOrders",
-                "orderStatus",
                 "userFills",
                 "userFillsByTime",
                 "userFunding",
@@ -354,15 +354,23 @@ async fn s1_exchange_actions_and_local_admission_results_are_forwarded_verbatim(
 }
 
 #[tokio::test]
-async fn order_status_never_retries_or_falls_back_to_state() {
+async fn order_status_never_retries_or_falls_back_to_indexer() {
     bounded(async {
-        let mut state = MockUpstream::fixed("must not query state").await;
+        let mut indexer = MockUpstream::fixed("must not query indexer").await;
         for (status, body) in [
             (StatusCode::OK, r#"{"status":"unknownOid"}"#),
+            (
+                StatusCode::BAD_REQUEST,
+                r#"{"error":"unknown info type: orderStatus"}"#,
+            ),
             (StatusCode::NOT_FOUND, "not found"),
-            (StatusCode::SERVICE_UNAVAILABLE, "indexer unavailable"),
+            (
+                StatusCode::NOT_IMPLEMENTED,
+                r#"{"error":"unsupported info type: orderStatus"}"#,
+            ),
+            (StatusCode::SERVICE_UNAVAILABLE, "state unavailable"),
         ] {
-            let mut indexer = MockUpstream::start(move || async move {
+            let mut state = MockUpstream::start(move || async move {
                 Response::builder()
                     .status(status)
                     .body(Body::from(body))
@@ -377,12 +385,9 @@ async fn order_status_never_retries_or_falls_back_to_state() {
             let response = send(&app, post("/info", request)).await;
             assert_eq!(response.status(), status);
             assert_eq!(bytes(response).await.as_ref(), body.as_bytes());
-            assert_eq!(
-                indexer.next_request().await.body.as_ref(),
-                request.as_bytes()
-            );
-            indexer.assert_no_requests();
+            assert_eq!(state.next_request().await.body.as_ref(), request.as_bytes());
             state.assert_no_requests();
+            indexer.assert_no_requests();
         }
     })
     .await;
@@ -574,7 +579,8 @@ async fn missing_upstreams_return_503_without_using_another_configured_backend()
         let mut upstream = MockUpstream::fixed("must not be used as fallback").await;
         for (missing, path, body) in [
             ("state", "/info", r#"{"type":"meta"}"#),
-            ("indexer", "/info", r#"{"type":"orderStatus"}"#),
+            ("state", "/info", r#"{"type":"orderStatus"}"#),
+            ("indexer", "/info", r#"{"type":"allMids"}"#),
             ("exchange", "/exchange", r#"{"nonce":1}"#),
         ] {
             let mut config = config();

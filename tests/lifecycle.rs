@@ -6,12 +6,17 @@ use axum::{
     http::{Request, StatusCode},
     Router,
 };
+use futures_util::{SinkExt, StreamExt};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::{TcpListener, TcpSocket, TcpStream},
     sync::{mpsc, oneshot},
     task::JoinHandle,
     time::timeout,
+};
+use tokio_tungstenite::{
+    tungstenite::{protocol::Role, Message},
+    WebSocketStream,
 };
 use tower::ServiceExt;
 
@@ -149,7 +154,7 @@ async fn shutdown_cancels_incomplete_write_before_it_can_reach_upstream() {
 }
 
 #[tokio::test]
-async fn shutdown_cancels_pending_websocket_handshake_before_registering_tunnel() {
+async fn shutdown_cancels_pending_lazy_websocket_handshake() {
     timeout(Duration::from_secs(5), async {
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let url = format!("ws://{}/ws", listener.local_addr().unwrap());
@@ -173,21 +178,32 @@ async fn shutdown_cancels_pending_websocket_handshake_before_registering_tunnel(
         let mut task = Task(tokio::spawn(server::serve(listener, config, async {
             let _ = stopped.await;
         })));
-        let client = reqwest::Client::builder().no_proxy().build().unwrap();
-        let mut request = Task(tokio::spawn(async move {
-            client
-                .get(format!("http://{address}/ws"))
-                .header("connection", "upgrade")
-                .header("upgrade", "websocket")
-                .header("sec-websocket-version", "13")
-                .header("sec-websocket-key", "dGhlIHNhbXBsZSBub25jZQ==")
-                .send()
-                .await
-        }));
+        let response = reqwest::Client::builder()
+            .no_proxy()
+            .build()
+            .unwrap()
+            .get(format!("http://{address}/ws"))
+            .header("connection", "upgrade")
+            .header("upgrade", "websocket")
+            .header("sec-websocket-version", "13")
+            .header("sec-websocket-key", "dGhlIHNhbXBsZSBub25jZQ==")
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(response.status(), 101);
+        let mut client =
+            WebSocketStream::from_raw_socket(response.upgrade().await.unwrap(), Role::Client, None)
+                .await;
+        client
+            .send(Message::text(
+                r#"{"method":"subscribe","subscription":{"type":"allMids"}}"#,
+            ))
+            .await
+            .unwrap();
         seen.recv().await.unwrap();
         stop.send(()).unwrap();
         (&mut task.0).await.unwrap().unwrap();
-        assert!((&mut request.0).await.unwrap().is_err());
+        assert!(client.next().await.unwrap().is_err());
     })
     .await
     .unwrap();

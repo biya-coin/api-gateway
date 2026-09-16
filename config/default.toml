@@ -12,6 +12,8 @@ filter = "info"
 # 状态容器 bybchain-api-server-api-server-1 使用 bybchain-api-server_default 网络。
 # 通过宿主机 36020 -> 状态容器 8888 访问，无需加入后端网络。
 state_info = "http://host.docker.internal:36020/info"
+# assetCtxs / clearinghouseState 的 WS 订阅；后端实现由状态服务提供。
+state_ws = "ws://host.docker.internal:36020/ws"
 # indexer 容器 biya-indexer 使用 biya-indexer_default 网络，通过宿主机映射访问。
 # 9090 和 36018 均映射至容器 8888，统一使用 36018；36019 -> 8889 不用于转发。
 indexer_info = "http://host.docker.internal:36018/info"
@@ -34,9 +36,11 @@ max_in_flight = 128
 [websocket]
 handshake_timeout_ms = 5000
 max_connections = 1024
-# 每个方向的固定拷贝缓冲，不缓存业务消息、不限制单帧大小。
+# 保留原配置键，现为每条 WebSocket 的读取缓冲大小。
 tunnel_buffer_bytes = 8192
-# 0 表示允许静默订阅；非零时按双向字节活动计算空闲时间。
+# 双向单条完整消息及单帧上限，包含分片重组后的消息。
+max_message_bytes = 4194304
+# 0 表示允许静默订阅；非零时按客户端或上游完整消息活动计算空闲时间。
 idle_timeout_ms = 0
 
 [access]

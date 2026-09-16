@@ -36,15 +36,16 @@ Compose 默认将映射端口绑定到宿主机 `0.0.0.0`，监听所有 IPv4 �
 | indexer 另一端口映射 | `127.0.0.1:36019 -> 8889/tcp`，网关不使用 |
 | 网关 indexer 后端 URL | `http://host.docker.internal:36018/info` 和 `ws://host.docker.internal:36018/ws` |
 | 状态服务容器／网络 | `bybchain-api-server-api-server-1` / `bybchain-api-server_default` |
-| 状态 HTTP 映射 | `0.0.0.0:36020 -> 8888/tcp` |
-| 网关状态后端 URL | `http://host.docker.internal:36020/info` |
+| 状态 HTTP/WS 映射 | `0.0.0.0:36020 -> 8888/tcp` |
+| 网关状态后端 URL | `http://host.docker.internal:36020/info` 和 `ws://host.docker.internal:36020/ws` |
 
 **直接使用项目默认配置即可，不需要创建本地配置或填写网络名。** Compose 默认挂载 [config/default.toml](../config/default.toml)，并使用 `network_mode: bridge`。
 内置 bridge 不提供容器名自动解析，因此不能直接把交易容器名当成主机名。Compose 通过 `extra_hosts` 将 `host.docker.internal` 映射到 Docker 的 `host-gateway`，从网关容器经宿主机 `36014` 访问交易容器 `8888`。
 indexer 和状态 APIServer 同样经宿主机映射端口 `36018`、`36020` 访问，不要求网关加入后端网络。
 该方案要求 Docker Engine 20.10 或更高版本，不修改或重启后端容器，也不创建共享网络。
 
-三个后端的默认地址均已配置，路由规则不变；宿主机端口连通性仍需在目标服务器验证。
+三个后端的默认地址均已配置。WS 的 `assetCtxs`、`clearinghouseState` 改为通过新增的 `upstreams.state_ws` 访问状态服务；其余订阅仍走 indexer。旧挂载配置需补上此键，不能只替换镜像。状态 `/ws` 由后端团队提供，上线后需验证订阅确认、推送和取消订阅；网关健康检查不证明其可用。
+WS 现在按消息分流，不协商压缩或子协议。每条前端连接最多建立两条上游连接，部署前请核对连接数和消息缓冲的内存预算。
 **容器里的 `localhost` 只指该容器自己**，不是宿主机。Linux 宿主机直接运行程序时，可另用 `http://127.0.0.1:36014/exchange`。
 
 网关镜像使用非 root 的 UID/GID `10001:10001`。挂载配置须对该用户可读，且父目录可遍历；Compose 不会自动创建不存在的配置文件。

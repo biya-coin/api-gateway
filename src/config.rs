@@ -45,6 +45,7 @@ pub struct Upstreams {
     pub indexer_info: Option<Url>,
     pub exchange: Option<Url>,
     pub indexer_ws: Option<Url>,
+    pub state_ws: Option<Url>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -80,7 +81,9 @@ impl Default for HttpConfig {
 pub struct WebSocketConfig {
     pub handshake_timeout_ms: u64,
     pub max_connections: usize,
+    /// Retained configuration key; now sizes each WebSocket read buffer.
     pub tunnel_buffer_bytes: usize,
+    pub max_message_bytes: usize,
     /// Zero disables the idle timeout: quiet subscriptions are not failures.
     pub idle_timeout_ms: u64,
 }
@@ -91,6 +94,7 @@ impl Default for WebSocketConfig {
             handshake_timeout_ms: 5_000,
             max_connections: 1_024,
             tunnel_buffer_bytes: 8_192,
+            max_message_bytes: 4 * 1024 * 1024,
             idle_timeout_ms: 0,
         }
     }
@@ -135,6 +139,7 @@ impl Config {
             ),
             ("exchange", &self.upstreams.exchange, &["http", "https"][..]),
             ("indexer_ws", &self.upstreams.indexer_ws, &["ws", "wss"][..]),
+            ("state_ws", &self.upstreams.state_ws, &["ws", "wss"][..]),
         ] {
             if let Some(url) = endpoint {
                 anyhow::ensure!(
@@ -180,8 +185,9 @@ impl Config {
         anyhow::ensure!(
             (1..=256 * 1024 * 1024).contains(&self.http.max_request_body_bytes)
                 && (1..=256 * 1024 * 1024).contains(&self.http.max_response_body_bytes)
-                && (1..=1024 * 1024).contains(&self.websocket.tunnel_buffer_bytes),
-            "body limits must be 1..256MiB; tunnel buffer must be 1..1MiB"
+                && (1..=1024 * 1024).contains(&self.websocket.tunnel_buffer_bytes)
+                && (1..=256 * 1024 * 1024).contains(&self.websocket.max_message_bytes),
+            "body/message limits must be 1..256MiB; WebSocket read buffer must be 1..1MiB"
         );
         for origin in &self.access.allowed_origins {
             if origin == "*" {
@@ -225,6 +231,11 @@ mod tests {
             config.upstreams.state_info.as_ref().map(Url::as_str),
             Some("http://host.docker.internal:36020/info")
         );
+        assert_eq!(
+            config.upstreams.state_ws.as_ref().map(Url::as_str),
+            Some("ws://host.docker.internal:36020/ws")
+        );
+        assert_eq!(config.websocket.max_message_bytes, 4 * 1024 * 1024);
         assert_eq!(
             config.upstreams.exchange.as_ref().map(Url::as_str),
             Some("http://host.docker.internal:36014/exchange")
@@ -279,6 +290,41 @@ mod tests {
         config.upstreams.indexer_ws = Some("wss://localhost/ws".parse().unwrap());
         config.upstreams.state_info = Some("https://localhost/prefix/info".parse().unwrap());
         assert!(config.validate().is_ok());
+    }
+
+    #[test]
+    fn old_configs_without_state_ws_or_message_limit_remain_valid() {
+        let old = EXAMPLE
+            .lines()
+            .filter(|line| {
+                !line.starts_with("state_ws =") && !line.starts_with("max_message_bytes =")
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+        let config = Config::parse(&old).unwrap();
+        assert!(config.upstreams.state_ws.is_none());
+        assert!(config.upstreams.indexer_ws.is_some());
+        assert_eq!(config.websocket.max_message_bytes, 4 * 1024 * 1024);
+    }
+
+    #[test]
+    fn state_websocket_requires_ws_scheme_and_can_be_omitted() {
+        let mut config = Config::parse(EXAMPLE).unwrap();
+        for endpoint in [
+            "http://localhost/ws",
+            "ws://user:secret@localhost/ws",
+            "ws://localhost/ws?token=secret",
+            "ws://localhost/ws#fragment",
+        ] {
+            config.upstreams.state_ws = Some(endpoint.parse().unwrap());
+            assert!(config.validate().is_err());
+        }
+        config.upstreams.state_ws = Some("wss://localhost/ws".parse().unwrap());
+        assert!(config.validate().is_ok());
+        config.upstreams.state_ws = None;
+        assert!(config.validate().is_ok());
+        config.websocket.max_message_bytes = 0;
+        assert!(config.validate().is_err());
     }
 
     #[test]
