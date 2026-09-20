@@ -361,6 +361,9 @@ def main():
     page = render(store, spec)
     (in_dir / "portal.html").write_text(page, encoding="utf-8")
     print(f"render-portal: OK items={len(post_items)}post/{len(ws_items)}ws -> {in_dir / 'portal.html'}")
+    import re as _re
+    for _tag in _re.findall(r"<[^>]*\shidden>", page):
+        assert "try-" not in _tag, "attribute-hidden on JS-toggled element: " + _tag[:80]
 
 
 def build_responses(schemas):
@@ -516,7 +519,7 @@ def render_post(store, item):
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
 <div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
 <button class="send">发送</button><span class="try-meta"></span></div>
-<pre class="code try-resp" hidden></pre>
+<pre class="code try-resp hidden"></pre>
 <textarea class="try-body" spellcheck="false">{esc(prefill)}</textarea>
 <pre class="code try-view hidden"></pre>
 <div class="try-bar"><button class="copybtn hidden">复制当前预览</button></div>
