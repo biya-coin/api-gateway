@@ -35,27 +35,16 @@ RESPONSE_MAP = {
     ("Exchange", "health"): ("sample", {"status": "ok"}),
     ("Exchange", "stateInfo"): ("note", "透传 connected node 的 /info 结果，其中 blockHeight 是当前区块高度。"),
     ("Exchange", "block"): ("note", "透传 connected node 的区块内容（需带 height）。"),
-    ("Exchange", "bridgeSnapshot"): ("note", "透传 connected node，原样返回。"),
-    ("Exchange", "bridgeDepositStatus"): ("note", "透传 connected node，原样返回。"),
-    ("Exchange", "bridgeWithdrawalStatus"): ("note", "透传 connected node，原样返回。"),
-    ("Exchange", "clearinghouseState"): ("note", "本服务仅透传；经网关调用时该 type 走状态服务。"),
-    ("Exchange", "accountOverview"): ("note", "透传 connected node，原样返回。"),
-    ("Exchange", "unifiedBalances"): ("note", "透传 connected node，原样返回。"),
-    ("Exchange", "accountNonces"): ("note", "透传 connected node，原样返回。"),
     ("State", "meta"): ("schema", "State__MetaResponse"),
     ("State", "metaAndAssetCtxs"): ("note", "[meta, 行情数组] 二元数组，行情与 universe 一一对应、顺序相同。"),
-    ("State", "allMids"): ("sample", {"mids": {"BTCUSDC": "76600.5"}}),
-    ("State", "l2Book"): ("schema", "State__L2BookResponse"),
     ("State", "clearinghouseState"): ("schema", "State__ClearinghouseStateResponse"),
     ("State", "openOrders"): ("schema", ["State__OpenOrderResponse"]),
     ("State", "frontendOpenOrders"): ("schema", ["State__NodeDataOrder"]),
     ("State", "extraAgents"): ("schema", ["State__ExtraAgentResponse"]),
     ("State", "activeAssetData"): ("schema", "State__ActiveAssetDataResponse"),
     ("State", "userFees"): ("schema", "State__UserFeesResponse"),
-    ("State", "recentTrades"): ("schema", ["State__RecentTradeResponse"]),
     ("State", "exchangeStatus"): ("schema", "State__ExchangeStatusResponse"),
     ("State", "orderStatus"): ("schema", "State__OrderStatusResponse"),
-    ("State", "webData2"): ("schema", "State__WebData2Response"),
     ("Indexer", "metaAndAssetCtxs"): ("note", "[meta, 行情数组]；meta 取自上游节点，行情取自本地 ctxs。"),
     ("Indexer", "webData2"): ("note", "页面加载聚合对象（账户 + 挂单 + 元数据 + 行情）。"),
     ("Indexer", "allMids"): ("sample", {"mids": {"BTCUSDC": "76600.5"}}),
@@ -76,10 +65,6 @@ STATUS_TABLES = {
     ("Exchange", "__exchange__"): [
         ("200", "本地处理结果：code 0=已入池；1001 参数/哈希失败；1002 重复交易；1003 签名失败。"),
         ("400", "malformed JSON，Axum 在进业务逻辑前拒绝。"),
-    ],
-    ("Exchange", "__info__"): [
-        ("200", "health 结果或节点透传结果；透传失败也以 200 + {\"error\"} 返回。"),
-        ("400", "malformed JSON。"),
     ],
     ("State", "__info__"): [
         ("200", "查询结果。"),
@@ -109,6 +94,32 @@ FIELD_OVERRIDES = {
 
 def esc(text):
     return html.escape(str(text), quote=True)
+
+
+def gateway_routing():
+    """(state_types, indexer_types) from the gateway router (single source of truth).
+    A type in neither list gets HTTP 400 at the gateway."""
+    import re
+
+    code = (GATEWAY_ROOT / "src" / "routing.rs").read_text()
+
+    def string_list(name):
+        match = re.search(name + r": &\[&str\] = &\[(.*?)\];", code, re.S)
+        return set(re.findall(r'"([^"]+)"', match.group(1))) if match else set()
+
+    return string_list("STATE_TYPES"), string_list("INDEXER_TYPES")
+
+
+def info_route_of(state_types, indexer_types, type_value):
+    if type_value in state_types:
+        return "State"
+    if type_value in indexer_types:
+        return "Indexer"
+    return None
+
+
+def ws_route_of(type_value):
+    return "State" if type_value in ("assetCtxs", "clearinghouseState") else "Indexer"
 
 
 def ws_prefill(sub):
@@ -179,6 +190,24 @@ def sample_of(schemas, schema, field_name="", depth=0):
     return None
 
 
+def type_label(prop):
+    if "$ref" in prop:
+        return prop["$ref"].split("/")[-1]
+    kind = prop.get("type")
+    if isinstance(kind, list):
+        return " | ".join(x for x in kind if x != "null") or "string"
+    if kind:
+        return kind
+    for key in ("oneOf", "anyOf"):
+        if prop.get(key):
+            return " | ".join(type_label(branch) for branch in prop[key])
+    if "const" in prop:
+        return "常量"
+    if "enum" in prop:
+        return "枚举"
+    return "object"
+
+
 def prefill_of(schemas, schema):
     """Prefill keeps required fields only (clean test case, user edits)."""
     schema = resolve(schemas, schema)
@@ -213,11 +242,12 @@ def main():
         ws_by_service.setdefault(item["service"], []).append(item)
 
     service_of_tag = {"Exchange": "exchange-apiserver", "State": "bybchain-api-server", "Indexer": "biya-indexer"}
+    state_types, indexer_types = gateway_routing()
 
     # ---- model: per-service POST items (one per type) + WS items ----
     post_items = []  # {id, service, kind, type, title, desc, params, required, response, prefill, path}
-    for tag in SERVICE_ORDER:
-        union_name = {"Exchange": "Exchange__InfoRequest", "State": "State__InfoRequest", "Indexer": "Indexer__InfoRequest"}[tag]
+    for tag in ("State", "Indexer"):
+        union_name = {"State": "State__InfoRequest", "Indexer": "Indexer__InfoRequest"}[tag]
         refs = []
         for ref in schemas[union_name].get("oneOf", []):
             nested = resolve(schemas, ref)
@@ -236,7 +266,7 @@ def main():
             params = [
                 {
                     "name": name,
-                    "type": json.dumps(prop.get("type", "object"), ensure_ascii=False),
+                    "type": type_label(prop),
                     "required": name in required,
                     "desc": prop.get("description", ""),
                 }
@@ -248,6 +278,7 @@ def main():
                 {
                     "id": f"post-{tag}-{type_value}",
                     "service": tag,
+                    "route": info_route_of(state_types, indexer_types, type_value),
                     "type": type_value,
                     "title": type_value,
                     "desc": variant.get("description", ""),
@@ -263,11 +294,12 @@ def main():
         {
             "id": "post-Exchange-exchange",
             "service": "Exchange",
+            "route": "Exchange",
             "type": "__exchange__",
             "title": "/exchange · 提交签名动作",
             "desc": "提交已签名的 exchange action；accepted 仅表示通过本地校验进入交易池，不代表链上执行。",
             "params": [
-                {"name": "action", "type": "object", "required": True, "desc": "9 种动作 oneOf（order/cancel/cancelByCloid/cancelAll/updateLeverage/batchModify/usdSend/withdraw3/approveAgent），见 Models。"},
+                {"name": "action", "type": "object", "required": True, "desc": "9 种动作 oneOf（order/cancel/cancelByCloid/cancelAll/updateLeverage/batchModify/usdSend/withdraw3/approveAgent），。各动作字段见下表与片段说明。"},
                 {"name": "nonce", "type": "integer", "required": True, "desc": "用户 nonce，必须大于 0。"},
                 {"name": "signature", "type": "object", "required": True, "desc": "{r, s, v}；r/s 32 字节 hex，v 为 27/28。"},
                 {"name": "vaultAddress", "type": "string", "required": False, "desc": "可选，20 字节 hex。"},
@@ -291,6 +323,7 @@ def main():
                 {
                     "id": f"ws-{tag}-{sub['type']}",
                     "service": tag,
+                    "route": ws_route_of(sub["type"]),
                     "type": sub["type"],
                     "params": sub.get("params", []),
                     "channel": sub.get("pushChannel", ""),
@@ -405,9 +438,16 @@ def render_nav(store):
         parts.append("<div class=\"nav-sec\">POST 接口</div>")
         for item in svc["posts"]:
             label = "动作提交" if item["type"] == "__exchange__" else item["type"]
+            route = item.get("route")
+            if route is None:
+                hint = '<span class="nav-hint off">网关未开放</span>'
+            elif route != svc["tag"]:
+                hint = '<span class="nav-hint warn">→' + route + '</span>'
+            else:
+                hint = ''
             parts.append(
                 f"<a class=\"nav-item\" data-id=\"{item['id']}\" data-keys=\"{esc(item['type'])} {esc(svc['tag'])} {esc(svc['cn'])}\" href=\"#{item['id']}\">"
-                f"<span class=\"badge post\">POST</span><span class=\"nav-label\">{esc(label)}</span></a>"
+                f"<span class=\"badge post\">POST</span><span class=\"nav-label\">{esc(label)}</span>{hint}</a>"
             )
         parts.append("<div class=\"nav-sec\">WS 订阅</div>")
         if svc["subs"]:
@@ -431,6 +471,7 @@ def render_overview(store):
     return f"""<section id="overview" class="card hero">
 <h1>BIYA DEX API <span>网关聚合文档</span></h1>
 <p class="lede">前端唯一入口：<code>POST /info</code>、<code>POST /exchange</code>、<code>GET /ws</code> 均打网关，由网关按 type / 订阅分流到三后端，网关不改业务字段、不回退。左侧选接口，右侧看说明、改参数、直接发送。</p>
+<p>共 <b>{len([i for svc in store['services'] for i in svc['posts']])}</b> 个 POST 接口、<b>{len([i for svc in store['services'] for i in svc['subs']])}</b> 个 WS 订阅。</p>
 <h2>版本矩阵（本次构建拉取）</h2>
 <table class="kv"><thead><tr><th>服务</th><th>rev</th></tr></thead><tbody>{rows}</tbody></table>
 <p class="note">构建时间 {esc(matrix.get('fetched_at', ''))}。文档内容与上表 rev 严格对应；发版即重拉，旧页面不复用。</p>
@@ -452,11 +493,17 @@ def render_post(store, item):
         params = f"<table class=\"kv\"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody>{param_rows}</tbody></table>"
     else:
         params = "<p class=\"note\">无业务参数（仅 type 常量）。</p>"
-    route_note = {
-        "Exchange": "经网关走 <b>交易池</b>。",
-        "State": "经网关走 <b>状态服务</b>。",
-        "Indexer": "经网关走 <b>Indexer</b>。",
-    }[item["service"]]
+    route = item.get("route")
+    if route is None:
+        route_note = '<b class="err">网关未开放（400），仅后端直连可用。</b>'
+    elif route != item["service"]:
+        route_note = '<b class="warn">注意：经网关走 ' + route + '（本节为 ' + item['service'] + ' 直连口径）。</b>'
+    else:
+        route_note = {
+            "Exchange": "经网关走 <b>交易池</b>。",
+            "State": "经网关走 <b>状态服务</b>。",
+            "Indexer": "经网关走 <b>Indexer</b>。",
+        }[item["service"]]
     prefill = json.dumps(item["prefill"], ensure_ascii=False, indent=2)
     return f"""<section id="{item['id']}" class="card">
 <div class="crumb">{esc(item['service'])} · POST {esc(item['path'])}</div>
@@ -467,9 +514,12 @@ def render_post(store, item):
 <h3>测试用例</h3>
 <div class="try" data-kind="post" data-id="{item['id']}">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json\">JSON</button><button class="tab" data-tab="curl\">cURL</button><button class="tab\" data-tab="ts\">TypeScript</button></div></div>
+
 <textarea class="try-body\" spellcheck="false">{esc(prefill)}</textarea>
-<pre class="code try-alt\" hidden></pre>
+<div class="prev-head">cURL（随上方实时更新） <button class="copy" data-copy="curl">复制</button></div>
+<pre class="code" data-preview="curl"></pre>
+<div class="prev-head">TypeScript（随上方实时更新） <button class="copy" data-copy="ts">复制</button></div>
+<pre class="code" data-preview="ts"></pre>
 <div class="try-bar\"><button class="send\">发送</button><span class="try-meta\"></span></div>
 <pre class="code try-resp\" hidden></pre>
 </div></section>"""
@@ -477,9 +527,10 @@ def render_post(store, item):
 
 def render_ws(store, item):
     official = "官方订阅" if item["official"] else "自加扩展（标准 SDK 不发送）"
+    route_note = "经网关走 <b>" + item["route"] + "</b>。"
     return f"""<section id="{item['id']}" class="card">
 <div class="crumb">{esc(item['service'])} · WebSocket /ws</div>
-<h2><span class="badge ws\">WS</span> {esc(item['type'])} <span class="route\">{official}</span></h2>
+<h2><span class="badge ws\">WS</span> {esc(item['type'])} <span class="route\">{official} · {route_note}</span></h2>
 <p>{esc(WS_TRANSPORT)}</p>
 <table class="kv\"><thead><tr><th>参数</th><th>推送 channel</th><th>数据</th></tr></thead>
 <tbody><tr><td><code>{esc(', '.join(item['params']) or '—')}</code></td><td><code>{esc(item['channel'])}</code></td><td>{esc(item['data'])}</td></tr></tbody></table>
@@ -500,9 +551,9 @@ PAGE = """<!doctype html>
 <title>BIYA DEX API · 网关聚合文档</title>
 <style>
 :root{
-  --ink:#1a2333; --muted:#5b6b82; --line:#e3e9f2; --paper:#ffffff; --wash:#f4f7fb;
-  --accent:#0e7c7b; --accent-ink:#0a5f5e; --amber:#b45309; --code-bg:#101828; --code-ink:#e6edf7;
-  --post:#15803d; --ws:#7c3aed; --radius:12px;
+  --ink:#111111; --muted:#4b5563; --line:#e2e8f0; --paper:#ffffff; --wash:#f6f8fb;
+  --accent:#0b6b4f; --accent-ink:#084f3a; --rose:#d61f5f; --sky:#0284c7; --amber:#b45309; --code-bg:#101828; --code-ink:#e6edf7;
+  --post:#0b6b4f; --ws:#d61f5f; --radius:12px;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -510,22 +561,22 @@ body{margin:0; color:var(--ink); background:var(--wash);
   font-family:"Avenir Next","Helvetica Neue","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
   font-size:15px; line-height:1.7;}
 code,pre,textarea,select{font-family:ui-monospace,"SF Mono","Cascadia Code",Consolas,monospace; font-size:13px;}
-a{color:var(--accent)}
+a{color:var(--sky)}
 .layout{display:flex; min-height:100vh;}
-aside{width:308px; flex:none; background:#0f1f2e; color:#cbd5e1; position:sticky; top:0; height:100vh; overflow-y:auto; padding:20px 14px;}
+aside{width:308px; flex:none; background:#ffffff; color:var(--ink); position:sticky; top:0; height:100vh; overflow-y:auto; padding:20px 14px; border-right:1px solid var(--line);}
 .brand{display:flex; gap:10px; align-items:center; padding:2px 6px 14px;}
-.brand-mark{width:34px; height:34px; border-radius:9px; background:linear-gradient(135deg,#0e7c7b,#14b8a6); color:#fff; font-weight:800; display:flex; align-items:center; justify-content:center; font-size:19px;}
-.brand b{display:block; color:#fff; font-size:15px; letter-spacing:.4px;}
-.brand span{display:block; font-size:12px; color:#8fa3b8;}
-#nav-search{width:100%; padding:8px 10px; border-radius:8px; border:1px solid #26394f; background:#0b1826; color:#e2e8f0; margin-bottom:12px;}
-.nav-item{display:block; color:#cbd5e1; text-decoration:none; padding:6px 8px; border-radius:8px; font-size:13.5px;}
-.nav-item:hover{background:#1a2f45;}
-.nav-item.active{background:#164e4d; color:#fff;}
-.nav-sub{display:block; font-size:11.5px; color:#8fa3b8;}
-.nav-group{margin-top:10px; border-top:1px solid #1e3247; padding-top:10px;}
-.nav-group-title{padding:4px 8px; font-weight:700; color:#fff; font-size:14px; display:flex; justify-content:space-between;}
-.nav-group-title span{font-weight:400; font-size:11px; color:#7d93aa; border:1px solid #2b4258; border-radius:20px; padding:0 8px;}
-.nav-sec{padding:8px 8px 2px; font-size:11.5px; letter-spacing:1px; color:#7d93aa;}
+.brand-mark{width:34px; height:34px; border-radius:9px; background:linear-gradient(135deg,#0b6b4f,#0284c7); color:#fff; font-weight:800; display:flex; align-items:center; justify-content:center; font-size:19px;}
+.brand b{display:block; color:var(--ink); font-size:15px; letter-spacing:.4px;}
+.brand span{display:block; font-size:12px; color:var(--muted);}
+#nav-search{width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:#fff; color:var(--ink); margin-bottom:12px;}
+.nav-item{display:block; color:#1f2937; text-decoration:none; padding:6px 8px; border-radius:8px; font-size:13.5px;}
+.nav-item:hover{background:#e2e8f0;}
+.nav-item.active{background:var(--accent); color:#fff;}
+.nav-sub{display:block; font-size:11.5px; color:var(--muted);}
+.nav-group{margin-top:10px; border-top:1px solid var(--line); padding-top:10px;}
+.nav-group-title{padding:4px 8px; font-weight:700; color:var(--ink); font-size:14px; display:flex; justify-content:space-between;}
+.nav-group-title span{font-weight:400; font-size:11px; color:var(--sky); border:1px solid var(--sky); border-radius:20px; padding:0 8px;}
+.nav-sec{padding:8px 8px 2px; font-size:11.5px; letter-spacing:1px; color:var(--muted);}
 .nav-label{margin-left:7px;}
 .nav-empty{padding:2px 8px 6px 30px; font-size:12.5px; color:#64748b;}
 .badge{display:inline-block; font-size:11px; font-weight:700; border-radius:6px; padding:1px 7px; color:#fff; vertical-align:1px;}
@@ -551,9 +602,9 @@ pre.code{background:var(--code-bg); color:var(--code-ink); border-radius:10px; p
 .try{border:1px dashed #b9c6d8; border-radius:10px; padding:12px 14px; background:#fafcff;}
 .try-bar{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:8px;}
 .try-bar select{padding:5px 8px; border-radius:7px; border:1px solid var(--line); background:#fff; max-width:340px;}
-.tabs{display:flex; gap:6px;}
-.tab{border:1px solid var(--line); background:#fff; border-radius:7px; padding:4px 12px; cursor:pointer;}
-.tab.on{background:var(--ink); color:#fff; border-color:var(--ink);}
+.prev-head{display:flex; justify-content:space-between; align-items:center; margin:10px 0 4px; font-size:13px; color:var(--muted);}
+.copy{border:1px solid var(--line); background:#fff; border-radius:7px; padding:3px 12px; cursor:pointer; color:var(--sky); font-weight:700;}
+.nav-hint{font-size:11px; border-radius:5px; padding:0 6px; margin-left:6px;}
 textarea.try-body{width:100%; min-height:150px; border:1px solid var(--line); border-radius:8px; padding:10px 12px; background:#fff; resize:vertical;}
 button.send,.ws-connect,.ws-ping,.ws-close{border:none; border-radius:8px; padding:7px 18px; cursor:pointer; font-weight:700;}
 button.send,.ws-connect{background:var(--accent); color:#fff;}
@@ -561,7 +612,10 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 .ws-ping,.ws-close{background:#e2e8f0; color:var(--ink);}
 .try-meta{font-size:12.5px; color:var(--muted);}
 .try-resp{margin-top:10px;}
-.ok{color:#16a34a;} .err{color:#dc2626;}
+.ok{color:#16a34a;} .err{color:#dc2626;} .warn{color:var(--amber);}
+.nav-hint{font-size:11px; border-radius:5px; padding:0 6px; margin-left:6px;}
+.nav-hint.warn{background:#451a03; color:#fbbf24;}
+.nav-hint.off{background:#334155; color:#94a3b8;}
 .ws-log{min-height:60px;}
 .hidden{display:none;}
 @media (max-width:900px){ aside{width:230px;} main{padding:20px;} }
@@ -613,14 +667,19 @@ function tsFor(server, path, body){
 $all(".try[data-kind='post']").forEach(function(box){
   var id = box.getAttribute("data-id");
   var meta = STORE.posts[id];
-  var area = $(".try-body", box), alt = $(".try-alt", box), resp = $(".try-resp", box), info = $(".try-meta", box);
+  var area = $(".try-body", box), resp = $(".try-resp", box), info = $(".try-meta", box);
   var server = function(){ return $(".try-server", box).value; };
-  $all(".tab", box).forEach(function(t){ t.addEventListener("click", function(){
-    $all(".tab", box).forEach(function(x){ x.classList.remove("on"); }); t.classList.add("on");
-    var mode = t.getAttribute("data-tab");
-    if (mode === "json"){ area.classList.remove("hidden"); alt.classList.add("hidden"); }
-    else { area.classList.add("hidden"); alt.classList.remove("hidden");
-      alt.textContent = mode === "curl" ? curlFor(server(), meta.path, area.value) : tsFor(server(), meta.path, area.value); }
+  var preCurl = $("[data-preview='curl']", box), preTs = $("[data-preview='ts']", box);
+  function refresh(){ preCurl.textContent = curlFor(server(), meta.path, area.value); preTs.textContent = tsFor(server(), meta.path, area.value); }
+  area.addEventListener("input", refresh);
+  $(".try-server", box).addEventListener("change", refresh);
+  refresh();
+  $all(".copy", box).forEach(function(b){ b.addEventListener("click", function(){
+    var text = b.getAttribute("data-copy") === "curl" ? preCurl.textContent : preTs.textContent;
+    function done(){ b.textContent = "已复制"; setTimeout(function(){ b.textContent = "复制"; }, 1200); }
+    if (navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done, function(){ fallback(); }); }
+    else { fallback(); }
+    function fallback(){ var ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); done(); } catch(e){} document.body.removeChild(ta); }
   }); });
   $(".send", box).addEventListener("click", function(){
     var payload;

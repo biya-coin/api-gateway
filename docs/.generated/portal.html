@@ -6,9 +6,9 @@
 <title>BIYA DEX API · 网关聚合文档</title>
 <style>
 :root{
-  --ink:#1a2333; --muted:#5b6b82; --line:#e3e9f2; --paper:#ffffff; --wash:#f4f7fb;
-  --accent:#0e7c7b; --accent-ink:#0a5f5e; --amber:#b45309; --code-bg:#101828; --code-ink:#e6edf7;
-  --post:#15803d; --ws:#7c3aed; --radius:12px;
+  --ink:#111111; --muted:#4b5563; --line:#e2e8f0; --paper:#ffffff; --wash:#f6f8fb;
+  --accent:#0b6b4f; --accent-ink:#084f3a; --rose:#d61f5f; --sky:#0284c7; --amber:#b45309; --code-bg:#101828; --code-ink:#e6edf7;
+  --post:#0b6b4f; --ws:#d61f5f; --radius:12px;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -16,22 +16,22 @@ body{margin:0; color:var(--ink); background:var(--wash);
   font-family:"Avenir Next","Helvetica Neue","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
   font-size:15px; line-height:1.7;}
 code,pre,textarea,select{font-family:ui-monospace,"SF Mono","Cascadia Code",Consolas,monospace; font-size:13px;}
-a{color:var(--accent)}
+a{color:var(--sky)}
 .layout{display:flex; min-height:100vh;}
-aside{width:308px; flex:none; background:#0f1f2e; color:#cbd5e1; position:sticky; top:0; height:100vh; overflow-y:auto; padding:20px 14px;}
+aside{width:308px; flex:none; background:#ffffff; color:var(--ink); position:sticky; top:0; height:100vh; overflow-y:auto; padding:20px 14px; border-right:1px solid var(--line);}
 .brand{display:flex; gap:10px; align-items:center; padding:2px 6px 14px;}
-.brand-mark{width:34px; height:34px; border-radius:9px; background:linear-gradient(135deg,#0e7c7b,#14b8a6); color:#fff; font-weight:800; display:flex; align-items:center; justify-content:center; font-size:19px;}
-.brand b{display:block; color:#fff; font-size:15px; letter-spacing:.4px;}
-.brand span{display:block; font-size:12px; color:#8fa3b8;}
-#nav-search{width:100%; padding:8px 10px; border-radius:8px; border:1px solid #26394f; background:#0b1826; color:#e2e8f0; margin-bottom:12px;}
-.nav-item{display:block; color:#cbd5e1; text-decoration:none; padding:6px 8px; border-radius:8px; font-size:13.5px;}
-.nav-item:hover{background:#1a2f45;}
-.nav-item.active{background:#164e4d; color:#fff;}
-.nav-sub{display:block; font-size:11.5px; color:#8fa3b8;}
-.nav-group{margin-top:10px; border-top:1px solid #1e3247; padding-top:10px;}
-.nav-group-title{padding:4px 8px; font-weight:700; color:#fff; font-size:14px; display:flex; justify-content:space-between;}
-.nav-group-title span{font-weight:400; font-size:11px; color:#7d93aa; border:1px solid #2b4258; border-radius:20px; padding:0 8px;}
-.nav-sec{padding:8px 8px 2px; font-size:11.5px; letter-spacing:1px; color:#7d93aa;}
+.brand-mark{width:34px; height:34px; border-radius:9px; background:linear-gradient(135deg,#0b6b4f,#0284c7); color:#fff; font-weight:800; display:flex; align-items:center; justify-content:center; font-size:19px;}
+.brand b{display:block; color:var(--ink); font-size:15px; letter-spacing:.4px;}
+.brand span{display:block; font-size:12px; color:var(--muted);}
+#nav-search{width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:#fff; color:var(--ink); margin-bottom:12px;}
+.nav-item{display:block; color:#1f2937; text-decoration:none; padding:6px 8px; border-radius:8px; font-size:13.5px;}
+.nav-item:hover{background:#e2e8f0;}
+.nav-item.active{background:var(--accent); color:#fff;}
+.nav-sub{display:block; font-size:11.5px; color:var(--muted);}
+.nav-group{margin-top:10px; border-top:1px solid var(--line); padding-top:10px;}
+.nav-group-title{padding:4px 8px; font-weight:700; color:var(--ink); font-size:14px; display:flex; justify-content:space-between;}
+.nav-group-title span{font-weight:400; font-size:11px; color:var(--sky); border:1px solid var(--sky); border-radius:20px; padding:0 8px;}
+.nav-sec{padding:8px 8px 2px; font-size:11.5px; letter-spacing:1px; color:var(--muted);}
 .nav-label{margin-left:7px;}
 .nav-empty{padding:2px 8px 6px 30px; font-size:12.5px; color:#64748b;}
 .badge{display:inline-block; font-size:11px; font-weight:700; border-radius:6px; padding:1px 7px; color:#fff; vertical-align:1px;}
@@ -57,9 +57,9 @@ pre.code{background:var(--code-bg); color:var(--code-ink); border-radius:10px; p
 .try{border:1px dashed #b9c6d8; border-radius:10px; padding:12px 14px; background:#fafcff;}
 .try-bar{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:8px;}
 .try-bar select{padding:5px 8px; border-radius:7px; border:1px solid var(--line); background:#fff; max-width:340px;}
-.tabs{display:flex; gap:6px;}
-.tab{border:1px solid var(--line); background:#fff; border-radius:7px; padding:4px 12px; cursor:pointer;}
-.tab.on{background:var(--ink); color:#fff; border-color:var(--ink);}
+.prev-head{display:flex; justify-content:space-between; align-items:center; margin:10px 0 4px; font-size:13px; color:var(--muted);}
+.copy{border:1px solid var(--line); background:#fff; border-radius:7px; padding:3px 12px; cursor:pointer; color:var(--sky); font-weight:700;}
+.nav-hint{font-size:11px; border-radius:5px; padding:0 6px; margin-left:6px;}
 textarea.try-body{width:100%; min-height:150px; border:1px solid var(--line); border-radius:8px; padding:10px 12px; background:#fff; resize:vertical;}
 button.send,.ws-connect,.ws-ping,.ws-close{border:none; border-radius:8px; padding:7px 18px; cursor:pointer; font-weight:700;}
 button.send,.ws-connect{background:var(--accent); color:#fff;}
@@ -67,7 +67,10 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 .ws-ping,.ws-close{background:#e2e8f0; color:var(--ink);}
 .try-meta{font-size:12.5px; color:var(--muted);}
 .try-resp{margin-top:10px;}
-.ok{color:#16a34a;} .err{color:#dc2626;}
+.ok{color:#16a34a;} .err{color:#dc2626;} .warn{color:var(--amber);}
+.nav-hint{font-size:11px; border-radius:5px; padding:0 6px; margin-left:6px;}
+.nav-hint.warn{background:#451a03; color:#fbbf24;}
+.nav-hint.off{background:#334155; color:#94a3b8;}
 .ws-log{min-height:60px;}
 .hidden{display:none;}
 @media (max-width:900px){ aside{width:230px;} main{padding:20px;} }
@@ -81,16 +84,6 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <div class="nav-group-title">交易池<span>Exchange</span></div>
 <div class="nav-sec">POST 接口</div>
 <a class="nav-item" data-id="post-Exchange-exchange" data-keys="__exchange__ Exchange 交易池" href="#post-Exchange-exchange"><span class="badge post">POST</span><span class="nav-label">动作提交</span></a>
-<a class="nav-item" data-id="post-Exchange-health" data-keys="health Exchange 交易池" href="#post-Exchange-health"><span class="badge post">POST</span><span class="nav-label">health</span></a>
-<a class="nav-item" data-id="post-Exchange-stateInfo" data-keys="stateInfo Exchange 交易池" href="#post-Exchange-stateInfo"><span class="badge post">POST</span><span class="nav-label">stateInfo</span></a>
-<a class="nav-item" data-id="post-Exchange-block" data-keys="block Exchange 交易池" href="#post-Exchange-block"><span class="badge post">POST</span><span class="nav-label">block</span></a>
-<a class="nav-item" data-id="post-Exchange-bridgeSnapshot" data-keys="bridgeSnapshot Exchange 交易池" href="#post-Exchange-bridgeSnapshot"><span class="badge post">POST</span><span class="nav-label">bridgeSnapshot</span></a>
-<a class="nav-item" data-id="post-Exchange-bridgeDepositStatus" data-keys="bridgeDepositStatus Exchange 交易池" href="#post-Exchange-bridgeDepositStatus"><span class="badge post">POST</span><span class="nav-label">bridgeDepositStatus</span></a>
-<a class="nav-item" data-id="post-Exchange-bridgeWithdrawalStatus" data-keys="bridgeWithdrawalStatus Exchange 交易池" href="#post-Exchange-bridgeWithdrawalStatus"><span class="badge post">POST</span><span class="nav-label">bridgeWithdrawalStatus</span></a>
-<a class="nav-item" data-id="post-Exchange-clearinghouseState" data-keys="clearinghouseState Exchange 交易池" href="#post-Exchange-clearinghouseState"><span class="badge post">POST</span><span class="nav-label">clearinghouseState</span></a>
-<a class="nav-item" data-id="post-Exchange-accountOverview" data-keys="accountOverview Exchange 交易池" href="#post-Exchange-accountOverview"><span class="badge post">POST</span><span class="nav-label">accountOverview</span></a>
-<a class="nav-item" data-id="post-Exchange-unifiedBalances" data-keys="unifiedBalances Exchange 交易池" href="#post-Exchange-unifiedBalances"><span class="badge post">POST</span><span class="nav-label">unifiedBalances</span></a>
-<a class="nav-item" data-id="post-Exchange-accountNonces" data-keys="accountNonces Exchange 交易池" href="#post-Exchange-accountNonces"><span class="badge post">POST</span><span class="nav-label">accountNonces</span></a>
 <div class="nav-sec">WS 订阅</div>
 <div class="nav-empty">本服务无 WS 订阅</div>
 </div>
@@ -99,18 +92,14 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <div class="nav-sec">POST 接口</div>
 <a class="nav-item" data-id="post-State-meta" data-keys="meta State 状态服务" href="#post-State-meta"><span class="badge post">POST</span><span class="nav-label">meta</span></a>
 <a class="nav-item" data-id="post-State-metaAndAssetCtxs" data-keys="metaAndAssetCtxs State 状态服务" href="#post-State-metaAndAssetCtxs"><span class="badge post">POST</span><span class="nav-label">metaAndAssetCtxs</span></a>
-<a class="nav-item" data-id="post-State-allMids" data-keys="allMids State 状态服务" href="#post-State-allMids"><span class="badge post">POST</span><span class="nav-label">allMids</span></a>
-<a class="nav-item" data-id="post-State-l2Book" data-keys="l2Book State 状态服务" href="#post-State-l2Book"><span class="badge post">POST</span><span class="nav-label">l2Book</span></a>
 <a class="nav-item" data-id="post-State-clearinghouseState" data-keys="clearinghouseState State 状态服务" href="#post-State-clearinghouseState"><span class="badge post">POST</span><span class="nav-label">clearinghouseState</span></a>
 <a class="nav-item" data-id="post-State-openOrders" data-keys="openOrders State 状态服务" href="#post-State-openOrders"><span class="badge post">POST</span><span class="nav-label">openOrders</span></a>
 <a class="nav-item" data-id="post-State-frontendOpenOrders" data-keys="frontendOpenOrders State 状态服务" href="#post-State-frontendOpenOrders"><span class="badge post">POST</span><span class="nav-label">frontendOpenOrders</span></a>
 <a class="nav-item" data-id="post-State-extraAgents" data-keys="extraAgents State 状态服务" href="#post-State-extraAgents"><span class="badge post">POST</span><span class="nav-label">extraAgents</span></a>
 <a class="nav-item" data-id="post-State-activeAssetData" data-keys="activeAssetData State 状态服务" href="#post-State-activeAssetData"><span class="badge post">POST</span><span class="nav-label">activeAssetData</span></a>
 <a class="nav-item" data-id="post-State-userFees" data-keys="userFees State 状态服务" href="#post-State-userFees"><span class="badge post">POST</span><span class="nav-label">userFees</span></a>
-<a class="nav-item" data-id="post-State-recentTrades" data-keys="recentTrades State 状态服务" href="#post-State-recentTrades"><span class="badge post">POST</span><span class="nav-label">recentTrades</span></a>
 <a class="nav-item" data-id="post-State-exchangeStatus" data-keys="exchangeStatus State 状态服务" href="#post-State-exchangeStatus"><span class="badge post">POST</span><span class="nav-label">exchangeStatus</span></a>
 <a class="nav-item" data-id="post-State-orderStatus" data-keys="orderStatus State 状态服务" href="#post-State-orderStatus"><span class="badge post">POST</span><span class="nav-label">orderStatus</span></a>
-<a class="nav-item" data-id="post-State-webData2" data-keys="webData2 State 状态服务" href="#post-State-webData2"><span class="badge post">POST</span><span class="nav-label">webData2</span></a>
 <div class="nav-sec">WS 订阅</div>
 <a class="nav-item" data-id="ws-State-assetCtxs" data-keys="assetCtxs ws State" href="#ws-State-assetCtxs"><span class="badge ws">WS</span><span class="nav-label">assetCtxs</span></a>
 <a class="nav-item" data-id="ws-State-clearinghouseState" data-keys="clearinghouseState ws State" href="#ws-State-clearinghouseState"><span class="badge ws">WS</span><span class="nav-label">clearinghouseState</span></a>
@@ -118,11 +107,9 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <div class="nav-group" data-service="Indexer">
 <div class="nav-group-title">Indexer<span>Indexer</span></div>
 <div class="nav-sec">POST 接口</div>
-<a class="nav-item" data-id="post-Indexer-metaAndAssetCtxs" data-keys="metaAndAssetCtxs Indexer Indexer" href="#post-Indexer-metaAndAssetCtxs"><span class="badge post">POST</span><span class="nav-label">metaAndAssetCtxs</span></a>
 <a class="nav-item" data-id="post-Indexer-webData2" data-keys="webData2 Indexer Indexer" href="#post-Indexer-webData2"><span class="badge post">POST</span><span class="nav-label">webData2</span></a>
 <a class="nav-item" data-id="post-Indexer-allMids" data-keys="allMids Indexer Indexer" href="#post-Indexer-allMids"><span class="badge post">POST</span><span class="nav-label">allMids</span></a>
 <a class="nav-item" data-id="post-Indexer-candleSnapshot" data-keys="candleSnapshot Indexer Indexer" href="#post-Indexer-candleSnapshot"><span class="badge post">POST</span><span class="nav-label">candleSnapshot</span></a>
-<a class="nav-item" data-id="post-Indexer-orderStatus" data-keys="orderStatus Indexer Indexer" href="#post-Indexer-orderStatus"><span class="badge post">POST</span><span class="nav-label">orderStatus</span></a>
 <a class="nav-item" data-id="post-Indexer-l2Book" data-keys="l2Book Indexer Indexer" href="#post-Indexer-l2Book"><span class="badge post">POST</span><span class="nav-label">l2Book</span></a>
 <a class="nav-item" data-id="post-Indexer-fundingHistory" data-keys="fundingHistory Indexer Indexer" href="#post-Indexer-fundingHistory"><span class="badge post">POST</span><span class="nav-label">fundingHistory</span></a>
 <a class="nav-item" data-id="post-Indexer-userFillsByTime" data-keys="userFillsByTime Indexer Indexer" href="#post-Indexer-userFillsByTime"><span class="badge post">POST</span><span class="nav-label">userFillsByTime</span></a>
@@ -152,9 +139,10 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 </div></aside><main><section id="overview" class="card hero">
 <h1>BIYA DEX API <span>网关聚合文档</span></h1>
 <p class="lede">前端唯一入口：<code>POST /info</code>、<code>POST /exchange</code>、<code>GET /ws</code> 均打网关，由网关按 type / 订阅分流到三后端，网关不改业务字段、不回退。左侧选接口，右侧看说明、改参数、直接发送。</p>
+<p>共 <b>22</b> 个 POST 接口、<b>19</b> 个 WS 订阅。</p>
 <h2>版本矩阵（本次构建拉取）</h2>
-<table class="kv"><thead><tr><th>服务</th><th>rev</th></tr></thead><tbody><tr><td><code>gateway</code></td><td><code>41340599358b</code></td></tr><tr><td><code>exchange-apiserver</code></td><td><code>c3756c0e461e</code></td></tr><tr><td><code>bybchain-api-server</code></td><td><code>3bac5a8b83f8</code></td></tr><tr><td><code>biya-indexer</code></td><td><code>f8fcb4815c56</code></td></tr></tbody></table>
-<p class="note">构建时间 2026-09-20T12:56:09.572063+00:00。文档内容与上表 rev 严格对应；发版即重拉，旧页面不复用。</p>
+<table class="kv"><thead><tr><th>服务</th><th>rev</th></tr></thead><tbody><tr><td><code>gateway</code></td><td><code>bb24929b47ec</code></td></tr><tr><td><code>exchange-apiserver</code></td><td><code>ef23fbc3ade2</code></td></tr><tr><td><code>bybchain-api-server</code></td><td><code>7c7a18982882</code></td></tr><tr><td><code>biya-indexer</code></td><td><code>731ec3b31f33</code></td></tr></tbody></table>
+<p class="note">构建时间 2026-09-20T13:46:12.248209+00:00。文档内容与上表 rev 严格对应；发版即重拉，旧页面不复用。</p>
 <h2>测试指南</h2>
 <ul class="guide">
 <li>每个 POST 接口自带填好参数的测试用例，改完点发送，结果原样展示（含业务错误体）。</li>
@@ -164,7 +152,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <div class="crumb">Exchange · POST /exchange</div>
 <h2><span class="badge post">POST</span> /exchange · 提交签名动作 <span class="route">经网关走 <b>交易池</b>。</span></h2>
 <p>提交已签名的 exchange action；accepted 仅表示通过本地校验进入交易池，不代表链上执行。</p>
-<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>action</code> <b class="req">*</b></td><td><code>object</code></td><td>9 种动作 oneOf（order/cancel/cancelByCloid/cancelAll/updateLeverage/batchModify/usdSend/withdraw3/approveAgent），见 Models。</td></tr><tr><td><code>nonce</code> <b class="req">*</b></td><td><code>integer</code></td><td>用户 nonce，必须大于 0。</td></tr><tr><td><code>signature</code> <b class="req">*</b></td><td><code>object</code></td><td>{r, s, v}；r/s 32 字节 hex，v 为 27/28。</td></tr><tr><td><code>vaultAddress</code></td><td><code>string</code></td><td>可选，20 字节 hex。</td></tr><tr><td><code>expiresAfter</code></td><td><code>integer</code></td><td>可选，参与签名。</td></tr></tbody></table>
+<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>action</code> <b class="req">*</b></td><td><code>object</code></td><td>9 种动作 oneOf（order/cancel/cancelByCloid/cancelAll/updateLeverage/batchModify/usdSend/withdraw3/approveAgent），。各动作字段见下表与片段说明。</td></tr><tr><td><code>nonce</code> <b class="req">*</b></td><td><code>integer</code></td><td>用户 nonce，必须大于 0。</td></tr><tr><td><code>signature</code> <b class="req">*</b></td><td><code>object</code></td><td>{r, s, v}；r/s 32 字节 hex，v 为 27/28。</td></tr><tr><td><code>vaultAddress</code></td><td><code>string</code></td><td>可选，20 字节 hex。</td></tr><tr><td><code>expiresAfter</code></td><td><code>integer</code></td><td>可选，参与签名。</td></tr></tbody></table>
 <h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>本地处理结果：code 0=已入池；1001 参数/哈希失败；1002 重复交易；1003 签名失败。</td></tr><tr><td><code>400</code></td><td>malformed JSON，Axum 在进业务逻辑前拒绝。</td></tr></tbody></table><p class="resp-label">Exchange__ExchangeResult</p><pre class="code">{
   &quot;code&quot;: 0,
   &quot;message&quot;: &quot;accepted&quot;,
@@ -173,7 +161,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <h3>测试用例</h3>
 <div class="try" data-kind="post" data-id="post-Exchange-exchange">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
+
 <textarea class="try-body" spellcheck="false">{
   &quot;action&quot;: {
     &quot;type&quot;: &quot;order&quot;,
@@ -200,177 +188,17 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
     &quot;v&quot;: 27
   }
 }</textarea>
-<pre class="code try-alt" hidden></pre>
-<div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
-<pre class="code try-resp" hidden></pre>
-</div></section><section id="post-Exchange-health" class="card">
-<div class="crumb">Exchange · POST /info</div>
-<h2><span class="badge post">POST</span> health <span class="route">经网关走 <b>交易池</b>。</span></h2>
-<p></p>
-<h3>入参</h3><p class="note">无业务参数（仅 type 常量）。</p>
-<h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>health 结果或节点透传结果；透传失败也以 200 + {&quot;error&quot;} 返回。</td></tr><tr><td><code>400</code></td><td>malformed JSON。</td></tr></tbody></table><pre class="code">{
-  &quot;status&quot;: &quot;ok&quot;
-}</pre>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-Exchange-health">
-<div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
-<textarea class="try-body" spellcheck="false">{
-  &quot;type&quot;: &quot;health&quot;
-}</textarea>
-<pre class="code try-alt" hidden></pre>
-<div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
-<pre class="code try-resp" hidden></pre>
-</div></section><section id="post-Exchange-stateInfo" class="card">
-<div class="crumb">Exchange · POST /info</div>
-<h2><span class="badge post">POST</span> stateInfo <span class="route">经网关走 <b>交易池</b>。</span></h2>
-<p></p>
-<h3>入参</h3><p class="note">无业务参数（仅 type 常量）。</p>
-<h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>health 结果或节点透传结果；透传失败也以 200 + {&quot;error&quot;} 返回。</td></tr><tr><td><code>400</code></td><td>malformed JSON。</td></tr></tbody></table><p class="note">透传 connected node 的 /info 结果，其中 blockHeight 是当前区块高度。</p>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-Exchange-stateInfo">
-<div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
-<textarea class="try-body" spellcheck="false">{
-  &quot;type&quot;: &quot;stateInfo&quot;
-}</textarea>
-<pre class="code try-alt" hidden></pre>
-<div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
-<pre class="code try-resp" hidden></pre>
-</div></section><section id="post-Exchange-block" class="card">
-<div class="crumb">Exchange · POST /info</div>
-<h2><span class="badge post">POST</span> block <span class="route">经网关走 <b>交易池</b>。</span></h2>
-<p></p>
-<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>height</code> <b class="req">*</b></td><td><code>&quot;integer&quot;</code></td><td>必填，查询的区块高度。</td></tr></tbody></table>
-<h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>health 结果或节点透传结果；透传失败也以 200 + {&quot;error&quot;} 返回。</td></tr><tr><td><code>400</code></td><td>malformed JSON。</td></tr></tbody></table><p class="note">透传 connected node 的区块内容（需带 height）。</p>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-Exchange-block">
-<div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
-<textarea class="try-body" spellcheck="false">{
-  &quot;type&quot;: &quot;block&quot;,
-  &quot;height&quot;: 1
-}</textarea>
-<pre class="code try-alt" hidden></pre>
-<div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
-<pre class="code try-resp" hidden></pre>
-</div></section><section id="post-Exchange-bridgeSnapshot" class="card">
-<div class="crumb">Exchange · POST /info</div>
-<h2><span class="badge post">POST</span> bridgeSnapshot <span class="route">经网关走 <b>交易池</b>。</span></h2>
-<p></p>
-<h3>入参</h3><p class="note">无业务参数（仅 type 常量）。</p>
-<h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>health 结果或节点透传结果；透传失败也以 200 + {&quot;error&quot;} 返回。</td></tr><tr><td><code>400</code></td><td>malformed JSON。</td></tr></tbody></table><p class="note">透传 connected node，原样返回。</p>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-Exchange-bridgeSnapshot">
-<div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
-<textarea class="try-body" spellcheck="false">{
-  &quot;type&quot;: &quot;bridgeSnapshot&quot;
-}</textarea>
-<pre class="code try-alt" hidden></pre>
-<div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
-<pre class="code try-resp" hidden></pre>
-</div></section><section id="post-Exchange-bridgeDepositStatus" class="card">
-<div class="crumb">Exchange · POST /info</div>
-<h2><span class="badge post">POST</span> bridgeDepositStatus <span class="route">经网关走 <b>交易池</b>。</span></h2>
-<p></p>
-<h3>入参</h3><p class="note">无业务参数（仅 type 常量）。</p>
-<h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>health 结果或节点透传结果；透传失败也以 200 + {&quot;error&quot;} 返回。</td></tr><tr><td><code>400</code></td><td>malformed JSON。</td></tr></tbody></table><p class="note">透传 connected node，原样返回。</p>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-Exchange-bridgeDepositStatus">
-<div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
-<textarea class="try-body" spellcheck="false">{
-  &quot;type&quot;: &quot;bridgeDepositStatus&quot;
-}</textarea>
-<pre class="code try-alt" hidden></pre>
-<div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
-<pre class="code try-resp" hidden></pre>
-</div></section><section id="post-Exchange-bridgeWithdrawalStatus" class="card">
-<div class="crumb">Exchange · POST /info</div>
-<h2><span class="badge post">POST</span> bridgeWithdrawalStatus <span class="route">经网关走 <b>交易池</b>。</span></h2>
-<p></p>
-<h3>入参</h3><p class="note">无业务参数（仅 type 常量）。</p>
-<h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>health 结果或节点透传结果；透传失败也以 200 + {&quot;error&quot;} 返回。</td></tr><tr><td><code>400</code></td><td>malformed JSON。</td></tr></tbody></table><p class="note">透传 connected node，原样返回。</p>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-Exchange-bridgeWithdrawalStatus">
-<div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
-<textarea class="try-body" spellcheck="false">{
-  &quot;type&quot;: &quot;bridgeWithdrawalStatus&quot;
-}</textarea>
-<pre class="code try-alt" hidden></pre>
-<div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
-<pre class="code try-resp" hidden></pre>
-</div></section><section id="post-Exchange-clearinghouseState" class="card">
-<div class="crumb">Exchange · POST /info</div>
-<h2><span class="badge post">POST</span> clearinghouseState <span class="route">经网关走 <b>交易池</b>。</span></h2>
-<p></p>
-<h3>入参</h3><p class="note">无业务参数（仅 type 常量）。</p>
-<h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>health 结果或节点透传结果；透传失败也以 200 + {&quot;error&quot;} 返回。</td></tr><tr><td><code>400</code></td><td>malformed JSON。</td></tr></tbody></table><p class="note">本服务仅透传；经网关调用时该 type 走状态服务。</p>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-Exchange-clearinghouseState">
-<div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
-<textarea class="try-body" spellcheck="false">{
-  &quot;type&quot;: &quot;clearinghouseState&quot;
-}</textarea>
-<pre class="code try-alt" hidden></pre>
-<div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
-<pre class="code try-resp" hidden></pre>
-</div></section><section id="post-Exchange-accountOverview" class="card">
-<div class="crumb">Exchange · POST /info</div>
-<h2><span class="badge post">POST</span> accountOverview <span class="route">经网关走 <b>交易池</b>。</span></h2>
-<p></p>
-<h3>入参</h3><p class="note">无业务参数（仅 type 常量）。</p>
-<h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>health 结果或节点透传结果；透传失败也以 200 + {&quot;error&quot;} 返回。</td></tr><tr><td><code>400</code></td><td>malformed JSON。</td></tr></tbody></table><p class="note">透传 connected node，原样返回。</p>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-Exchange-accountOverview">
-<div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
-<textarea class="try-body" spellcheck="false">{
-  &quot;type&quot;: &quot;accountOverview&quot;
-}</textarea>
-<pre class="code try-alt" hidden></pre>
-<div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
-<pre class="code try-resp" hidden></pre>
-</div></section><section id="post-Exchange-unifiedBalances" class="card">
-<div class="crumb">Exchange · POST /info</div>
-<h2><span class="badge post">POST</span> unifiedBalances <span class="route">经网关走 <b>交易池</b>。</span></h2>
-<p></p>
-<h3>入参</h3><p class="note">无业务参数（仅 type 常量）。</p>
-<h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>health 结果或节点透传结果；透传失败也以 200 + {&quot;error&quot;} 返回。</td></tr><tr><td><code>400</code></td><td>malformed JSON。</td></tr></tbody></table><p class="note">透传 connected node，原样返回。</p>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-Exchange-unifiedBalances">
-<div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
-<textarea class="try-body" spellcheck="false">{
-  &quot;type&quot;: &quot;unifiedBalances&quot;
-}</textarea>
-<pre class="code try-alt" hidden></pre>
-<div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
-<pre class="code try-resp" hidden></pre>
-</div></section><section id="post-Exchange-accountNonces" class="card">
-<div class="crumb">Exchange · POST /info</div>
-<h2><span class="badge post">POST</span> accountNonces <span class="route">经网关走 <b>交易池</b>。</span></h2>
-<p></p>
-<h3>入参</h3><p class="note">无业务参数（仅 type 常量）。</p>
-<h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>health 结果或节点透传结果；透传失败也以 200 + {&quot;error&quot;} 返回。</td></tr><tr><td><code>400</code></td><td>malformed JSON。</td></tr></tbody></table><p class="note">透传 connected node，原样返回。</p>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-Exchange-accountNonces">
-<div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
-<textarea class="try-body" spellcheck="false">{
-  &quot;type&quot;: &quot;accountNonces&quot;
-}</textarea>
-<pre class="code try-alt" hidden></pre>
+<div class="prev-head">cURL（随上方实时更新） <button class="copy" data-copy="curl">复制</button></div>
+<pre class="code" data-preview="curl"></pre>
+<div class="prev-head">TypeScript（随上方实时更新） <button class="copy" data-copy="ts">复制</button></div>
+<pre class="code" data-preview="ts"></pre>
 <div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
 <pre class="code try-resp" hidden></pre>
 </div></section><section id="post-State-meta" class="card">
 <div class="crumb">State · POST /info</div>
 <h2><span class="badge post">POST</span> meta <span class="route">经网关走 <b>状态服务</b>。</span></h2>
-<p></p>
-<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>dex</code></td><td><code>&quot;string&quot;</code></td><td>可选，默认 dex；非默认 dex 返回 501。</td></tr></tbody></table>
+<p>市场元数据、交易品种列表和基础配置。</p>
+<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>dex</code></td><td><code>string</code></td><td>可选，默认 dex；非默认 dex 返回 501。</td></tr></tbody></table>
 <h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果。</td></tr><tr><td><code>400</code></td><td>未知 type 或参数错误。</td></tr><tr><td><code>501</code></td><td>type 可解析但尚未实现，或 dex 不是默认 dex。</td></tr><tr><td><code>503</code></td><td>副本尚未同步就绪。</td></tr></tbody></table><p class="resp-label">State__MetaResponse</p><pre class="code">{
   &quot;universe&quot;: [
     {
@@ -402,83 +230,40 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <h3>测试用例</h3>
 <div class="try" data-kind="post" data-id="post-State-meta">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
+
 <textarea class="try-body" spellcheck="false">{
   &quot;type&quot;: &quot;meta&quot;
 }</textarea>
-<pre class="code try-alt" hidden></pre>
+<div class="prev-head">cURL（随上方实时更新） <button class="copy" data-copy="curl">复制</button></div>
+<pre class="code" data-preview="curl"></pre>
+<div class="prev-head">TypeScript（随上方实时更新） <button class="copy" data-copy="ts">复制</button></div>
+<pre class="code" data-preview="ts"></pre>
 <div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
 <pre class="code try-resp" hidden></pre>
 </div></section><section id="post-State-metaAndAssetCtxs" class="card">
 <div class="crumb">State · POST /info</div>
 <h2><span class="badge post">POST</span> metaAndAssetCtxs <span class="route">经网关走 <b>状态服务</b>。</span></h2>
-<p></p>
-<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>dex</code></td><td><code>&quot;string&quot;</code></td><td></td></tr></tbody></table>
+<p>市场元数据及市场上下文（与 universe 一一对应）。</p>
+<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>dex</code></td><td><code>string</code></td><td>可选，默认 dex（空字符串）；非默认 dex 返回 501。</td></tr></tbody></table>
 <h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果。</td></tr><tr><td><code>400</code></td><td>未知 type 或参数错误。</td></tr><tr><td><code>501</code></td><td>type 可解析但尚未实现，或 dex 不是默认 dex。</td></tr><tr><td><code>503</code></td><td>副本尚未同步就绪。</td></tr></tbody></table><p class="note">[meta, 行情数组] 二元数组，行情与 universe 一一对应、顺序相同。</p>
 <h3>测试用例</h3>
 <div class="try" data-kind="post" data-id="post-State-metaAndAssetCtxs">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
+
 <textarea class="try-body" spellcheck="false">{
   &quot;type&quot;: &quot;metaAndAssetCtxs&quot;
 }</textarea>
-<pre class="code try-alt" hidden></pre>
-<div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
-<pre class="code try-resp" hidden></pre>
-</div></section><section id="post-State-allMids" class="card">
-<div class="crumb">State · POST /info</div>
-<h2><span class="badge post">POST</span> allMids <span class="route">经网关走 <b>状态服务</b>。</span></h2>
-<p></p>
-<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>dex</code></td><td><code>&quot;string&quot;</code></td><td></td></tr></tbody></table>
-<h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果。</td></tr><tr><td><code>400</code></td><td>未知 type 或参数错误。</td></tr><tr><td><code>501</code></td><td>type 可解析但尚未实现，或 dex 不是默认 dex。</td></tr><tr><td><code>503</code></td><td>副本尚未同步就绪。</td></tr></tbody></table><pre class="code">{
-  &quot;mids&quot;: {
-    &quot;BTCUSDC&quot;: &quot;76600.5&quot;
-  }
-}</pre>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-State-allMids">
-<div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
-<textarea class="try-body" spellcheck="false">{
-  &quot;type&quot;: &quot;allMids&quot;
-}</textarea>
-<pre class="code try-alt" hidden></pre>
-<div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
-<pre class="code try-resp" hidden></pre>
-</div></section><section id="post-State-l2Book" class="card">
-<div class="crumb">State · POST /info</div>
-<h2><span class="badge post">POST</span> l2Book <span class="route">经网关走 <b>状态服务</b>。</span></h2>
-<p></p>
-<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>coin</code> <b class="req">*</b></td><td><code>&quot;string&quot;</code></td><td></td></tr><tr><td><code>nSigFigs</code></td><td><code>&quot;integer&quot;</code></td><td>可选有效数字位数。</td></tr><tr><td><code>mantissa</code></td><td><code>&quot;integer&quot;</code></td><td>可选尾数。</td></tr></tbody></table>
-<h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果。</td></tr><tr><td><code>400</code></td><td>未知 type 或参数错误。</td></tr><tr><td><code>501</code></td><td>type 可解析但尚未实现，或 dex 不是默认 dex。</td></tr><tr><td><code>503</code></td><td>副本尚未同步就绪。</td></tr></tbody></table><p class="resp-label">State__L2BookResponse</p><pre class="code">{
-  &quot;coin&quot;: &quot;BTCUSDC&quot;,
-  &quot;time&quot;: 0,
-  &quot;levels&quot;: [
-    [
-      {
-        &quot;px&quot;: &quot;&quot;,
-        &quot;sz&quot;: &quot;&quot;,
-        &quot;n&quot;: 0
-      }
-    ]
-  ]
-}</pre>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-State-l2Book">
-<div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
-<textarea class="try-body" spellcheck="false">{
-  &quot;type&quot;: &quot;l2Book&quot;,
-  &quot;coin&quot;: &quot;BTCUSDC&quot;
-}</textarea>
-<pre class="code try-alt" hidden></pre>
+<div class="prev-head">cURL（随上方实时更新） <button class="copy" data-copy="curl">复制</button></div>
+<pre class="code" data-preview="curl"></pre>
+<div class="prev-head">TypeScript（随上方实时更新） <button class="copy" data-copy="ts">复制</button></div>
+<pre class="code" data-preview="ts"></pre>
 <div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
 <pre class="code try-resp" hidden></pre>
 </div></section><section id="post-State-clearinghouseState" class="card">
 <div class="crumb">State · POST /info</div>
 <h2><span class="badge post">POST</span> clearinghouseState <span class="route">经网关走 <b>状态服务</b>。</span></h2>
-<p></p>
-<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>&quot;string&quot;</code></td><td>42 字符 0x 地址。</td></tr><tr><td><code>dex</code></td><td><code>&quot;string&quot;</code></td><td></td></tr></tbody></table>
+<p>用户持仓、保证金、账户权益和未实现盈亏。</p>
+<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>string</code></td><td>42 字符 0x 地址。</td></tr><tr><td><code>dex</code></td><td><code>string</code></td><td>可选，默认 dex（空字符串）；非默认 dex 返回 501。</td></tr></tbody></table>
 <h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果。</td></tr><tr><td><code>400</code></td><td>未知 type 或参数错误。</td></tr><tr><td><code>501</code></td><td>type 可解析但尚未实现，或 dex 不是默认 dex。</td></tr><tr><td><code>503</code></td><td>副本尚未同步就绪。</td></tr></tbody></table><p class="resp-label">State__ClearinghouseStateResponse</p><pre class="code">{
   &quot;marginSummary&quot;: {
     &quot;accountValue&quot;: &quot;&quot;,
@@ -525,19 +310,22 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <h3>测试用例</h3>
 <div class="try" data-kind="post" data-id="post-State-clearinghouseState">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
+
 <textarea class="try-body" spellcheck="false">{
   &quot;type&quot;: &quot;clearinghouseState&quot;,
   &quot;user&quot;: &quot;0x1111111111111111111111111111111111111111&quot;
 }</textarea>
-<pre class="code try-alt" hidden></pre>
+<div class="prev-head">cURL（随上方实时更新） <button class="copy" data-copy="curl">复制</button></div>
+<pre class="code" data-preview="curl"></pre>
+<div class="prev-head">TypeScript（随上方实时更新） <button class="copy" data-copy="ts">复制</button></div>
+<pre class="code" data-preview="ts"></pre>
 <div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
 <pre class="code try-resp" hidden></pre>
 </div></section><section id="post-State-openOrders" class="card">
 <div class="crumb">State · POST /info</div>
 <h2><span class="badge post">POST</span> openOrders <span class="route">经网关走 <b>状态服务</b>。</span></h2>
-<p></p>
-<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>&quot;string&quot;</code></td><td></td></tr><tr><td><code>dex</code></td><td><code>&quot;string&quot;</code></td><td></td></tr></tbody></table>
+<p>用户当前订单。</p>
+<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>string</code></td><td>42 字符 0x 十六进制地址。只返回当前挂单。</td></tr><tr><td><code>dex</code></td><td><code>string</code></td><td>可选，默认 dex（空字符串）；非默认 dex 返回 501。</td></tr></tbody></table>
 <h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果。</td></tr><tr><td><code>400</code></td><td>未知 type 或参数错误。</td></tr><tr><td><code>501</code></td><td>type 可解析但尚未实现，或 dex 不是默认 dex。</td></tr><tr><td><code>503</code></td><td>副本尚未同步就绪。</td></tr></tbody></table><p class="resp-label">State__OpenOrderResponse 数组</p><pre class="code">[
   {
     &quot;coin&quot;: &quot;BTCUSDC&quot;,
@@ -551,19 +339,22 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <h3>测试用例</h3>
 <div class="try" data-kind="post" data-id="post-State-openOrders">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
+
 <textarea class="try-body" spellcheck="false">{
   &quot;type&quot;: &quot;openOrders&quot;,
   &quot;user&quot;: &quot;0x1111111111111111111111111111111111111111&quot;
 }</textarea>
-<pre class="code try-alt" hidden></pre>
+<div class="prev-head">cURL（随上方实时更新） <button class="copy" data-copy="curl">复制</button></div>
+<pre class="code" data-preview="curl"></pre>
+<div class="prev-head">TypeScript（随上方实时更新） <button class="copy" data-copy="ts">复制</button></div>
+<pre class="code" data-preview="ts"></pre>
 <div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
 <pre class="code try-resp" hidden></pre>
 </div></section><section id="post-State-frontendOpenOrders" class="card">
 <div class="crumb">State · POST /info</div>
 <h2><span class="badge post">POST</span> frontendOpenOrders <span class="route">经网关走 <b>状态服务</b>。</span></h2>
-<p></p>
-<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>&quot;string&quot;</code></td><td></td></tr><tr><td><code>dex</code></td><td><code>&quot;string&quot;</code></td><td></td></tr></tbody></table>
+<p>前端展示格式的用户当前订单。</p>
+<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>string</code></td><td>42 字符 0x 十六进制地址。只返回当前挂单。</td></tr><tr><td><code>dex</code></td><td><code>string</code></td><td>可选，默认 dex（空字符串）；非默认 dex 返回 501。</td></tr></tbody></table>
 <h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果。</td></tr><tr><td><code>400</code></td><td>未知 type 或参数错误。</td></tr><tr><td><code>501</code></td><td>type 可解析但尚未实现，或 dex 不是默认 dex。</td></tr><tr><td><code>503</code></td><td>副本尚未同步就绪。</td></tr></tbody></table><p class="resp-label">State__NodeDataOrder 数组</p><pre class="code">[
   {
     &quot;coin&quot;: &quot;BTCUSDC&quot;,
@@ -644,19 +435,22 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <h3>测试用例</h3>
 <div class="try" data-kind="post" data-id="post-State-frontendOpenOrders">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
+
 <textarea class="try-body" spellcheck="false">{
   &quot;type&quot;: &quot;frontendOpenOrders&quot;,
   &quot;user&quot;: &quot;0x1111111111111111111111111111111111111111&quot;
 }</textarea>
-<pre class="code try-alt" hidden></pre>
+<div class="prev-head">cURL（随上方实时更新） <button class="copy" data-copy="curl">复制</button></div>
+<pre class="code" data-preview="curl"></pre>
+<div class="prev-head">TypeScript（随上方实时更新） <button class="copy" data-copy="ts">复制</button></div>
+<pre class="code" data-preview="ts"></pre>
 <div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
 <pre class="code try-resp" hidden></pre>
 </div></section><section id="post-State-extraAgents" class="card">
 <div class="crumb">State · POST /info</div>
 <h2><span class="badge post">POST</span> extraAgents <span class="route">经网关走 <b>状态服务</b>。</span></h2>
-<p></p>
-<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>&quot;string&quot;</code></td><td></td></tr></tbody></table>
+<p>用户当前有效且已命名的 API wallet／agent。</p>
+<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>string</code></td><td>42 字符 0x 十六进制地址。只返回当前有效且已命名的 agent。</td></tr></tbody></table>
 <h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果。</td></tr><tr><td><code>400</code></td><td>未知 type 或参数错误。</td></tr><tr><td><code>501</code></td><td>type 可解析但尚未实现，或 dex 不是默认 dex。</td></tr><tr><td><code>503</code></td><td>副本尚未同步就绪。</td></tr></tbody></table><p class="resp-label">State__ExtraAgentResponse 数组</p><pre class="code">[
   {
     &quot;address&quot;: &quot;0x1111111111111111111111111111111111111111&quot;,
@@ -667,19 +461,22 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <h3>测试用例</h3>
 <div class="try" data-kind="post" data-id="post-State-extraAgents">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
+
 <textarea class="try-body" spellcheck="false">{
   &quot;type&quot;: &quot;extraAgents&quot;,
   &quot;user&quot;: &quot;0x1111111111111111111111111111111111111111&quot;
 }</textarea>
-<pre class="code try-alt" hidden></pre>
+<div class="prev-head">cURL（随上方实时更新） <button class="copy" data-copy="curl">复制</button></div>
+<pre class="code" data-preview="curl"></pre>
+<div class="prev-head">TypeScript（随上方实时更新） <button class="copy" data-copy="ts">复制</button></div>
+<pre class="code" data-preview="ts"></pre>
 <div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
 <pre class="code try-resp" hidden></pre>
 </div></section><section id="post-State-activeAssetData" class="card">
 <div class="crumb">State · POST /info</div>
 <h2><span class="badge post">POST</span> activeAssetData <span class="route">经网关走 <b>状态服务</b>。</span></h2>
-<p></p>
-<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>&quot;string&quot;</code></td><td></td></tr><tr><td><code>coin</code> <b class="req">*</b></td><td><code>&quot;string&quot;</code></td><td></td></tr></tbody></table>
+<p>用户在指定市场的杠杆、可交易数量和标记价格等状态。</p>
+<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>string</code></td><td>42 字符 0x 十六进制地址。</td></tr><tr><td><code>coin</code> <b class="req">*</b></td><td><code>string</code></td><td>币种，如 BTCUSDC。</td></tr></tbody></table>
 <h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果。</td></tr><tr><td><code>400</code></td><td>未知 type 或参数错误。</td></tr><tr><td><code>501</code></td><td>type 可解析但尚未实现，或 dex 不是默认 dex。</td></tr><tr><td><code>503</code></td><td>副本尚未同步就绪。</td></tr></tbody></table><p class="resp-label">State__ActiveAssetDataResponse</p><pre class="code">{
   &quot;user&quot;: &quot;0x1111111111111111111111111111111111111111&quot;,
   &quot;coin&quot;: &quot;BTCUSDC&quot;,
@@ -699,20 +496,23 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <h3>测试用例</h3>
 <div class="try" data-kind="post" data-id="post-State-activeAssetData">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
+
 <textarea class="try-body" spellcheck="false">{
   &quot;type&quot;: &quot;activeAssetData&quot;,
   &quot;user&quot;: &quot;0x1111111111111111111111111111111111111111&quot;,
   &quot;coin&quot;: &quot;BTCUSDC&quot;
 }</textarea>
-<pre class="code try-alt" hidden></pre>
+<div class="prev-head">cURL（随上方实时更新） <button class="copy" data-copy="curl">复制</button></div>
+<pre class="code" data-preview="curl"></pre>
+<div class="prev-head">TypeScript（随上方实时更新） <button class="copy" data-copy="ts">复制</button></div>
+<pre class="code" data-preview="ts"></pre>
 <div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
 <pre class="code try-resp" hidden></pre>
 </div></section><section id="post-State-userFees" class="card">
 <div class="crumb">State · POST /info</div>
 <h2><span class="badge post">POST</span> userFees <span class="route">经网关走 <b>状态服务</b>。</span></h2>
-<p></p>
-<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>&quot;string&quot;</code></td><td></td></tr></tbody></table>
+<p>用户手续费信息（链上固定费率）。</p>
+<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>string</code></td><td>42 字符 0x 十六进制地址。链上固定费率，无阶梯。</td></tr></tbody></table>
 <h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果。</td></tr><tr><td><code>400</code></td><td>未知 type 或参数错误。</td></tr><tr><td><code>501</code></td><td>type 可解析但尚未实现，或 dex 不是默认 dex。</td></tr><tr><td><code>503</code></td><td>副本尚未同步就绪。</td></tr></tbody></table><p class="resp-label">State__UserFeesResponse</p><pre class="code">{
   &quot;dailyUserVlm&quot;: [],
   &quot;feeSchedule&quot;: {
@@ -736,44 +536,21 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <h3>测试用例</h3>
 <div class="try" data-kind="post" data-id="post-State-userFees">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
+
 <textarea class="try-body" spellcheck="false">{
   &quot;type&quot;: &quot;userFees&quot;,
   &quot;user&quot;: &quot;0x1111111111111111111111111111111111111111&quot;
 }</textarea>
-<pre class="code try-alt" hidden></pre>
-<div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
-<pre class="code try-resp" hidden></pre>
-</div></section><section id="post-State-recentTrades" class="card">
-<div class="crumb">State · POST /info</div>
-<h2><span class="badge post">POST</span> recentTrades <span class="route">经网关走 <b>状态服务</b>。</span></h2>
-<p></p>
-<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>coin</code> <b class="req">*</b></td><td><code>&quot;string&quot;</code></td><td></td></tr></tbody></table>
-<h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果。</td></tr><tr><td><code>400</code></td><td>未知 type 或参数错误。</td></tr><tr><td><code>501</code></td><td>type 可解析但尚未实现，或 dex 不是默认 dex。</td></tr><tr><td><code>503</code></td><td>副本尚未同步就绪。</td></tr></tbody></table><p class="resp-label">State__RecentTradeResponse 数组</p><pre class="code">[
-  {
-    &quot;coin&quot;: &quot;BTCUSDC&quot;,
-    &quot;side&quot;: &quot;B&quot;,
-    &quot;px&quot;: &quot;&quot;,
-    &quot;sz&quot;: &quot;&quot;,
-    &quot;time&quot;: 0,
-    &quot;tid&quot;: 0
-  }
-]</pre>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-State-recentTrades">
-<div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
-<textarea class="try-body" spellcheck="false">{
-  &quot;type&quot;: &quot;recentTrades&quot;,
-  &quot;coin&quot;: &quot;BTCUSDC&quot;
-}</textarea>
-<pre class="code try-alt" hidden></pre>
+<div class="prev-head">cURL（随上方实时更新） <button class="copy" data-copy="curl">复制</button></div>
+<pre class="code" data-preview="curl"></pre>
+<div class="prev-head">TypeScript（随上方实时更新） <button class="copy" data-copy="ts">复制</button></div>
+<pre class="code" data-preview="ts"></pre>
 <div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
 <pre class="code try-resp" hidden></pre>
 </div></section><section id="post-State-exchangeStatus" class="card">
 <div class="crumb">State · POST /info</div>
 <h2><span class="badge post">POST</span> exchangeStatus <span class="route">经网关走 <b>状态服务</b>。</span></h2>
-<p></p>
+<p>交易所特殊状态公告位；本链恒为 null。</p>
 <h3>入参</h3><p class="note">无业务参数（仅 type 常量）。</p>
 <h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果。</td></tr><tr><td><code>400</code></td><td>未知 type 或参数错误。</td></tr><tr><td><code>501</code></td><td>type 可解析但尚未实现，或 dex 不是默认 dex。</td></tr><tr><td><code>503</code></td><td>副本尚未同步就绪。</td></tr></tbody></table><p class="resp-label">State__ExchangeStatusResponse</p><pre class="code">{
   &quot;time&quot;: 0,
@@ -784,18 +561,21 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <h3>测试用例</h3>
 <div class="try" data-kind="post" data-id="post-State-exchangeStatus">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
+
 <textarea class="try-body" spellcheck="false">{
   &quot;type&quot;: &quot;exchangeStatus&quot;
 }</textarea>
-<pre class="code try-alt" hidden></pre>
+<div class="prev-head">cURL（随上方实时更新） <button class="copy" data-copy="curl">复制</button></div>
+<pre class="code" data-preview="curl"></pre>
+<div class="prev-head">TypeScript（随上方实时更新） <button class="copy" data-copy="ts">复制</button></div>
+<pre class="code" data-preview="ts"></pre>
 <div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
 <pre class="code try-resp" hidden></pre>
 </div></section><section id="post-State-orderStatus" class="card">
 <div class="crumb">State · POST /info</div>
 <h2><span class="badge post">POST</span> orderStatus <span class="route">经网关走 <b>状态服务</b>。</span></h2>
-<p></p>
-<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>&quot;string&quot;</code></td><td></td></tr><tr><td><code>oid</code> <b class="req">*</b></td><td><code>&quot;object&quot;</code></td><td>数字按链上 oid 查；字符串按 cloid 查（经链上 cloid_to_oid 映射）。找不到返回 {&quot;status&quot;:&quot;unknownOid&quot;}。</td></tr></tbody></table>
+<p>单个订单状态；只查活单，终态返回 unknownOid。</p>
+<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>string</code></td><td>42 字符 0x 十六进制地址。</td></tr><tr><td><code>oid</code> <b class="req">*</b></td><td><code>integer | string</code></td><td>数字按链上 oid 查；字符串按 cloid 查（经链上 cloid_to_oid 映射）。找不到返回 {&quot;status&quot;:&quot;unknownOid&quot;}。</td></tr></tbody></table>
 <h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果。</td></tr><tr><td><code>400</code></td><td>未知 type 或参数错误。</td></tr><tr><td><code>501</code></td><td>type 可解析但尚未实现，或 dex 不是默认 dex。</td></tr><tr><td><code>503</code></td><td>副本尚未同步就绪。</td></tr></tbody></table><p class="resp-label">State__OrderStatusResponse</p><pre class="code">{
   &quot;status&quot;: &quot;&quot;,
   &quot;order&quot;: {
@@ -862,226 +642,42 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <h3>测试用例</h3>
 <div class="try" data-kind="post" data-id="post-State-orderStatus">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
+
 <textarea class="try-body" spellcheck="false">{
   &quot;type&quot;: &quot;orderStatus&quot;,
   &quot;user&quot;: &quot;0x1111111111111111111111111111111111111111&quot;,
   &quot;oid&quot;: 2
 }</textarea>
-<pre class="code try-alt" hidden></pre>
-<div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
-<pre class="code try-resp" hidden></pre>
-</div></section><section id="post-State-webData2" class="card">
-<div class="crumb">State · POST /info</div>
-<h2><span class="badge post">POST</span> webData2 <span class="route">经网关走 <b>状态服务</b>。</span></h2>
-<p></p>
-<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>&quot;string&quot;</code></td><td></td></tr><tr><td><code>dex</code></td><td><code>&quot;string&quot;</code></td><td></td></tr></tbody></table>
-<h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果。</td></tr><tr><td><code>400</code></td><td>未知 type 或参数错误。</td></tr><tr><td><code>501</code></td><td>type 可解析但尚未实现，或 dex 不是默认 dex。</td></tr><tr><td><code>503</code></td><td>副本尚未同步就绪。</td></tr></tbody></table><p class="resp-label">State__WebData2Response</p><pre class="code">{
-  &quot;clearinghouseState&quot;: {
-    &quot;marginSummary&quot;: {
-      &quot;accountValue&quot;: &quot;&quot;,
-      &quot;totalNtlPos&quot;: &quot;&quot;,
-      &quot;totalRawUsd&quot;: &quot;&quot;,
-      &quot;totalMarginUsed&quot;: &quot;&quot;
-    },
-    &quot;crossMarginSummary&quot;: {
-      &quot;accountValue&quot;: &quot;&quot;,
-      &quot;totalNtlPos&quot;: &quot;&quot;,
-      &quot;totalRawUsd&quot;: &quot;&quot;,
-      &quot;totalMarginUsed&quot;: &quot;&quot;
-    },
-    &quot;crossMaintenanceMarginUsed&quot;: &quot;&quot;,
-    &quot;withdrawable&quot;: &quot;&quot;,
-    &quot;assetPositions&quot;: [
-      {
-        &quot;type&quot;: &quot;oneWay&quot;,
-        &quot;position&quot;: {
-          &quot;coin&quot;: &quot;BTCUSDC&quot;,
-          &quot;szi&quot;: &quot;&quot;,
-          &quot;leverage&quot;: {
-            &quot;type&quot;: &quot;&quot;,
-            &quot;value&quot;: 0,
-            &quot;rawUsd&quot;: &quot;&quot;
-          },
-          &quot;entryPx&quot;: &quot;&quot;,
-          &quot;positionValue&quot;: &quot;&quot;,
-          &quot;unrealizedPnl&quot;: &quot;&quot;,
-          &quot;returnOnEquity&quot;: &quot;&quot;,
-          &quot;marginUsed&quot;: &quot;&quot;,
-          &quot;maxLeverage&quot;: 0,
-          &quot;cumFunding&quot;: {
-            &quot;allTime&quot;: &quot;&quot;,
-            &quot;sinceOpen&quot;: &quot;&quot;,
-            &quot;sinceChange&quot;: &quot;&quot;
-          },
-          &quot;liquidationPx&quot;: &quot;&quot;
-        }
-      }
-    ],
-    &quot;time&quot;: 0
-  },
-  &quot;leadingVaults&quot;: [],
-  &quot;totalVaultEquity&quot;: &quot;&quot;,
-  &quot;openOrders&quot;: [
-    {
-      &quot;coin&quot;: &quot;BTCUSDC&quot;,
-      &quot;side&quot;: &quot;&quot;,
-      &quot;limitPx&quot;: &quot;&quot;,
-      &quot;sz&quot;: &quot;&quot;,
-      &quot;oid&quot;: 2,
-      &quot;timestamp&quot;: 0,
-      &quot;triggerCondition&quot;: &quot;&quot;,
-      &quot;isTrigger&quot;: false,
-      &quot;triggerPx&quot;: &quot;&quot;,
-      &quot;children&quot;: [
-        {
-          &quot;coin&quot;: &quot;BTCUSDC&quot;,
-          &quot;side&quot;: &quot;&quot;,
-          &quot;limitPx&quot;: &quot;&quot;,
-          &quot;sz&quot;: &quot;&quot;,
-          &quot;oid&quot;: 2,
-          &quot;timestamp&quot;: 0,
-          &quot;triggerCondition&quot;: &quot;&quot;,
-          &quot;isTrigger&quot;: false,
-          &quot;triggerPx&quot;: &quot;&quot;,
-          &quot;children&quot;: [
-            {
-              &quot;coin&quot;: &quot;…&quot;,
-              &quot;side&quot;: &quot;…&quot;,
-              &quot;limitPx&quot;: &quot;…&quot;,
-              &quot;sz&quot;: &quot;…&quot;,
-              &quot;oid&quot;: &quot;…&quot;,
-              &quot;timestamp&quot;: &quot;…&quot;,
-              &quot;triggerCondition&quot;: &quot;…&quot;,
-              &quot;isTrigger&quot;: &quot;…&quot;,
-              &quot;triggerPx&quot;: &quot;…&quot;,
-              &quot;children&quot;: &quot;…&quot;,
-              &quot;isPositionTpsl&quot;: &quot;…&quot;,
-              &quot;reduceOnly&quot;: &quot;…&quot;,
-              &quot;orderType&quot;: &quot;…&quot;,
-              &quot;origSz&quot;: &quot;…&quot;,
-              &quot;tif&quot;: &quot;…&quot;,
-              &quot;cloid&quot;: &quot;…&quot;
-            }
-          ],
-          &quot;isPositionTpsl&quot;: false,
-          &quot;reduceOnly&quot;: false,
-          &quot;orderType&quot;: &quot;&quot;,
-          &quot;origSz&quot;: &quot;&quot;,
-          &quot;tif&quot;: &quot;&quot;,
-          &quot;cloid&quot;: &quot;&quot;
-        }
-      ],
-      &quot;isPositionTpsl&quot;: false,
-      &quot;reduceOnly&quot;: false,
-      &quot;orderType&quot;: &quot;&quot;,
-      &quot;origSz&quot;: &quot;&quot;,
-      &quot;tif&quot;: &quot;&quot;,
-      &quot;cloid&quot;: &quot;&quot;
-    }
-  ],
-  &quot;cumLedger&quot;: &quot;&quot;,
-  &quot;meta&quot;: {
-    &quot;universe&quot;: [
-      {
-        &quot;szDecimals&quot;: 0,
-        &quot;name&quot;: &quot;BTCUSDC&quot;,
-        &quot;maxLeverage&quot;: 0,
-        &quot;marginTableId&quot;: 0,
-        &quot;onlyIsolated&quot;: false,
-        &quot;isDelisted&quot;: false,
-        &quot;marginMode&quot;: &quot;&quot;
-      }
-    ],
-    &quot;marginTables&quot;: [
-      [
-        0,
-        {
-          &quot;description&quot;: &quot;&quot;,
-          &quot;marginTiers&quot;: [
-            {
-              &quot;lowerBound&quot;: &quot;…&quot;,
-              &quot;maxLeverage&quot;: &quot;…&quot;
-            }
-          ]
-        }
-      ]
-    ],
-    &quot;collateralToken&quot;: 0
-  },
-  &quot;assetCtxs&quot;: [
-    {
-      &quot;funding&quot;: &quot;&quot;,
-      &quot;openInterest&quot;: &quot;&quot;,
-      &quot;prevDayPx&quot;: &quot;&quot;,
-      &quot;dayNtlVlm&quot;: &quot;&quot;,
-      &quot;oraclePx&quot;: &quot;&quot;,
-      &quot;markPx&quot;: &quot;&quot;,
-      &quot;dayBaseVlm&quot;: &quot;&quot;,
-      &quot;premium&quot;: &quot;&quot;,
-      &quot;midPx&quot;: &quot;&quot;,
-      &quot;impactPxs&quot;: [
-        &quot;&quot;
-      ]
-    }
-  ],
-  &quot;serverTime&quot;: 0,
-  &quot;isVault&quot;: false,
-  &quot;user&quot;: &quot;0x1111111111111111111111111111111111111111&quot;,
-  &quot;twapStates&quot;: [],
-  &quot;spotAssetCtxs&quot;: [],
-  &quot;perpsAtOpenInterestCap&quot;: [],
-  &quot;agentAddress&quot;: &quot;0x2222222222222222222222222222222222222222&quot;,
-  &quot;agentValidUntil&quot;: 0
-}</pre>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-State-webData2">
-<div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
-<textarea class="try-body" spellcheck="false">{
-  &quot;type&quot;: &quot;webData2&quot;,
-  &quot;user&quot;: &quot;0x1111111111111111111111111111111111111111&quot;
-}</textarea>
-<pre class="code try-alt" hidden></pre>
-<div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
-<pre class="code try-resp" hidden></pre>
-</div></section><section id="post-Indexer-metaAndAssetCtxs" class="card">
-<div class="crumb">Indexer · POST /info</div>
-<h2><span class="badge post">POST</span> metaAndAssetCtxs <span class="route">经网关走 <b>Indexer</b>。</span></h2>
-<p></p>
-<h3>入参</h3><p class="note">无业务参数（仅 type 常量）。</p>
-<h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果；历史存储未启用时历史类返回 []。</td></tr><tr><td><code>400</code></td><td>请求参数错误，或时间范围超出留存窗口。</td></tr><tr><td><code>404</code></td><td>非 indexer info type。</td></tr></tbody></table><p class="note">[meta, 行情数组]；meta 取自上游节点，行情取自本地 ctxs。</p>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-Indexer-metaAndAssetCtxs">
-<div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
-<textarea class="try-body" spellcheck="false">{
-  &quot;type&quot;: &quot;metaAndAssetCtxs&quot;
-}</textarea>
-<pre class="code try-alt" hidden></pre>
+<div class="prev-head">cURL（随上方实时更新） <button class="copy" data-copy="curl">复制</button></div>
+<pre class="code" data-preview="curl"></pre>
+<div class="prev-head">TypeScript（随上方实时更新） <button class="copy" data-copy="ts">复制</button></div>
+<pre class="code" data-preview="ts"></pre>
 <div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
 <pre class="code try-resp" hidden></pre>
 </div></section><section id="post-Indexer-webData2" class="card">
 <div class="crumb">Indexer · POST /info</div>
 <h2><span class="badge post">POST</span> webData2 <span class="route">经网关走 <b>Indexer</b>。</span></h2>
-<p></p>
-<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>&quot;string&quot;</code></td><td></td></tr></tbody></table>
+<p>前端页面加载所需的账户和市场聚合数据。</p>
+<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>string</code></td><td>42 字符 0x 十六进制地址。</td></tr></tbody></table>
 <h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果；历史存储未启用时历史类返回 []。</td></tr><tr><td><code>400</code></td><td>请求参数错误，或时间范围超出留存窗口。</td></tr><tr><td><code>404</code></td><td>非 indexer info type。</td></tr></tbody></table><p class="note">页面加载聚合对象（账户 + 挂单 + 元数据 + 行情）。</p>
 <h3>测试用例</h3>
 <div class="try" data-kind="post" data-id="post-Indexer-webData2">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
+
 <textarea class="try-body" spellcheck="false">{
   &quot;type&quot;: &quot;webData2&quot;,
   &quot;user&quot;: &quot;0x1111111111111111111111111111111111111111&quot;
 }</textarea>
-<pre class="code try-alt" hidden></pre>
+<div class="prev-head">cURL（随上方实时更新） <button class="copy" data-copy="curl">复制</button></div>
+<pre class="code" data-preview="curl"></pre>
+<div class="prev-head">TypeScript（随上方实时更新） <button class="copy" data-copy="ts">复制</button></div>
+<pre class="code" data-preview="ts"></pre>
 <div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
 <pre class="code try-resp" hidden></pre>
 </div></section><section id="post-Indexer-allMids" class="card">
 <div class="crumb">Indexer · POST /info</div>
 <h2><span class="badge post">POST</span> allMids <span class="route">经网关走 <b>Indexer</b>。</span></h2>
-<p></p>
+<p>全部市场的中间价。</p>
 <h3>入参</h3><p class="note">无业务参数（仅 type 常量）。</p>
 <h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果；历史存储未启用时历史类返回 []。</td></tr><tr><td><code>400</code></td><td>请求参数错误，或时间范围超出留存窗口。</td></tr><tr><td><code>404</code></td><td>非 indexer info type。</td></tr></tbody></table><pre class="code">{
   &quot;mids&quot;: {
@@ -1091,181 +687,186 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <h3>测试用例</h3>
 <div class="try" data-kind="post" data-id="post-Indexer-allMids">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
+
 <textarea class="try-body" spellcheck="false">{
   &quot;type&quot;: &quot;allMids&quot;
 }</textarea>
-<pre class="code try-alt" hidden></pre>
+<div class="prev-head">cURL（随上方实时更新） <button class="copy" data-copy="curl">复制</button></div>
+<pre class="code" data-preview="curl"></pre>
+<div class="prev-head">TypeScript（随上方实时更新） <button class="copy" data-copy="ts">复制</button></div>
+<pre class="code" data-preview="ts"></pre>
 <div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
 <pre class="code try-resp" hidden></pre>
 </div></section><section id="post-Indexer-candleSnapshot" class="card">
 <div class="crumb">Indexer · POST /info</div>
 <h2><span class="badge post">POST</span> candleSnapshot <span class="route">经网关走 <b>Indexer</b>。</span></h2>
-<p></p>
-<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>coin</code> <b class="req">*</b></td><td><code>&quot;string&quot;</code></td><td></td></tr><tr><td><code>interval</code> <b class="req">*</b></td><td><code>&quot;string&quot;</code></td><td></td></tr><tr><td><code>startTime</code></td><td><code>&quot;integer&quot;</code></td><td>可选，毫秒，默认 0。</td></tr><tr><td><code>endTime</code></td><td><code>&quot;integer&quot;</code></td><td>可选，毫秒，默认 u64::MAX。</td></tr></tbody></table>
+<p>K 线快照。</p>
+<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>coin</code> <b class="req">*</b></td><td><code>string</code></td><td>币种，如 BTCUSDC。</td></tr><tr><td><code>interval</code> <b class="req">*</b></td><td><code>string</code></td><td>K 线周期（1m/5m/15m/1h/4h/1d）。</td></tr><tr><td><code>startTime</code></td><td><code>integer</code></td><td>可选，毫秒，默认 0。</td></tr><tr><td><code>endTime</code></td><td><code>integer</code></td><td>可选，毫秒，默认 u64::MAX。</td></tr></tbody></table>
 <h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果；历史存储未启用时历史类返回 []。</td></tr><tr><td><code>400</code></td><td>请求参数错误，或时间范围超出留存窗口。</td></tr><tr><td><code>404</code></td><td>非 indexer info type。</td></tr></tbody></table><p class="note">K 线数组（SDK candle wire {t,T,s,i,o,c,h,l,v,n}）。</p>
 <h3>测试用例</h3>
 <div class="try" data-kind="post" data-id="post-Indexer-candleSnapshot">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
+
 <textarea class="try-body" spellcheck="false">{
   &quot;type&quot;: &quot;candleSnapshot&quot;,
   &quot;coin&quot;: &quot;BTCUSDC&quot;,
   &quot;interval&quot;: &quot;1h&quot;
 }</textarea>
-<pre class="code try-alt" hidden></pre>
-<div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
-<pre class="code try-resp" hidden></pre>
-</div></section><section id="post-Indexer-orderStatus" class="card">
-<div class="crumb">Indexer · POST /info</div>
-<h2><span class="badge post">POST</span> orderStatus <span class="route">经网关走 <b>Indexer</b>。</span></h2>
-<p></p>
-<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>&quot;string&quot;</code></td><td></td></tr><tr><td><code>oid</code> <b class="req">*</b></td><td><code>&quot;object&quot;</code></td><td>数字按 oid 查；字符串按 cloid 查。找不到返回 {&quot;status&quot;:&quot;unknownOid&quot;}。</td></tr></tbody></table>
-<h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果；历史存储未启用时历史类返回 []。</td></tr><tr><td><code>400</code></td><td>请求参数错误，或时间范围超出留存窗口。</td></tr><tr><td><code>404</code></td><td>非 indexer info type。</td></tr></tbody></table><p class="resp-label">Indexer__OrderStatusResponse</p><pre class="code">{
-  &quot;status&quot;: &quot;&quot;,
-  &quot;order&quot;: {},
-  &quot;statusTimestamp&quot;: 0
-}</pre>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-Indexer-orderStatus">
-<div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
-<textarea class="try-body" spellcheck="false">{
-  &quot;type&quot;: &quot;orderStatus&quot;,
-  &quot;user&quot;: &quot;0x1111111111111111111111111111111111111111&quot;,
-  &quot;oid&quot;: 2
-}</textarea>
-<pre class="code try-alt" hidden></pre>
+<div class="prev-head">cURL（随上方实时更新） <button class="copy" data-copy="curl">复制</button></div>
+<pre class="code" data-preview="curl"></pre>
+<div class="prev-head">TypeScript（随上方实时更新） <button class="copy" data-copy="ts">复制</button></div>
+<pre class="code" data-preview="ts"></pre>
 <div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
 <pre class="code try-resp" hidden></pre>
 </div></section><section id="post-Indexer-l2Book" class="card">
 <div class="crumb">Indexer · POST /info</div>
 <h2><span class="badge post">POST</span> l2Book <span class="route">经网关走 <b>Indexer</b>。</span></h2>
-<p></p>
-<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>coin</code> <b class="req">*</b></td><td><code>&quot;string&quot;</code></td><td></td></tr><tr><td><code>nSigFigs</code></td><td><code>&quot;integer&quot;</code></td><td></td></tr><tr><td><code>mantissa</code></td><td><code>&quot;integer&quot;</code></td><td></td></tr><tr><td><code>nLevels</code></td><td><code>&quot;integer&quot;</code></td><td></td></tr></tbody></table>
+<p>L2 聚合订单簿（本地订单簿引擎）。</p>
+<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>coin</code> <b class="req">*</b></td><td><code>string</code></td><td>币种，如 BTCUSDC。</td></tr><tr><td><code>nSigFigs</code></td><td><code>integer</code></td><td>可选，有上限校验。</td></tr><tr><td><code>mantissa</code></td><td><code>integer</code></td><td>可选，有上限校验。</td></tr><tr><td><code>nLevels</code></td><td><code>integer</code></td><td>可选，有上限校验。</td></tr></tbody></table>
 <h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果；历史存储未启用时历史类返回 []。</td></tr><tr><td><code>400</code></td><td>请求参数错误，或时间范围超出留存窗口。</td></tr><tr><td><code>404</code></td><td>非 indexer info type。</td></tr></tbody></table><p class="note">本地订单簿引擎的盘口快照。</p>
 <h3>测试用例</h3>
 <div class="try" data-kind="post" data-id="post-Indexer-l2Book">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
+
 <textarea class="try-body" spellcheck="false">{
   &quot;type&quot;: &quot;l2Book&quot;,
   &quot;coin&quot;: &quot;BTCUSDC&quot;
 }</textarea>
-<pre class="code try-alt" hidden></pre>
+<div class="prev-head">cURL（随上方实时更新） <button class="copy" data-copy="curl">复制</button></div>
+<pre class="code" data-preview="curl"></pre>
+<div class="prev-head">TypeScript（随上方实时更新） <button class="copy" data-copy="ts">复制</button></div>
+<pre class="code" data-preview="ts"></pre>
 <div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
 <pre class="code try-resp" hidden></pre>
 </div></section><section id="post-Indexer-fundingHistory" class="card">
 <div class="crumb">Indexer · POST /info</div>
 <h2><span class="badge post">POST</span> fundingHistory <span class="route">经网关走 <b>Indexer</b>。</span></h2>
-<p></p>
-<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>coin</code> <b class="req">*</b></td><td><code>&quot;string&quot;</code></td><td></td></tr><tr><td><code>startTime</code> <b class="req">*</b></td><td><code>&quot;integer&quot;</code></td><td>毫秒。</td></tr><tr><td><code>endTime</code></td><td><code>&quot;integer&quot;</code></td><td>可选，毫秒，默认 i64::MAX。</td></tr></tbody></table>
+<p>按时间范围查询市场资金费历史。</p>
+<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>coin</code> <b class="req">*</b></td><td><code>string</code></td><td>币种，如 BTCUSDC。</td></tr><tr><td><code>startTime</code> <b class="req">*</b></td><td><code>integer</code></td><td>毫秒。</td></tr><tr><td><code>endTime</code></td><td><code>integer</code></td><td>可选，毫秒，默认 i64::MAX。</td></tr></tbody></table>
 <h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果；历史存储未启用时历史类返回 []。</td></tr><tr><td><code>400</code></td><td>请求参数错误，或时间范围超出留存窗口。</td></tr><tr><td><code>404</code></td><td>非 indexer info type。</td></tr></tbody></table><p class="note">资金费历史数组。</p>
 <h3>测试用例</h3>
 <div class="try" data-kind="post" data-id="post-Indexer-fundingHistory">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
+
 <textarea class="try-body" spellcheck="false">{
   &quot;type&quot;: &quot;fundingHistory&quot;,
   &quot;coin&quot;: &quot;BTCUSDC&quot;,
   &quot;startTime&quot;: 0
 }</textarea>
-<pre class="code try-alt" hidden></pre>
+<div class="prev-head">cURL（随上方实时更新） <button class="copy" data-copy="curl">复制</button></div>
+<pre class="code" data-preview="curl"></pre>
+<div class="prev-head">TypeScript（随上方实时更新） <button class="copy" data-copy="ts">复制</button></div>
+<pre class="code" data-preview="ts"></pre>
 <div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
 <pre class="code try-resp" hidden></pre>
 </div></section><section id="post-Indexer-userFillsByTime" class="card">
 <div class="crumb">Indexer · POST /info</div>
 <h2><span class="badge post">POST</span> userFillsByTime <span class="route">经网关走 <b>Indexer</b>。</span></h2>
-<p></p>
-<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>&quot;string&quot;</code></td><td></td></tr><tr><td><code>startTime</code> <b class="req">*</b></td><td><code>&quot;integer&quot;</code></td><td>毫秒。</td></tr><tr><td><code>endTime</code></td><td><code>&quot;integer&quot;</code></td><td>可选，毫秒，默认 i64::MAX。</td></tr></tbody></table>
+<p>按时间范围查询用户成交。</p>
+<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>string</code></td><td>42 字符 0x 十六进制地址。</td></tr><tr><td><code>startTime</code> <b class="req">*</b></td><td><code>integer</code></td><td>毫秒。</td></tr><tr><td><code>endTime</code></td><td><code>integer</code></td><td>可选，毫秒，默认 i64::MAX。</td></tr></tbody></table>
 <h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果；历史存储未启用时历史类返回 []。</td></tr><tr><td><code>400</code></td><td>请求参数错误，或时间范围超出留存窗口。</td></tr><tr><td><code>404</code></td><td>非 indexer info type。</td></tr></tbody></table><p class="note">Fill 数组（Hyperliquid SDK Fill 原文透传）。</p>
 <h3>测试用例</h3>
 <div class="try" data-kind="post" data-id="post-Indexer-userFillsByTime">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
+
 <textarea class="try-body" spellcheck="false">{
   &quot;type&quot;: &quot;userFillsByTime&quot;,
   &quot;user&quot;: &quot;0x1111111111111111111111111111111111111111&quot;,
   &quot;startTime&quot;: 0
 }</textarea>
-<pre class="code try-alt" hidden></pre>
+<div class="prev-head">cURL（随上方实时更新） <button class="copy" data-copy="curl">复制</button></div>
+<pre class="code" data-preview="curl"></pre>
+<div class="prev-head">TypeScript（随上方实时更新） <button class="copy" data-copy="ts">复制</button></div>
+<pre class="code" data-preview="ts"></pre>
 <div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
 <pre class="code try-resp" hidden></pre>
 </div></section><section id="post-Indexer-userFills" class="card">
 <div class="crumb">Indexer · POST /info</div>
 <h2><span class="badge post">POST</span> userFills <span class="route">经网关走 <b>Indexer</b>。</span></h2>
-<p></p>
-<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>&quot;string&quot;</code></td><td></td></tr></tbody></table>
+<p>用户近期成交（Fill 原文）。</p>
+<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>string</code></td><td>42 字符 0x 十六进制地址。</td></tr></tbody></table>
 <h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果；历史存储未启用时历史类返回 []。</td></tr><tr><td><code>400</code></td><td>请求参数错误，或时间范围超出留存窗口。</td></tr><tr><td><code>404</code></td><td>非 indexer info type。</td></tr></tbody></table><p class="note">Fill 数组（Hyperliquid SDK Fill 原文透传）。</p>
 <h3>测试用例</h3>
 <div class="try" data-kind="post" data-id="post-Indexer-userFills">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
+
 <textarea class="try-body" spellcheck="false">{
   &quot;type&quot;: &quot;userFills&quot;,
   &quot;user&quot;: &quot;0x1111111111111111111111111111111111111111&quot;
 }</textarea>
-<pre class="code try-alt" hidden></pre>
+<div class="prev-head">cURL（随上方实时更新） <button class="copy" data-copy="curl">复制</button></div>
+<pre class="code" data-preview="curl"></pre>
+<div class="prev-head">TypeScript（随上方实时更新） <button class="copy" data-copy="ts">复制</button></div>
+<pre class="code" data-preview="ts"></pre>
 <div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
 <pre class="code try-resp" hidden></pre>
 </div></section><section id="post-Indexer-recentTrades" class="card">
 <div class="crumb">Indexer · POST /info</div>
 <h2><span class="badge post">POST</span> recentTrades <span class="route">经网关走 <b>Indexer</b>。</span></h2>
-<p></p>
-<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>coin</code> <b class="req">*</b></td><td><code>&quot;string&quot;</code></td><td></td></tr></tbody></table>
+<p>最近成交（与 WS trades 配对方式一致）。</p>
+<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>coin</code> <b class="req">*</b></td><td><code>string</code></td><td>币种，如 BTCUSDC。</td></tr></tbody></table>
 <h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果；历史存储未启用时历史类返回 []。</td></tr><tr><td><code>400</code></td><td>请求参数错误，或时间范围超出留存窗口。</td></tr><tr><td><code>404</code></td><td>非 indexer info type。</td></tr></tbody></table><p class="note">公开成交数组（与 WS trades 频道配对方式一致）。</p>
 <h3>测试用例</h3>
 <div class="try" data-kind="post" data-id="post-Indexer-recentTrades">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
+
 <textarea class="try-body" spellcheck="false">{
   &quot;type&quot;: &quot;recentTrades&quot;,
   &quot;coin&quot;: &quot;BTCUSDC&quot;
 }</textarea>
-<pre class="code try-alt" hidden></pre>
+<div class="prev-head">cURL（随上方实时更新） <button class="copy" data-copy="curl">复制</button></div>
+<pre class="code" data-preview="curl"></pre>
+<div class="prev-head">TypeScript（随上方实时更新） <button class="copy" data-copy="ts">复制</button></div>
+<pre class="code" data-preview="ts"></pre>
 <div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
 <pre class="code try-resp" hidden></pre>
 </div></section><section id="post-Indexer-userFunding" class="card">
 <div class="crumb">Indexer · POST /info</div>
 <h2><span class="badge post">POST</span> userFunding <span class="route">经网关走 <b>Indexer</b>。</span></h2>
-<p></p>
-<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>&quot;string&quot;</code></td><td></td></tr><tr><td><code>startTime</code> <b class="req">*</b></td><td><code>&quot;integer&quot;</code></td><td>毫秒。</td></tr><tr><td><code>endTime</code></td><td><code>&quot;integer&quot;</code></td><td>可选，毫秒，默认 i64::MAX。</td></tr></tbody></table>
+<p>按时间范围查询用户资金费。</p>
+<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>string</code></td><td>42 字符 0x 十六进制地址。</td></tr><tr><td><code>startTime</code> <b class="req">*</b></td><td><code>integer</code></td><td>毫秒。</td></tr><tr><td><code>endTime</code></td><td><code>integer</code></td><td>可选，毫秒，默认 i64::MAX。</td></tr></tbody></table>
 <h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果；历史存储未启用时历史类返回 []。</td></tr><tr><td><code>400</code></td><td>请求参数错误，或时间范围超出留存窗口。</td></tr><tr><td><code>404</code></td><td>非 indexer info type。</td></tr></tbody></table><p class="note">资金费数组。</p>
 <h3>测试用例</h3>
 <div class="try" data-kind="post" data-id="post-Indexer-userFunding">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
+
 <textarea class="try-body" spellcheck="false">{
   &quot;type&quot;: &quot;userFunding&quot;,
   &quot;user&quot;: &quot;0x1111111111111111111111111111111111111111&quot;,
   &quot;startTime&quot;: 0
 }</textarea>
-<pre class="code try-alt" hidden></pre>
+<div class="prev-head">cURL（随上方实时更新） <button class="copy" data-copy="curl">复制</button></div>
+<pre class="code" data-preview="curl"></pre>
+<div class="prev-head">TypeScript（随上方实时更新） <button class="copy" data-copy="ts">复制</button></div>
+<pre class="code" data-preview="ts"></pre>
 <div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
 <pre class="code try-resp" hidden></pre>
 </div></section><section id="post-Indexer-userNonFundingLedgerUpdates" class="card">
 <div class="crumb">Indexer · POST /info</div>
 <h2><span class="badge post">POST</span> userNonFundingLedgerUpdates <span class="route">经网关走 <b>Indexer</b>。</span></h2>
-<p></p>
-<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>&quot;string&quot;</code></td><td></td></tr><tr><td><code>startTime</code> <b class="req">*</b></td><td><code>&quot;integer&quot;</code></td><td>毫秒。</td></tr><tr><td><code>endTime</code></td><td><code>&quot;integer&quot;</code></td><td>可选，毫秒，默认 i64::MAX。</td></tr></tbody></table>
+<p>按时间范围查询用户非资金类账本变更。</p>
+<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>string</code></td><td>42 字符 0x 十六进制地址。</td></tr><tr><td><code>startTime</code> <b class="req">*</b></td><td><code>integer</code></td><td>毫秒。</td></tr><tr><td><code>endTime</code></td><td><code>integer</code></td><td>可选，毫秒，默认 i64::MAX。</td></tr></tbody></table>
 <h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果；历史存储未启用时历史类返回 []。</td></tr><tr><td><code>400</code></td><td>请求参数错误，或时间范围超出留存窗口。</td></tr><tr><td><code>404</code></td><td>非 indexer info type。</td></tr></tbody></table><p class="note">非资金类账本变更数组。</p>
 <h3>测试用例</h3>
 <div class="try" data-kind="post" data-id="post-Indexer-userNonFundingLedgerUpdates">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
+
 <textarea class="try-body" spellcheck="false">{
   &quot;type&quot;: &quot;userNonFundingLedgerUpdates&quot;,
   &quot;user&quot;: &quot;0x1111111111111111111111111111111111111111&quot;,
   &quot;startTime&quot;: 0
 }</textarea>
-<pre class="code try-alt" hidden></pre>
+<div class="prev-head">cURL（随上方实时更新） <button class="copy" data-copy="curl">复制</button></div>
+<pre class="code" data-preview="curl"></pre>
+<div class="prev-head">TypeScript（随上方实时更新） <button class="copy" data-copy="ts">复制</button></div>
+<pre class="code" data-preview="ts"></pre>
 <div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
 <pre class="code try-resp" hidden></pre>
 </div></section><section id="post-Indexer-historicalOrders" class="card">
 <div class="crumb">Indexer · POST /info</div>
 <h2><span class="badge post">POST</span> historicalOrders <span class="route">经网关走 <b>Indexer</b>。</span></h2>
-<p></p>
-<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>&quot;string&quot;</code></td><td></td></tr></tbody></table>
+<p>用户近期历史订单（{order,status,statusTimestamp}）。</p>
+<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>string</code></td><td>42 字符 0x 十六进制地址。</td></tr></tbody></table>
 <h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果；历史存储未启用时历史类返回 []。</td></tr><tr><td><code>400</code></td><td>请求参数错误，或时间范围超出留存窗口。</td></tr><tr><td><code>404</code></td><td>非 indexer info type。</td></tr></tbody></table><p class="resp-label">Indexer__HistoricalOrderItem 数组</p><pre class="code">[
   {
     &quot;order&quot;: {},
@@ -1276,17 +877,20 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <h3>测试用例</h3>
 <div class="try" data-kind="post" data-id="post-Indexer-historicalOrders">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="tabs"><button class="tab on" data-tab="json">JSON</button><button class="tab" data-tab="curl">cURL</button><button class="tab" data-tab="ts">TypeScript</button></div></div>
+
 <textarea class="try-body" spellcheck="false">{
   &quot;type&quot;: &quot;historicalOrders&quot;,
   &quot;user&quot;: &quot;0x1111111111111111111111111111111111111111&quot;
 }</textarea>
-<pre class="code try-alt" hidden></pre>
+<div class="prev-head">cURL（随上方实时更新） <button class="copy" data-copy="curl">复制</button></div>
+<pre class="code" data-preview="curl"></pre>
+<div class="prev-head">TypeScript（随上方实时更新） <button class="copy" data-copy="ts">复制</button></div>
+<pre class="code" data-preview="ts"></pre>
 <div class="try-bar"><button class="send">发送</button><span class="try-meta"></span></div>
 <pre class="code try-resp" hidden></pre>
 </div></section><section id="ws-State-assetCtxs" class="card">
 <div class="crumb">State · WebSocket /ws</div>
-<h2><span class="badge ws">WS</span> assetCtxs <span class="route">自加扩展（标准 SDK 不发送）</span></h2>
+<h2><span class="badge ws">WS</span> assetCtxs <span class="route">自加扩展（标准 SDK 不发送） · 经网关走 <b>State</b>。</span></h2>
 <p>GET /ws（单连接多路复用）：订阅 {&quot;method&quot;:&quot;subscribe&quot;,&quot;subscription&quot;:{&quot;type&quot;: ... }}，心跳 {&quot;method&quot;:&quot;ping&quot;} 回 {&quot;channel&quot;:&quot;pong&quot;}</p>
 <table class="kv"><thead><tr><th>参数</th><th>推送 channel</th><th>数据</th></tr></thead>
 <tbody><tr><td><code>dex?</code></td><td><code>assetCtxs</code></td><td>{dex, ctxs:[...]}（ctxs 顺序与 meta.universe 一致，客户端按下标配对币种；dex 原样回显）</td></tr></tbody></table>
@@ -1306,7 +910,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <pre class="code ws-log">等待连接…</pre>
 </div></section><section id="ws-State-clearinghouseState" class="card">
 <div class="crumb">State · WebSocket /ws</div>
-<h2><span class="badge ws">WS</span> clearinghouseState <span class="route">自加扩展（标准 SDK 不发送）</span></h2>
+<h2><span class="badge ws">WS</span> clearinghouseState <span class="route">自加扩展（标准 SDK 不发送） · 经网关走 <b>State</b>。</span></h2>
 <p>GET /ws（单连接多路复用）：订阅 {&quot;method&quot;:&quot;subscribe&quot;,&quot;subscription&quot;:{&quot;type&quot;: ... }}，心跳 {&quot;method&quot;:&quot;ping&quot;} 回 {&quot;channel&quot;:&quot;pong&quot;}</p>
 <table class="kv"><thead><tr><th>参数</th><th>推送 channel</th><th>数据</th></tr></thead>
 <tbody><tr><td><code>user, dex?</code></td><td><code>clearinghouseState</code></td><td>{dex, user, clearinghouseState:{...}}（账户状态，内容变化时推送）</td></tr></tbody></table>
@@ -1327,7 +931,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <pre class="code ws-log">等待连接…</pre>
 </div></section><section id="ws-Indexer-trades" class="card">
 <div class="crumb">Indexer · WebSocket /ws</div>
-<h2><span class="badge ws">WS</span> trades <span class="route">官方订阅</span></h2>
+<h2><span class="badge ws">WS</span> trades <span class="route">官方订阅 · 经网关走 <b>Indexer</b>。</span></h2>
 <p>GET /ws（单连接多路复用）：订阅 {&quot;method&quot;:&quot;subscribe&quot;,&quot;subscription&quot;:{&quot;type&quot;: ... }}，心跳 {&quot;method&quot;:&quot;ping&quot;} 回 {&quot;channel&quot;:&quot;pong&quot;}</p>
 <table class="kv"><thead><tr><th>参数</th><th>推送 channel</th><th>数据</th></tr></thead>
 <tbody><tr><td><code>coin</code></td><td><code>trades</code></td><td>指定市场成交数组</td></tr></tbody></table>
@@ -1348,7 +952,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <pre class="code ws-log">等待连接…</pre>
 </div></section><section id="ws-Indexer-l2Book" class="card">
 <div class="crumb">Indexer · WebSocket /ws</div>
-<h2><span class="badge ws">WS</span> l2Book <span class="route">官方订阅</span></h2>
+<h2><span class="badge ws">WS</span> l2Book <span class="route">官方订阅 · 经网关走 <b>Indexer</b>。</span></h2>
 <p>GET /ws（单连接多路复用）：订阅 {&quot;method&quot;:&quot;subscribe&quot;,&quot;subscription&quot;:{&quot;type&quot;: ... }}，心跳 {&quot;method&quot;:&quot;ping&quot;} 回 {&quot;channel&quot;:&quot;pong&quot;}</p>
 <table class="kv"><thead><tr><th>参数</th><th>推送 channel</th><th>数据</th></tr></thead>
 <tbody><tr><td><code>coin, nSigFigs?, nLevels?, mantissa?</code></td><td><code>l2Book</code></td><td>L2 快照及变化；订阅成功可能先回一次快照</td></tr></tbody></table>
@@ -1369,7 +973,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <pre class="code ws-log">等待连接…</pre>
 </div></section><section id="ws-Indexer-l4Book" class="card">
 <div class="crumb">Indexer · WebSocket /ws</div>
-<h2><span class="badge ws">WS</span> l4Book <span class="route">官方订阅</span></h2>
+<h2><span class="badge ws">WS</span> l4Book <span class="route">官方订阅 · 经网关走 <b>Indexer</b>。</span></h2>
 <p>GET /ws（单连接多路复用）：订阅 {&quot;method&quot;:&quot;subscribe&quot;,&quot;subscription&quot;:{&quot;type&quot;: ... }}，心跳 {&quot;method&quot;:&quot;ping&quot;} 回 {&quot;channel&quot;:&quot;pong&quot;}</p>
 <table class="kv"><thead><tr><th>参数</th><th>推送 channel</th><th>数据</th></tr></thead>
 <tbody><tr><td><code>coin</code></td><td><code>l4Book</code></td><td>L4 订单簿</td></tr></tbody></table>
@@ -1390,7 +994,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <pre class="code ws-log">等待连接…</pre>
 </div></section><section id="ws-Indexer-bbo" class="card">
 <div class="crumb">Indexer · WebSocket /ws</div>
-<h2><span class="badge ws">WS</span> bbo <span class="route">官方订阅</span></h2>
+<h2><span class="badge ws">WS</span> bbo <span class="route">官方订阅 · 经网关走 <b>Indexer</b>。</span></h2>
 <p>GET /ws（单连接多路复用）：订阅 {&quot;method&quot;:&quot;subscribe&quot;,&quot;subscription&quot;:{&quot;type&quot;: ... }}，心跳 {&quot;method&quot;:&quot;ping&quot;} 回 {&quot;channel&quot;:&quot;pong&quot;}</p>
 <table class="kv"><thead><tr><th>参数</th><th>推送 channel</th><th>数据</th></tr></thead>
 <tbody><tr><td><code>coin</code></td><td><code>bbo</code></td><td>最优买卖报价</td></tr></tbody></table>
@@ -1411,7 +1015,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <pre class="code ws-log">等待连接…</pre>
 </div></section><section id="ws-Indexer-bookDiffs" class="card">
 <div class="crumb">Indexer · WebSocket /ws</div>
-<h2><span class="badge ws">WS</span> bookDiffs <span class="route">自加扩展（标准 SDK 不发送）</span></h2>
+<h2><span class="badge ws">WS</span> bookDiffs <span class="route">自加扩展（标准 SDK 不发送） · 经网关走 <b>Indexer</b>。</span></h2>
 <p>GET /ws（单连接多路复用）：订阅 {&quot;method&quot;:&quot;subscribe&quot;,&quot;subscription&quot;:{&quot;type&quot;: ... }}，心跳 {&quot;method&quot;:&quot;ping&quot;} 回 {&quot;channel&quot;:&quot;pong&quot;}</p>
 <table class="kv"><thead><tr><th>参数</th><th>推送 channel</th><th>数据</th></tr></thead>
 <tbody><tr><td><code>coin</code></td><td><code>bookDiffs</code></td><td>订单簿差异</td></tr></tbody></table>
@@ -1432,7 +1036,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <pre class="code ws-log">等待连接…</pre>
 </div></section><section id="ws-Indexer-activeAssetCtx" class="card">
 <div class="crumb">Indexer · WebSocket /ws</div>
-<h2><span class="badge ws">WS</span> activeAssetCtx <span class="route">官方订阅</span></h2>
+<h2><span class="badge ws">WS</span> activeAssetCtx <span class="route">官方订阅 · 经网关走 <b>Indexer</b>。</span></h2>
 <p>GET /ws（单连接多路复用）：订阅 {&quot;method&quot;:&quot;subscribe&quot;,&quot;subscription&quot;:{&quot;type&quot;: ... }}，心跳 {&quot;method&quot;:&quot;ping&quot;} 回 {&quot;channel&quot;:&quot;pong&quot;}</p>
 <table class="kv"><thead><tr><th>参数</th><th>推送 channel</th><th>数据</th></tr></thead>
 <tbody><tr><td><code>coin</code></td><td><code>activeAssetCtx</code></td><td>{coin, ctx: PerpAssetCtx}（标记价/资金费/持仓量）</td></tr></tbody></table>
@@ -1453,7 +1057,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <pre class="code ws-log">等待连接…</pre>
 </div></section><section id="ws-Indexer-activeSpotAssetCtx" class="card">
 <div class="crumb">Indexer · WebSocket /ws</div>
-<h2><span class="badge ws">WS</span> activeSpotAssetCtx <span class="route">官方订阅</span></h2>
+<h2><span class="badge ws">WS</span> activeSpotAssetCtx <span class="route">官方订阅 · 经网关走 <b>Indexer</b>。</span></h2>
 <p>GET /ws（单连接多路复用）：订阅 {&quot;method&quot;:&quot;subscribe&quot;,&quot;subscription&quot;:{&quot;type&quot;: ... }}，心跳 {&quot;method&quot;:&quot;ping&quot;} 回 {&quot;channel&quot;:&quot;pong&quot;}</p>
 <table class="kv"><thead><tr><th>参数</th><th>推送 channel</th><th>数据</th></tr></thead>
 <tbody><tr><td><code>coin</code></td><td><code>activeSpotAssetCtx</code></td><td>{coin, ctx: SpotAssetCtx}</td></tr></tbody></table>
@@ -1474,7 +1078,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <pre class="code ws-log">等待连接…</pre>
 </div></section><section id="ws-Indexer-allMids" class="card">
 <div class="crumb">Indexer · WebSocket /ws</div>
-<h2><span class="badge ws">WS</span> allMids <span class="route">官方订阅</span></h2>
+<h2><span class="badge ws">WS</span> allMids <span class="route">官方订阅 · 经网关走 <b>Indexer</b>。</span></h2>
 <p>GET /ws（单连接多路复用）：订阅 {&quot;method&quot;:&quot;subscribe&quot;,&quot;subscription&quot;:{&quot;type&quot;: ... }}，心跳 {&quot;method&quot;:&quot;ping&quot;} 回 {&quot;channel&quot;:&quot;pong&quot;}</p>
 <table class="kv"><thead><tr><th>参数</th><th>推送 channel</th><th>数据</th></tr></thead>
 <tbody><tr><td><code>—</code></td><td><code>allMids</code></td><td>{mids:{coin:px}}（SDK AllMidsData）</td></tr></tbody></table>
@@ -1494,7 +1098,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <pre class="code ws-log">等待连接…</pre>
 </div></section><section id="ws-Indexer-candle" class="card">
 <div class="crumb">Indexer · WebSocket /ws</div>
-<h2><span class="badge ws">WS</span> candle <span class="route">官方订阅</span></h2>
+<h2><span class="badge ws">WS</span> candle <span class="route">官方订阅 · 经网关走 <b>Indexer</b>。</span></h2>
 <p>GET /ws（单连接多路复用）：订阅 {&quot;method&quot;:&quot;subscribe&quot;,&quot;subscription&quot;:{&quot;type&quot;: ... }}，心跳 {&quot;method&quot;:&quot;ping&quot;} 回 {&quot;channel&quot;:&quot;pong&quot;}</p>
 <table class="kv"><thead><tr><th>参数</th><th>推送 channel</th><th>数据</th></tr></thead>
 <tbody><tr><td><code>coin, interval</code></td><td><code>candle</code></td><td>{t,T,s,i,o,c,h,l,v,n}（SDK candle wire）</td></tr></tbody></table>
@@ -1516,7 +1120,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <pre class="code ws-log">等待连接…</pre>
 </div></section><section id="ws-Indexer-orderUpdates" class="card">
 <div class="crumb">Indexer · WebSocket /ws</div>
-<h2><span class="badge ws">WS</span> orderUpdates <span class="route">官方订阅</span></h2>
+<h2><span class="badge ws">WS</span> orderUpdates <span class="route">官方订阅 · 经网关走 <b>Indexer</b>。</span></h2>
 <p>GET /ws（单连接多路复用）：订阅 {&quot;method&quot;:&quot;subscribe&quot;,&quot;subscription&quot;:{&quot;type&quot;: ... }}，心跳 {&quot;method&quot;:&quot;ping&quot;} 回 {&quot;channel&quot;:&quot;pong&quot;}</p>
 <table class="kv"><thead><tr><th>参数</th><th>推送 channel</th><th>数据</th></tr></thead>
 <tbody><tr><td><code>user</code></td><td><code>orderUpdates</code></td><td>用户订单状态更新（与 REST historicalOrders 同源的 node_order_statuses 广播过滤）</td></tr></tbody></table>
@@ -1537,7 +1141,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <pre class="code ws-log">等待连接…</pre>
 </div></section><section id="ws-Indexer-userFills" class="card">
 <div class="crumb">Indexer · WebSocket /ws</div>
-<h2><span class="badge ws">WS</span> userFills <span class="route">官方订阅</span></h2>
+<h2><span class="badge ws">WS</span> userFills <span class="route">官方订阅 · 经网关走 <b>Indexer</b>。</span></h2>
 <p>GET /ws（单连接多路复用）：订阅 {&quot;method&quot;:&quot;subscribe&quot;,&quot;subscription&quot;:{&quot;type&quot;: ... }}，心跳 {&quot;method&quot;:&quot;ping&quot;} 回 {&quot;channel&quot;:&quot;pong&quot;}</p>
 <table class="kv"><thead><tr><th>参数</th><th>推送 channel</th><th>数据</th></tr></thead>
 <tbody><tr><td><code>user, aggregateByTime?</code></td><td><code>userFills</code></td><td>{user, isSnapshot, fills:[...]}</td></tr></tbody></table>
@@ -1558,7 +1162,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <pre class="code ws-log">等待连接…</pre>
 </div></section><section id="ws-Indexer-userEvents" class="card">
 <div class="crumb">Indexer · WebSocket /ws</div>
-<h2><span class="badge ws">WS</span> userEvents <span class="route">官方订阅</span></h2>
+<h2><span class="badge ws">WS</span> userEvents <span class="route">官方订阅 · 经网关走 <b>Indexer</b>。</span></h2>
 <p>GET /ws（单连接多路复用）：订阅 {&quot;method&quot;:&quot;subscribe&quot;,&quot;subscription&quot;:{&quot;type&quot;: ... }}，心跳 {&quot;method&quot;:&quot;ping&quot;} 回 {&quot;channel&quot;:&quot;pong&quot;}</p>
 <table class="kv"><thead><tr><th>参数</th><th>推送 channel</th><th>数据</th></tr></thead>
 <tbody><tr><td><code>user</code></td><td><code>user</code></td><td>fills/funding/liquidation/nonUserCancel（注意入站 channel 名为 user）</td></tr></tbody></table>
@@ -1579,7 +1183,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <pre class="code ws-log">等待连接…</pre>
 </div></section><section id="ws-Indexer-userFundings" class="card">
 <div class="crumb">Indexer · WebSocket /ws</div>
-<h2><span class="badge ws">WS</span> userFundings <span class="route">官方订阅</span></h2>
+<h2><span class="badge ws">WS</span> userFundings <span class="route">官方订阅 · 经网关走 <b>Indexer</b>。</span></h2>
 <p>GET /ws（单连接多路复用）：订阅 {&quot;method&quot;:&quot;subscribe&quot;,&quot;subscription&quot;:{&quot;type&quot;: ... }}，心跳 {&quot;method&quot;:&quot;ping&quot;} 回 {&quot;channel&quot;:&quot;pong&quot;}</p>
 <table class="kv"><thead><tr><th>参数</th><th>推送 channel</th><th>数据</th></tr></thead>
 <tbody><tr><td><code>user</code></td><td><code>userFundings</code></td><td>{user, isSnapshot, fundings}</td></tr></tbody></table>
@@ -1600,7 +1204,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <pre class="code ws-log">等待连接…</pre>
 </div></section><section id="ws-Indexer-userNonFundingLedgerUpdates" class="card">
 <div class="crumb">Indexer · WebSocket /ws</div>
-<h2><span class="badge ws">WS</span> userNonFundingLedgerUpdates <span class="route">官方订阅</span></h2>
+<h2><span class="badge ws">WS</span> userNonFundingLedgerUpdates <span class="route">官方订阅 · 经网关走 <b>Indexer</b>。</span></h2>
 <p>GET /ws（单连接多路复用）：订阅 {&quot;method&quot;:&quot;subscribe&quot;,&quot;subscription&quot;:{&quot;type&quot;: ... }}，心跳 {&quot;method&quot;:&quot;ping&quot;} 回 {&quot;channel&quot;:&quot;pong&quot;}</p>
 <table class="kv"><thead><tr><th>参数</th><th>推送 channel</th><th>数据</th></tr></thead>
 <tbody><tr><td><code>user</code></td><td><code>userNonFundingLedgerUpdates</code></td><td>{user, isSnapshot, nonFundingLedgerUpdates}</td></tr></tbody></table>
@@ -1621,7 +1225,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <pre class="code ws-log">等待连接…</pre>
 </div></section><section id="ws-Indexer-userHistoricalOrders" class="card">
 <div class="crumb">Indexer · WebSocket /ws</div>
-<h2><span class="badge ws">WS</span> userHistoricalOrders <span class="route">自加扩展（标准 SDK 不发送）</span></h2>
+<h2><span class="badge ws">WS</span> userHistoricalOrders <span class="route">自加扩展（标准 SDK 不发送） · 经网关走 <b>Indexer</b>。</span></h2>
 <p>GET /ws（单连接多路复用）：订阅 {&quot;method&quot;:&quot;subscribe&quot;,&quot;subscription&quot;:{&quot;type&quot;: ... }}，心跳 {&quot;method&quot;:&quot;ping&quot;} 回 {&quot;channel&quot;:&quot;pong&quot;}</p>
 <table class="kv"><thead><tr><th>参数</th><th>推送 channel</th><th>数据</th></tr></thead>
 <tbody><tr><td><code>user</code></td><td><code>userHistoricalOrders</code></td><td>{user, orderHistory:[{order,status,statusTimestamp}]}（条目与 REST historicalOrders 完全一致；非官方扩展，标准 HL SDK 不会发送）</td></tr></tbody></table>
@@ -1642,7 +1246,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <pre class="code ws-log">等待连接…</pre>
 </div></section><section id="ws-Indexer-openOrders" class="card">
 <div class="crumb">Indexer · WebSocket /ws</div>
-<h2><span class="badge ws">WS</span> openOrders <span class="route">自加扩展（标准 SDK 不发送）</span></h2>
+<h2><span class="badge ws">WS</span> openOrders <span class="route">自加扩展（标准 SDK 不发送） · 经网关走 <b>Indexer</b>。</span></h2>
 <p>GET /ws（单连接多路复用）：订阅 {&quot;method&quot;:&quot;subscribe&quot;,&quot;subscription&quot;:{&quot;type&quot;: ... }}，心跳 {&quot;method&quot;:&quot;ping&quot;} 回 {&quot;channel&quot;:&quot;pong&quot;}</p>
 <table class="kv"><thead><tr><th>参数</th><th>推送 channel</th><th>数据</th></tr></thead>
 <tbody><tr><td><code>user, dex?</code></td><td><code>openOrders</code></td><td>用户当前订单变化（轮询节点 frontendOpenOrders 中继；经网关仍走 indexer）</td></tr></tbody></table>
@@ -1663,7 +1267,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <pre class="code ws-log">等待连接…</pre>
 </div></section><section id="ws-Indexer-activeAssetData" class="card">
 <div class="crumb">Indexer · WebSocket /ws</div>
-<h2><span class="badge ws">WS</span> activeAssetData <span class="route">官方订阅</span></h2>
+<h2><span class="badge ws">WS</span> activeAssetData <span class="route">官方订阅 · 经网关走 <b>Indexer</b>。</span></h2>
 <p>GET /ws（单连接多路复用）：订阅 {&quot;method&quot;:&quot;subscribe&quot;,&quot;subscription&quot;:{&quot;type&quot;: ... }}，心跳 {&quot;method&quot;:&quot;ping&quot;} 回 {&quot;channel&quot;:&quot;pong&quot;}</p>
 <table class="kv"><thead><tr><th>参数</th><th>推送 channel</th><th>数据</th></tr></thead>
 <tbody><tr><td><code>user, coin</code></td><td><code>activeAssetData</code></td><td>{user,coin,leverage,maxTradeSzs,availableToTrade,markPx}</td></tr></tbody></table>
@@ -1685,7 +1289,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <pre class="code ws-log">等待连接…</pre>
 </div></section></main></div>
 <script>
-var STORE = {"posts": {"post-Exchange-exchange": {"path": "/exchange"}, "post-Exchange-health": {"path": "/info"}, "post-Exchange-stateInfo": {"path": "/info"}, "post-Exchange-block": {"path": "/info"}, "post-Exchange-bridgeSnapshot": {"path": "/info"}, "post-Exchange-bridgeDepositStatus": {"path": "/info"}, "post-Exchange-bridgeWithdrawalStatus": {"path": "/info"}, "post-Exchange-clearinghouseState": {"path": "/info"}, "post-Exchange-accountOverview": {"path": "/info"}, "post-Exchange-unifiedBalances": {"path": "/info"}, "post-Exchange-accountNonces": {"path": "/info"}, "post-State-meta": {"path": "/info"}, "post-State-metaAndAssetCtxs": {"path": "/info"}, "post-State-allMids": {"path": "/info"}, "post-State-l2Book": {"path": "/info"}, "post-State-clearinghouseState": {"path": "/info"}, "post-State-openOrders": {"path": "/info"}, "post-State-frontendOpenOrders": {"path": "/info"}, "post-State-extraAgents": {"path": "/info"}, "post-State-activeAssetData": {"path": "/info"}, "post-State-userFees": {"path": "/info"}, "post-State-recentTrades": {"path": "/info"}, "post-State-exchangeStatus": {"path": "/info"}, "post-State-orderStatus": {"path": "/info"}, "post-State-webData2": {"path": "/info"}, "post-Indexer-metaAndAssetCtxs": {"path": "/info"}, "post-Indexer-webData2": {"path": "/info"}, "post-Indexer-allMids": {"path": "/info"}, "post-Indexer-candleSnapshot": {"path": "/info"}, "post-Indexer-orderStatus": {"path": "/info"}, "post-Indexer-l2Book": {"path": "/info"}, "post-Indexer-fundingHistory": {"path": "/info"}, "post-Indexer-userFillsByTime": {"path": "/info"}, "post-Indexer-userFills": {"path": "/info"}, "post-Indexer-recentTrades": {"path": "/info"}, "post-Indexer-userFunding": {"path": "/info"}, "post-Indexer-userNonFundingLedgerUpdates": {"path": "/info"}, "post-Indexer-historicalOrders": {"path": "/info"}}, "httpServers": ["https://dev.dex-api.biya.io", "http://127.0.0.1:36016"], "wsUrls": ["wss://dev.dex-api.biya.io/ws", "ws://127.0.0.1:36016/ws"]};
+var STORE = {"posts": {"post-Exchange-exchange": {"path": "/exchange"}, "post-State-meta": {"path": "/info"}, "post-State-metaAndAssetCtxs": {"path": "/info"}, "post-State-clearinghouseState": {"path": "/info"}, "post-State-openOrders": {"path": "/info"}, "post-State-frontendOpenOrders": {"path": "/info"}, "post-State-extraAgents": {"path": "/info"}, "post-State-activeAssetData": {"path": "/info"}, "post-State-userFees": {"path": "/info"}, "post-State-exchangeStatus": {"path": "/info"}, "post-State-orderStatus": {"path": "/info"}, "post-Indexer-webData2": {"path": "/info"}, "post-Indexer-allMids": {"path": "/info"}, "post-Indexer-candleSnapshot": {"path": "/info"}, "post-Indexer-l2Book": {"path": "/info"}, "post-Indexer-fundingHistory": {"path": "/info"}, "post-Indexer-userFillsByTime": {"path": "/info"}, "post-Indexer-userFills": {"path": "/info"}, "post-Indexer-recentTrades": {"path": "/info"}, "post-Indexer-userFunding": {"path": "/info"}, "post-Indexer-userNonFundingLedgerUpdates": {"path": "/info"}, "post-Indexer-historicalOrders": {"path": "/info"}}, "httpServers": ["https://dev.dex-api.biya.io", "http://127.0.0.1:36016"], "wsUrls": ["wss://dev.dex-api.biya.io/ws", "ws://127.0.0.1:36016/ws"]};
 function $(s, r){ return (r||document).querySelector(s); }
 function $all(s, r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); }
 // nav search + active state
@@ -1728,14 +1332,19 @@ function tsFor(server, path, body){
 $all(".try[data-kind='post']").forEach(function(box){
   var id = box.getAttribute("data-id");
   var meta = STORE.posts[id];
-  var area = $(".try-body", box), alt = $(".try-alt", box), resp = $(".try-resp", box), info = $(".try-meta", box);
+  var area = $(".try-body", box), resp = $(".try-resp", box), info = $(".try-meta", box);
   var server = function(){ return $(".try-server", box).value; };
-  $all(".tab", box).forEach(function(t){ t.addEventListener("click", function(){
-    $all(".tab", box).forEach(function(x){ x.classList.remove("on"); }); t.classList.add("on");
-    var mode = t.getAttribute("data-tab");
-    if (mode === "json"){ area.classList.remove("hidden"); alt.classList.add("hidden"); }
-    else { area.classList.add("hidden"); alt.classList.remove("hidden");
-      alt.textContent = mode === "curl" ? curlFor(server(), meta.path, area.value) : tsFor(server(), meta.path, area.value); }
+  var preCurl = $("[data-preview='curl']", box), preTs = $("[data-preview='ts']", box);
+  function refresh(){ preCurl.textContent = curlFor(server(), meta.path, area.value); preTs.textContent = tsFor(server(), meta.path, area.value); }
+  area.addEventListener("input", refresh);
+  $(".try-server", box).addEventListener("change", refresh);
+  refresh();
+  $all(".copy", box).forEach(function(b){ b.addEventListener("click", function(){
+    var text = b.getAttribute("data-copy") === "curl" ? preCurl.textContent : preTs.textContent;
+    function done(){ b.textContent = "已复制"; setTimeout(function(){ b.textContent = "复制"; }, 1200); }
+    if (navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done, function(){ fallback(); }); }
+    else { fallback(); }
+    function fallback(){ var ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); done(); } catch(e){} document.body.removeChild(ta); }
   }); });
   $(".send", box).addEventListener("click", function(){
     var payload;

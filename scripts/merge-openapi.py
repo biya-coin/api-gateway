@@ -194,7 +194,7 @@ def main():
 
     info_requests = []
     info_responses = []
-    for tag in ("Exchange", "State", "Indexer"):
+    for tag in ("State", "Indexer"):
         _, spec = fragments[tag]
         info_item = spec["paths"].get("/info", {}).get("post", {})
         request_ref = (
@@ -214,8 +214,8 @@ def main():
             info_requests.append(request_ref)
         if response_ref:
             info_responses.append(response_ref)
-    if len(info_requests) != 3:
-        fail(f"expected /info in all 3 fragments, found {len(info_requests)}")
+    if len(info_requests) != 2:
+        fail(f"expected /info in State + Indexer fragments, found {len(info_requests)}")
 
     indexer_types, state_types = routing_tables()
     if indexer_types is None or state_types is None:
@@ -322,10 +322,6 @@ def main():
                             "application/json": {
                                 "schema": {"oneOf": info_requests},
                                 "examples": {
-                                    "Exchange": {
-                                        "summary": "发往交易池的 type（如 health）",
-                                        "value": {"type": "health"},
-                                    },
                                     "State": {
                                         "summary": "发往状态服务的 type",
                                         "value": {

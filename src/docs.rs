@@ -90,5 +90,11 @@ mod tests {
                 "portal must be offline/self-built: {banned}"
             );
         }
+        // Fragments are trimmed to the gateway-routed scope: no item may
+        // render a routed-elsewhere hint (CSS class definitions excluded).
+        assert!(
+            !html.contains("nav-hint warn") && !html.contains("nav-hint off"),
+            "routed-elsewhere item leaked into portal"
+        );
     }
 }

@@ -1,21 +1,21 @@
 {
-  "gateway_rev": "41340599358b658a4c041a94d638d40547080db8",
-  "fetched_at": "2026-09-20T12:56:09.572063+00:00",
+  "gateway_rev": "bb24929b47ec27e2056d46632cb0453005c50030",
+  "fetched_at": "2026-09-20T13:46:12.248209+00:00",
   "backends": [
     {
       "service": "exchange-apiserver",
-      "rev": "c3756c0e461e301c0043f28471fc79516fec5c48",
-      "source": "git:dev@c3756c0e461e301c0043f28471fc79516fec5c48"
+      "rev": "ef23fbc3ade2196065deb439316f05667831f444",
+      "source": "git:dev@ef23fbc3ade2196065deb439316f05667831f444"
     },
     {
       "service": "bybchain-api-server",
-      "rev": "3bac5a8b83f882eaff83b10b0f2db9b42c4b9e18",
-      "source": "git:dev@3bac5a8b83f882eaff83b10b0f2db9b42c4b9e18"
+      "rev": "7c7a18982882b7f7ff551d24b8aea7ef093a2ce9",
+      "source": "git:dev@7c7a18982882b7f7ff551d24b8aea7ef093a2ce9"
     },
     {
       "service": "biya-indexer",
-      "rev": "f8fcb4815c56f16e0b65537a905c4d1c05f27e5c",
-      "source": "git:main@f8fcb4815c56f16e0b65537a905c4d1c05f27e5c"
+      "rev": "731ec3b31f33caf98e1a24eac39b69740c56510d",
+      "source": "git:main@731ec3b31f33caf98e1a24eac39b69740c56510d"
     }
   ]
 }
