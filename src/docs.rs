@@ -3,15 +3,17 @@ use axum::{
     response::{Html, IntoResponse},
 };
 
-/// Merged OpenAPI spec produced by `scripts/merge-openapi.py` from the three
-/// backend fragments. Regenerate on every release; never hand-edit output.
+/// Self-built API portal (single offline HTML file, no CDN, no UI framework).
+/// Produced by `scripts/render-portal.py` from the merged spec; regenerate on
+/// every release, never hand-edit output.
+pub(crate) const PORTAL_HTML: &str = include_str!("../docs/.generated/portal.html");
+
+/// Merged OpenAPI spec, kept for tooling and SDK generation.
 pub(crate) const OPENAPI_JSON: &str = include_str!("../docs/.generated/openapi.json");
 
-/// Scalar API reference page. UI assets are embedded in the binary; no CDN.
-pub(crate) async fn docs_page() -> Html<String> {
-    let spec: serde_json::Value =
-        serde_json::from_str(OPENAPI_JSON).expect("embedded openapi.json must parse");
-    Html(utoipa_scalar::Scalar::new(spec).to_html())
+/// Human portal: left nav per service, per-item detail with prefilled tests.
+pub(crate) async fn docs_page() -> Html<&'static str> {
+    Html(PORTAL_HTML)
 }
 
 /// Raw merged spec for tooling and SDK generation.
@@ -64,18 +66,29 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn docs_page_serves_scalar_ui() {
+    async fn docs_page_serves_self_built_portal() {
         let response = router(config())
             .unwrap()
             .oneshot(Request::get("/docs").body(Body::empty()).unwrap())
             .await
             .unwrap();
         assert_eq!(response.status(), StatusCode::OK);
-        let body = to_bytes(response.into_body(), 8 * 1024 * 1024)
-            .await
-            .unwrap();
+        let body = to_bytes(response.into_body(), 1024 * 1024).await.unwrap();
         let html = String::from_utf8(body.to_vec()).unwrap();
-        assert!(html.contains("scalar"), "Scalar UI marker missing");
-        assert!(html.contains("BIYA DEX API"), "merged spec not embedded");
+        for marker in [
+            "BIYA DEX API",
+            "nav-search",
+            "post-State-orderStatus",
+            "ws-Indexer-userHistoricalOrders",
+            "TypeScript",
+        ] {
+            assert!(html.contains(marker), "portal marker missing: {marker}");
+        }
+        for banned in ["cdn.jsdelivr.net", "Scalar", "$spec"] {
+            assert!(
+                !html.contains(banned),
+                "portal must be offline/self-built: {banned}"
+            );
+        }
     }
 }

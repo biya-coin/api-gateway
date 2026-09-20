@@ -20,7 +20,7 @@
   拉三份 openapi.json + 版本 → 合并成一份 → embed 进网关镜像
 
 网关运行时（用户唯一入口）：
-  GET /docs           Scalar 统一页，TAG = Exchange / State / Indexer
+  GET /docs           自研门户单页（左导航按服务分组，离线无 CDN），TAG = Exchange / State / Indexer
   GET /openapi.json   合并后的总 spec（机器读）
 ```
 
@@ -52,12 +52,12 @@ out: api-gateway/docs/.generated/openapi.json + version-matrix.json
 1. `POST /exchange`：整体取 exchange 片段。
 2. `POST /info`：三个片段的 `requestBody` 按 `type` 字段做 `oneOf + discriminator` 合并；`responses` 同理。网关不再为每个 type 手写 schema，只维护“哪个 type 归哪个服务”的路由表（以 `src/routing.rs` 的 `STATE_TYPES / INDEXER_TYPES` 为准，文档页原样展示该表）。
 3. `components.schemas`：全部按 `Exchange__ / State__ / Indexer__` 重命名后合并，重名即构建失败。
-4. `GET /ws`：不进 OpenAPI `paths`（OpenAPI 表达不了我们的单连接多路复用订阅），统一放到 Scalar 页的独立“WebSocket 订阅”章节，数据源是三份 `ws-subscriptions.json`（§6）。
+4. `GET /ws`：不进 OpenAPI `paths`（OpenAPI 表达不了我们的单连接多路复用订阅），统一放到门户各服务分组的“WebSocket 订阅”一节，数据源是三份 `ws-subscriptions.json`（§6）。
 5. 总 spec 的 `info.version` = 网关 rev；`x-backend-revs` 扩展字段记录三后端 rev（页首版本矩阵就读它）。
 
 ## 5. 版本矩阵格式
 
-合并产物 `version-matrix.json`（Scalar 页首渲染，`GET /openapi.json` 里以 `x-backend-revs` 同步携带）：
+合并产物 `version-matrix.json`（门户总览渲染，`GET /openapi.json` 里以 `x-backend-revs` 同步携带）：
 
 ```json
 {
@@ -93,13 +93,13 @@ OpenAPI 不覆盖 WS，所以 WS 走伴生机制，不单独立项：
    抽查一个新增 type 的参数表与示例。
 ```
 
-网关 `Router` 改动（实施阶段才做）：在 `src/server.rs::build_router` 旁加 `GET /docs`（Scalar 页）与 `GET /openapi.json`（合并产物 `include_str!`），与 `/healthz` 一样走本机路由，不进后端代理。实施需单独授权（改路由 + 加依赖）。
+网关 `Router` 改动（实施阶段才做）：在 `src/server.rs::build_router` 旁加 `GET /docs`（`scripts/render-portal.py` 生成的自研门户）与 `GET /openapi.json`（合并产物 `include_str!`），与 `/healthz` 一样走本机路由，不进后端代理。不引入文档 UI 依赖。
 
 ## 8. 验收标准
 
 * 打开网关 `/docs`：一页内可见 Exchange / State / Indexer 三组，HTTP 参数表 + 请求/响应示例可读，WS 订阅独立成节。
 * 页首版本矩阵四 rev 可见，且与各服务 `GET /version` 一致。
-* `GET /openapi.json` 可被 Scalar 正常渲染，无 schema 冲突。
+* `GET /openapi.json` 无 schema 冲突；`GET /docs` 离线可开，导航条目与内容区块一一对应。
 * 任一后端 spec 拉取失败时，网关构建失败而非发布旧文档。
 * 前端确认：只用网关这一个地址即可联调，不再需要翻三个仓库找文档。
 

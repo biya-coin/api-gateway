@@ -12,8 +12,8 @@
   ],
   "info": {
     "title": "BIYA DEX API（网关聚合）",
-    "version": "d94dba3d08f833231725c1103f6c6efa175a2bf7",
-    "description": "前端唯一入口：`POST /info`、`POST /exchange`、`GET /ws` 均打网关，由网关按 type/订阅分流到三后端，网关不改业务字段、不回退。\n\n## 版本矩阵（本次构建拉取）\n\n| 服务 | rev |\n|---|---|\n| `gateway` | `d94dba3d08f833231725c1103f6c6efa175a2bf7` |\n| `exchange-apiserver` | `c3756c0e461e301c0043f28471fc79516fec5c48` |\n| `bybchain-api-server` | `3bac5a8b83f882eaff83b10b0f2db9b42c4b9e18` |\n| `biya-indexer` | `e9ca86d98a52a6855f95e0f502ff7a0c40cd4d3c` |\n\n网关按 `type` 分流（以本次构建的 `src/routing.rs` 为准）：\n\n- State：`meta`, `metaAndAssetCtxs`, `extraAgents`, `clearinghouseState`, `activeAssetData`, `openOrders`, `frontendOpenOrders`, `orderStatus`, `userFees`, `unifiedBalances`, `accountNonces`, `marketSnapshot`, `exchangeStatus`\n- Indexer：`allMids`, `recentTrades`, `l2Book`, `webData2`, `candleSnapshot`, `historicalOrders`, `userFills`, `userFillsByTime`, `userFunding`, `fundingHistory`, `userNonFundingLedgerUpdates`\n\nWS 订阅：`assetCtxs` / `clearinghouseState` 走状态服务，其余走 indexer。\n\nWS 订阅见各服务分组下的“WebSocket 订阅”一节（与 REST 同源，按服务归属展示）。"
+    "version": "41340599358b658a4c041a94d638d40547080db8",
+    "description": "前端唯一入口：`POST /info`、`POST /exchange`、`GET /ws` 均打网关，由网关按 type/订阅分流到三后端，网关不改业务字段、不回退。\n\n## 版本矩阵（本次构建拉取）\n\n| 服务 | rev |\n|---|---|\n| `gateway` | `41340599358b658a4c041a94d638d40547080db8` |\n| `exchange-apiserver` | `c3756c0e461e301c0043f28471fc79516fec5c48` |\n| `bybchain-api-server` | `3bac5a8b83f882eaff83b10b0f2db9b42c4b9e18` |\n| `biya-indexer` | `f8fcb4815c56f16e0b65537a905c4d1c05f27e5c` |\n\n网关按 `type` 分流（以本次构建的 `src/routing.rs` 为准）：\n\n- State：`meta`, `metaAndAssetCtxs`, `extraAgents`, `clearinghouseState`, `activeAssetData`, `openOrders`, `frontendOpenOrders`, `orderStatus`, `userFees`, `unifiedBalances`, `accountNonces`, `marketSnapshot`, `exchangeStatus`\n- Indexer：`allMids`, `recentTrades`, `l2Book`, `webData2`, `candleSnapshot`, `historicalOrders`, `userFills`, `userFillsByTime`, `userFunding`, `fundingHistory`, `userNonFundingLedgerUpdates`\n\nWS 订阅：`assetCtxs` / `clearinghouseState` 走状态服务，其余走 indexer。\n\nWS 订阅见各服务分组下的“WebSocket 订阅”一节（与 REST 同源，按服务归属展示）。"
   },
   "tags": [
     {
@@ -2395,7 +2395,7 @@
   "x-backend-revs": {
     "exchange-apiserver": "c3756c0e461e301c0043f28471fc79516fec5c48",
     "bybchain-api-server": "3bac5a8b83f882eaff83b10b0f2db9b42c4b9e18",
-    "biya-indexer": "e9ca86d98a52a6855f95e0f502ff7a0c40cd4d3c"
+    "biya-indexer": "f8fcb4815c56f16e0b65537a905c4d1c05f27e5c"
   },
   "x-ws-subscriptions": [
     {
