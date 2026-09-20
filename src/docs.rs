@@ -54,6 +54,13 @@ mod tests {
             .collect();
         assert_eq!(tags, ["Exchange", "State", "Indexer"]);
         assert!(spec["x-backend-revs"].as_object().unwrap().len() == 3);
+        let servers: Vec<&str> = spec["servers"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|server| server["url"].as_str().unwrap())
+            .collect();
+        assert!(servers.contains(&"https://dev.dex-api.biya.io"));
     }
 
     #[tokio::test]

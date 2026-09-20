@@ -146,6 +146,45 @@ def main():
     # Only gateway-routed paths are published: /info (merged below) and
     # /exchange. Backend ops probes (/health*, /v1/replica, /l4Book) are not
     # reachable via the gateway and stay out of the unified page.
+    # Scalar's language tabs are built-in and fixed (no TypeScript generator).
+    # Hand-written TypeScript samples ride along via x-codeSamples and render
+    # in the same snippet panel. Keep them short: copy-paste starters, with
+    # per-type payloads covered by the requestBody examples above.
+    ts_info_sample = {
+        "lang": "TypeScript",
+        "label": "TypeScript",
+        "source": (
+            "// POST https://dev.dex-api.biya.io/info\n"
+            "// 网关按 type 分流到三后端；各服务的 type 与字段见对应分组。\n"
+            "const res = await fetch(\"https://dev.dex-api.biya.io/info\", {\n"
+            "  method: \"POST\",\n"
+            "  headers: { \"Content-Type\": \"application/json\" },\n"
+            "  body: JSON.stringify({\n"
+            "    type: \"extraAgents\", // State; Indexer 如 { type: \"l2Book\", coin: \"BTCUSDC\" }\n"
+            "    user: \"0x1111111111111111111111111111111111111111\",\n"
+            "  }),\n"
+            "});\n"
+            "const data = await res.json();\n"
+        ),
+    }
+    ts_exchange_sample = {
+        "lang": "TypeScript",
+        "label": "TypeScript",
+        "source": (
+            "// POST https://dev.dex-api.biya.io/exchange\n"
+            "// 提交已签名动作；accepted 仅表示入本地交易池，不代表链上执行。\n"
+            "const res = await fetch(\"https://dev.dex-api.biya.io/exchange\", {\n"
+            "  method: \"POST\",\n"
+            "  headers: { \"Content-Type\": \"application/json\" },\n"
+            "  body: JSON.stringify({\n"
+            "    action: { type: \"order\", orders: [order], grouping: \"na\" },\n"
+            "    nonce,\n"
+            "    signature: { r, s, v }, // Hyperliquid L1 签名，r/s 32 字节 hex，v 为 27/28\n"
+            "  }),\n"
+            "});\n"
+            "const data: { code: number; message: string; tx_hash?: string } = await res.json();\n"
+        ),
+    }
     merged_paths = {}
     for tag, (_, spec) in fragments.items():
         for path, item in spec.get("paths", {}).items():
@@ -190,13 +229,16 @@ def main():
             "WS 订阅：`assetCtxs` / `clearinghouseState` 走状态服务，其余走 indexer。"
         )
 
-    ws_sections = []
+    # WS subscriptions live in each tag's description (second section of the
+    # service group), not in the intro: one service group = REST part + WS part.
     ws_combined = []
+    tag_ws_md = {}
     for tag in ("Exchange", "State", "Indexer"):
         entry, _ = fragments[tag]
-        if not entry.get("ws_path"):
-            continue
         service = entry["service"]
+        if not entry.get("ws_path"):
+            tag_ws_md[tag] = "## WebSocket 订阅\n\n本服务无 WS 订阅。"
+            continue
         repo_dir = local_root / {
             "exchange-apiserver": "exchange-apiserver",
             "bybchain-api-server": "bybchain-api-server",
@@ -204,8 +246,7 @@ def main():
         }[service]
         ws_file = repo_dir / entry["ws_path"]
         if not ws_file.is_file():
-            ws_sections.append(f"### {tag}\n\nWS 订阅文档待补（{entry['ws_path']} 缺失）。")
-            continue
+            fail(f"{service}: missing {ws_file}")
         ws_doc = json.loads(ws_file.read_text())
         subs = ws_doc.get("subscriptions", [])
         ws_combined.extend([{**s, "service": service} for s in subs])
@@ -215,12 +256,13 @@ def main():
             f"| {'官方' if s.get('official') else '自加扩展'} |"
             for s in subs
         )
-        ws_sections.append(
-            f"### {tag}（{len(subs)} 种）\n\n| 订阅 | 参数 | 推送 channel | 数据 | 来源 |\n"
+        tag_ws_md[tag] = (
+            f"## WebSocket 订阅（{len(subs)} 种）\n\n订阅消息 "
+            f"`{{\"method\":\"subscribe\",\"subscription\":{{\"type\":...}}}}`，"
+            f"推送帧为 `{{\"channel\":...,\"data\":...}}`。\n\n"
+            f"| 订阅 | 参数 | 推送 channel | 数据 | 来源 |\n"
             f"|---|---|---|---|---|\n{rows}"
         )
-    if not ws_combined:
-        ws_sections.append("WS 订阅文档待补：三后端均未提供 ws-subscriptions.json。")
 
     rev_rows = "\n".join(
         f"| `{r['service']}` | `{r['rev']}` |" for r in [{"service": "gateway", "rev": gateway_rev}] + revs
@@ -230,28 +272,74 @@ def main():
     )
     merged = {
         "openapi": "3.1.0",
+        # Servers drive Scalar's code snippets and in-page Test Request.
+        # No servers entry = "replace.me" placeholder and dead Test button.
+        "servers": [
+            {
+                "url": "https://dev.dex-api.biya.io",
+                "description": "公网入口（页内 Test Request 默认发往这里）。",
+            },
+            {
+                "url": "http://127.0.0.1:36016",
+                "description": "139 服务器本机。",
+            },
+        ],
         "info": {
             "title": "BIYA DEX API（网关聚合）",
             "version": gateway_rev,
             "description": (
                 "前端唯一入口：`POST /info`、`POST /exchange`、`GET /ws` 均打网关，由网关按 type/订阅分流到三后端，"
-                "网关不改业务字段、不回退。\n\n" + rev_md + "\n\n" + routing_md + "\n\n## WebSocket 订阅\n\n" + "\n\n".join(ws_sections)
+                "网关不改业务字段、不回退。\n\n" + rev_md + "\n\n" + routing_md + "\n\n"
+                "WS 订阅见各服务分组下的“WebSocket 订阅”一节（与 REST 同源，按服务归属展示）。"
             ),
         },
         "tags": [
-            {"name": "Exchange", "description": "交易池：签名动作接收与本地校验入池。"},
-            {"name": "State", "description": "状态服务：当前状态查询。"},
-            {"name": "Indexer", "description": "Indexer：历史、订单簿与行情订阅。"},
+            {"name": "Exchange", "description": "交易池：签名动作接收与本地校验入池。\n\n" + tag_ws_md["Exchange"]},
+            {"name": "State", "description": "状态服务：当前状态查询。\n\n" + tag_ws_md["State"]},
+            {"name": "Indexer", "description": "Indexer：历史、订单簿与行情查询。\n\n" + tag_ws_md["Indexer"]},
         ],
         "paths": {
-            "/exchange": fragments["Exchange"][1]["paths"]["/exchange"],
+            "/exchange": {
+                "post": {
+                    **fragments["Exchange"][1]["paths"]["/exchange"]["post"],
+                    "x-codeSamples": [ts_exchange_sample],
+                },
+            },
             "/info": {
                 "post": {
                     "tags": ["Exchange", "State", "Indexer"],
-                    "summary": "统一查询入口（网关按 type 分流）",
+                    "x-codeSamples": [ts_info_sample],
+
+                    "summary": "POST /info（网关按 type 分流）",
+                    "description": (
+                        "网关唯一的 POST /info 入口：三个分组导航指向的是同一个操作，"
+                        "Body 默认显示第一项。用 Body 区右上 Examples 按服务一键切换 "
+                        "（Exchange/State/Indexer），或在 oneOf 下拉里直接选 type 对应的 schema。"
+                    ),
                     "requestBody": {
                         "required": True,
-                        "content": {"application/json": {"schema": {"oneOf": info_requests}}},
+                        "content": {
+                            "application/json": {
+                                "schema": {"oneOf": info_requests},
+                                "examples": {
+                                    "Exchange": {
+                                        "summary": "发往交易池的 type（如 health）",
+                                        "value": {"type": "health"},
+                                    },
+                                    "State": {
+                                        "summary": "发往状态服务的 type",
+                                        "value": {
+                                            "type": "extraAgents",
+                                            "user": "0x1111111111111111111111111111111111111111",
+                                        },
+                                    },
+                                    "Indexer": {
+                                        "summary": "发往 indexer 的 type",
+                                        "value": {"type": "l2Book", "coin": "BTCUSDC"},
+                                    },
+                                },
+                            }
+                        },
                     },
                     "responses": {
                         "200": {

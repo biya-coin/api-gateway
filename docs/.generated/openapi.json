@@ -1,22 +1,32 @@
 {
   "openapi": "3.1.0",
+  "servers": [
+    {
+      "url": "https://dev.dex-api.biya.io",
+      "description": "公网入口（页内 Test Request 默认发往这里）。"
+    },
+    {
+      "url": "http://127.0.0.1:36016",
+      "description": "139 服务器本机。"
+    }
+  ],
   "info": {
     "title": "BIYA DEX API（网关聚合）",
-    "version": "7e01d0910fb0aab261873530147fcf5ec1e4776a",
-    "description": "前端唯一入口：`POST /info`、`POST /exchange`、`GET /ws` 均打网关，由网关按 type/订阅分流到三后端，网关不改业务字段、不回退。\n\n## 版本矩阵（本次构建拉取）\n\n| 服务 | rev |\n|---|---|\n| `gateway` | `7e01d0910fb0aab261873530147fcf5ec1e4776a` |\n| `exchange-apiserver` | `c601f4da12563d20931dce1952d49517c576a100` |\n| `bybchain-api-server` | `3808341d403f0122e1e8715c7c308c2a92f34a25` |\n| `biya-indexer` | `e9ca86d98a52a6855f95e0f502ff7a0c40cd4d3c` |\n\n网关按 `type` 分流（以本次构建的 `src/routing.rs` 为准）：\n\n- State：`meta`, `metaAndAssetCtxs`, `extraAgents`, `clearinghouseState`, `activeAssetData`, `openOrders`, `frontendOpenOrders`, `orderStatus`, `userFees`, `unifiedBalances`, `accountNonces`, `marketSnapshot`, `exchangeStatus`\n- Indexer：`allMids`, `recentTrades`, `l2Book`, `webData2`, `candleSnapshot`, `historicalOrders`, `userFills`, `userFillsByTime`, `userFunding`, `fundingHistory`, `userNonFundingLedgerUpdates`\n\nWS 订阅：`assetCtxs` / `clearinghouseState` 走状态服务，其余走 indexer。\n\n## WebSocket 订阅\n\n### Indexer（17 种）\n\n| 订阅 | 参数 | 推送 channel | 数据 | 来源 |\n|---|---|---|---|---|\n| `trades` | `coin` | `trades` | 指定市场成交数组 | 官方 |\n| `l2Book` | `coin`, `nSigFigs?`, `nLevels?`, `mantissa?` | `l2Book` | L2 快照及变化；订阅成功可能先回一次快照 | 官方 |\n| `l4Book` | `coin` | `l4Book` | L4 订单簿 | 官方 |\n| `bbo` | `coin` | `bbo` | 最优买卖报价 | 官方 |\n| `bookDiffs` | `coin` | `bookDiffs` | 订单簿差异 | 自加扩展 |\n| `activeAssetCtx` | `coin` | `activeAssetCtx` | {coin, ctx: PerpAssetCtx}（标记价/资金费/持仓量） | 官方 |\n| `activeSpotAssetCtx` | `coin` | `activeSpotAssetCtx` | {coin, ctx: SpotAssetCtx} | 官方 |\n| `allMids` | — | `allMids` | {mids:{coin:px}}（SDK AllMidsData） | 官方 |\n| `candle` | `coin`, `interval` | `candle` | {t,T,s,i,o,c,h,l,v,n}（SDK candle wire） | 官方 |\n| `orderUpdates` | `user` | `orderUpdates` | 用户订单状态更新（与 REST historicalOrders 同源的 node_order_statuses 广播过滤） | 官方 |\n| `userFills` | `user`, `aggregateByTime?` | `userFills` | {user, isSnapshot, fills:[...]} | 官方 |\n| `userEvents` | `user` | `user` | fills/funding/liquidation/nonUserCancel（注意入站 channel 名为 user） | 官方 |\n| `userFundings` | `user` | `userFundings` | {user, isSnapshot, fundings} | 官方 |\n| `userNonFundingLedgerUpdates` | `user` | `userNonFundingLedgerUpdates` | {user, isSnapshot, nonFundingLedgerUpdates} | 官方 |\n| `userHistoricalOrders` | `user` | `userHistoricalOrders` | {user, orderHistory:[{order,status,statusTimestamp}]}（条目与 REST historicalOrders 完全一致；非官方扩展，标准 HL SDK 不会发送） | 自加扩展 |\n| `openOrders` | `user`, `dex?` | `openOrders` | 用户当前订单变化（轮询节点 frontendOpenOrders 中继；经网关仍走 indexer） | 自加扩展 |\n| `activeAssetData` | `user`, `coin` | `activeAssetData` | {user,coin,leverage,maxTradeSzs,availableToTrade,markPx} | 官方 |"
+    "version": "d94dba3d08f833231725c1103f6c6efa175a2bf7",
+    "description": "前端唯一入口：`POST /info`、`POST /exchange`、`GET /ws` 均打网关，由网关按 type/订阅分流到三后端，网关不改业务字段、不回退。\n\n## 版本矩阵（本次构建拉取）\n\n| 服务 | rev |\n|---|---|\n| `gateway` | `d94dba3d08f833231725c1103f6c6efa175a2bf7` |\n| `exchange-apiserver` | `c3756c0e461e301c0043f28471fc79516fec5c48` |\n| `bybchain-api-server` | `3bac5a8b83f882eaff83b10b0f2db9b42c4b9e18` |\n| `biya-indexer` | `e9ca86d98a52a6855f95e0f502ff7a0c40cd4d3c` |\n\n网关按 `type` 分流（以本次构建的 `src/routing.rs` 为准）：\n\n- State：`meta`, `metaAndAssetCtxs`, `extraAgents`, `clearinghouseState`, `activeAssetData`, `openOrders`, `frontendOpenOrders`, `orderStatus`, `userFees`, `unifiedBalances`, `accountNonces`, `marketSnapshot`, `exchangeStatus`\n- Indexer：`allMids`, `recentTrades`, `l2Book`, `webData2`, `candleSnapshot`, `historicalOrders`, `userFills`, `userFillsByTime`, `userFunding`, `fundingHistory`, `userNonFundingLedgerUpdates`\n\nWS 订阅：`assetCtxs` / `clearinghouseState` 走状态服务，其余走 indexer。\n\nWS 订阅见各服务分组下的“WebSocket 订阅”一节（与 REST 同源，按服务归属展示）。"
   },
   "tags": [
     {
       "name": "Exchange",
-      "description": "交易池：签名动作接收与本地校验入池。"
+      "description": "交易池：签名动作接收与本地校验入池。\n\n## WebSocket 订阅\n\n本服务无 WS 订阅。"
     },
     {
       "name": "State",
-      "description": "状态服务：当前状态查询。"
+      "description": "状态服务：当前状态查询。\n\n## WebSocket 订阅（2 种）\n\n订阅消息 `{\"method\":\"subscribe\",\"subscription\":{\"type\":...}}`，推送帧为 `{\"channel\":...,\"data\":...}`。\n\n| 订阅 | 参数 | 推送 channel | 数据 | 来源 |\n|---|---|---|---|---|\n| `assetCtxs` | `dex?` | `assetCtxs` | {dex, ctxs:[...]}（ctxs 顺序与 meta.universe 一致，客户端按下标配对币种；dex 原样回显） | 自加扩展 |\n| `clearinghouseState` | `user`, `dex?` | `clearinghouseState` | {dex, user, clearinghouseState:{...}}（账户状态，内容变化时推送） | 自加扩展 |"
     },
     {
       "name": "Indexer",
-      "description": "Indexer：历史、订单簿与行情订阅。"
+      "description": "Indexer：历史、订单簿与行情查询。\n\n## WebSocket 订阅（17 种）\n\n订阅消息 `{\"method\":\"subscribe\",\"subscription\":{\"type\":...}}`，推送帧为 `{\"channel\":...,\"data\":...}`。\n\n| 订阅 | 参数 | 推送 channel | 数据 | 来源 |\n|---|---|---|---|---|\n| `trades` | `coin` | `trades` | 指定市场成交数组 | 官方 |\n| `l2Book` | `coin`, `nSigFigs?`, `nLevels?`, `mantissa?` | `l2Book` | L2 快照及变化；订阅成功可能先回一次快照 | 官方 |\n| `l4Book` | `coin` | `l4Book` | L4 订单簿 | 官方 |\n| `bbo` | `coin` | `bbo` | 最优买卖报价 | 官方 |\n| `bookDiffs` | `coin` | `bookDiffs` | 订单簿差异 | 自加扩展 |\n| `activeAssetCtx` | `coin` | `activeAssetCtx` | {coin, ctx: PerpAssetCtx}（标记价/资金费/持仓量） | 官方 |\n| `activeSpotAssetCtx` | `coin` | `activeSpotAssetCtx` | {coin, ctx: SpotAssetCtx} | 官方 |\n| `allMids` | — | `allMids` | {mids:{coin:px}}（SDK AllMidsData） | 官方 |\n| `candle` | `coin`, `interval` | `candle` | {t,T,s,i,o,c,h,l,v,n}（SDK candle wire） | 官方 |\n| `orderUpdates` | `user` | `orderUpdates` | 用户订单状态更新（与 REST historicalOrders 同源的 node_order_statuses 广播过滤） | 官方 |\n| `userFills` | `user`, `aggregateByTime?` | `userFills` | {user, isSnapshot, fills:[...]} | 官方 |\n| `userEvents` | `user` | `user` | fills/funding/liquidation/nonUserCancel（注意入站 channel 名为 user） | 官方 |\n| `userFundings` | `user` | `userFundings` | {user, isSnapshot, fundings} | 官方 |\n| `userNonFundingLedgerUpdates` | `user` | `userNonFundingLedgerUpdates` | {user, isSnapshot, nonFundingLedgerUpdates} | 官方 |\n| `userHistoricalOrders` | `user` | `userHistoricalOrders` | {user, orderHistory:[{order,status,statusTimestamp}]}（条目与 REST historicalOrders 完全一致；非官方扩展，标准 HL SDK 不会发送） | 自加扩展 |\n| `openOrders` | `user`, `dex?` | `openOrders` | 用户当前订单变化（轮询节点 frontendOpenOrders 中继；经网关仍走 indexer） | 自加扩展 |\n| `activeAssetData` | `user`, `coin` | `activeAssetData` | {user,coin,leverage,maxTradeSzs,availableToTrade,markPx} | 官方 |"
     }
   ],
   "paths": {
@@ -89,7 +99,14 @@
               }
             }
           }
-        }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "TypeScript",
+            "label": "TypeScript",
+            "source": "// POST https://dev.dex-api.biya.io/exchange\n// 提交已签名动作；accepted 仅表示入本地交易池，不代表链上执行。\nconst res = await fetch(\"https://dev.dex-api.biya.io/exchange\", {\n  method: \"POST\",\n  headers: { \"Content-Type\": \"application/json\" },\n  body: JSON.stringify({\n    action: { type: \"order\", orders: [order], grouping: \"na\" },\n    nonce,\n    signature: { r, s, v }, // Hyperliquid L1 签名，r/s 32 字节 hex，v 为 27/28\n  }),\n});\nconst data: { code: number; message: string; tx_hash?: string } = await res.json();\n"
+          }
+        ]
       }
     },
     "/info": {
@@ -99,7 +116,15 @@
           "State",
           "Indexer"
         ],
-        "summary": "统一查询入口（网关按 type 分流）",
+        "x-codeSamples": [
+          {
+            "lang": "TypeScript",
+            "label": "TypeScript",
+            "source": "// POST https://dev.dex-api.biya.io/info\n// 网关按 type 分流到三后端；各服务的 type 与字段见对应分组。\nconst res = await fetch(\"https://dev.dex-api.biya.io/info\", {\n  method: \"POST\",\n  headers: { \"Content-Type\": \"application/json\" },\n  body: JSON.stringify({\n    type: \"extraAgents\", // State; Indexer 如 { type: \"l2Book\", coin: \"BTCUSDC\" }\n    user: \"0x1111111111111111111111111111111111111111\",\n  }),\n});\nconst data = await res.json();\n"
+          }
+        ],
+        "summary": "POST /info（网关按 type 分流）",
+        "description": "网关唯一的 POST /info 入口：三个分组导航指向的是同一个操作，Body 默认显示第一项。用 Body 区右上 Examples 按服务一键切换 （Exchange/State/Indexer），或在 oneOf 下拉里直接选 type 对应的 schema。",
         "requestBody": {
           "required": true,
           "content": {
@@ -116,6 +141,28 @@
                     "$ref": "#/components/schemas/Indexer__InfoRequest"
                   }
                 ]
+              },
+              "examples": {
+                "Exchange": {
+                  "summary": "发往交易池的 type（如 health）",
+                  "value": {
+                    "type": "health"
+                  }
+                },
+                "State": {
+                  "summary": "发往状态服务的 type",
+                  "value": {
+                    "type": "extraAgents",
+                    "user": "0x1111111111111111111111111111111111111111"
+                  }
+                },
+                "Indexer": {
+                  "summary": "发往 indexer 的 type",
+                  "value": {
+                    "type": "l2Book",
+                    "coin": "BTCUSDC"
+                  }
+                }
               }
             }
           }
@@ -612,30 +659,164 @@
         }
       },
       "Exchange__InfoRequest": {
+        "description": "10 种 type 的联合，discriminator 为 type。health 由本服务直接回答；其余原样透传 connected node（透传类只约束 type 常量，其余字段原样转发）。",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/Exchange__HealthRequest"
+          },
+          {
+            "$ref": "#/components/schemas/Exchange__StateInfoRequest"
+          },
+          {
+            "$ref": "#/components/schemas/Exchange__BlockRequest"
+          },
+          {
+            "$ref": "#/components/schemas/Exchange__BridgeSnapshotRequest"
+          },
+          {
+            "$ref": "#/components/schemas/Exchange__BridgeDepositStatusRequest"
+          },
+          {
+            "$ref": "#/components/schemas/Exchange__BridgeWithdrawalStatusRequest"
+          },
+          {
+            "$ref": "#/components/schemas/Exchange__PassthroughClearinghouseStateRequest"
+          },
+          {
+            "$ref": "#/components/schemas/Exchange__AccountOverviewRequest"
+          },
+          {
+            "$ref": "#/components/schemas/Exchange__UnifiedBalancesRequest"
+          },
+          {
+            "$ref": "#/components/schemas/Exchange__AccountNoncesRequest"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "type"
+        }
+      },
+      "Exchange__HealthRequest": {
         "type": "object",
         "required": [
           "type"
         ],
         "properties": {
           "type": {
-            "type": "string",
-            "enum": [
-              "health",
-              "stateInfo",
-              "block",
-              "bridgeSnapshot",
-              "bridgeDepositStatus",
-              "bridgeWithdrawalStatus",
-              "clearinghouseState",
-              "accountOverview",
-              "unifiedBalances",
-              "accountNonces"
-            ],
-            "description": "health 由本服务直接回答；其余透传 connected node，block 需带 height。"
+            "const": "health",
+            "description": "本服务直接回答 {\"status\":\"ok\"}。"
+          }
+        }
+      },
+      "Exchange__StateInfoRequest": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "const": "stateInfo",
+            "description": "透传 connected node，响应含 blockHeight。"
+          }
+        }
+      },
+      "Exchange__BlockRequest": {
+        "type": "object",
+        "required": [
+          "type",
+          "height"
+        ],
+        "properties": {
+          "type": {
+            "const": "block"
           },
           "height": {
             "type": "integer",
-            "description": "type=block 时必填。"
+            "description": "必填，查询的区块高度。"
+          }
+        }
+      },
+      "Exchange__BridgeSnapshotRequest": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "const": "bridgeSnapshot",
+            "description": "透传 connected node，其余字段原样转发。"
+          }
+        }
+      },
+      "Exchange__BridgeDepositStatusRequest": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "const": "bridgeDepositStatus",
+            "description": "透传 connected node，其余字段原样转发。"
+          }
+        }
+      },
+      "Exchange__BridgeWithdrawalStatusRequest": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "const": "bridgeWithdrawalStatus",
+            "description": "透传 connected node，其余字段原样转发。"
+          }
+        }
+      },
+      "Exchange__PassthroughClearinghouseStateRequest": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "const": "clearinghouseState",
+            "description": "本服务仅透传；经网关调用时该 type 走状态服务，不到这里。"
+          }
+        }
+      },
+      "Exchange__AccountOverviewRequest": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "const": "accountOverview",
+            "description": "透传 connected node，其余字段原样转发。"
+          }
+        }
+      },
+      "Exchange__UnifiedBalancesRequest": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "const": "unifiedBalances",
+            "description": "透传 connected node，其余字段原样转发。"
+          }
+        }
+      },
+      "Exchange__AccountNoncesRequest": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "const": "accountNonces",
+            "description": "透传 connected node，其余字段原样转发。"
           }
         }
       },
@@ -2212,11 +2393,32 @@
     }
   },
   "x-backend-revs": {
-    "exchange-apiserver": "c601f4da12563d20931dce1952d49517c576a100",
-    "bybchain-api-server": "3808341d403f0122e1e8715c7c308c2a92f34a25",
+    "exchange-apiserver": "c3756c0e461e301c0043f28471fc79516fec5c48",
+    "bybchain-api-server": "3bac5a8b83f882eaff83b10b0f2db9b42c4b9e18",
     "biya-indexer": "e9ca86d98a52a6855f95e0f502ff7a0c40cd4d3c"
   },
   "x-ws-subscriptions": [
+    {
+      "type": "assetCtxs",
+      "official": false,
+      "params": [
+        "dex?"
+      ],
+      "pushChannel": "assetCtxs",
+      "data": "{dex, ctxs:[...]}（ctxs 顺序与 meta.universe 一致，客户端按下标配对币种；dex 原样回显）",
+      "service": "bybchain-api-server"
+    },
+    {
+      "type": "clearinghouseState",
+      "official": false,
+      "params": [
+        "user",
+        "dex?"
+      ],
+      "pushChannel": "clearinghouseState",
+      "data": "{dex, user, clearinghouseState:{...}}（账户状态，内容变化时推送）",
+      "service": "bybchain-api-server"
+    },
     {
       "type": "trades",
       "official": true,

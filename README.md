@@ -79,7 +79,7 @@ state_info = "http://host.docker.internal:36020/info"
 state_ws = "ws://host.docker.internal:36020/ws"
 
 [access]
-allowed_origins = ["http://localhost:8080", "http://127.0.0.1:8080", "https://dev.dex.biya.io"]
+allowed_origins = ["http://localhost:8080", "http://127.0.0.1:8080", "https://dev.dex.biya.io", "https://dev.dex-api.biya.io"]
 ```
 
 目前启用已部署的交易后端、indexer 和状态 APIServer，前端 Origin 允许上述两个本地开发地址及 HTTPS 前端域名，不再放行原公网 IP 页面来源。后端无鉴权或 IP 白名单不等于放开网关自身的浏览器 Origin 策略。
@@ -106,7 +106,7 @@ cargo run -- --config config/local.toml
 - 程序启动时读取 `--config` 指定的文件；未指定时读取工作目录下的 [config/default.toml](config/default.toml)。配置修改后需重启才生效。
 - 网关容器端口为 `8888`。宿主机映射端口由运维另行设置，例如 `36016:8888`；`36016` 仅为示例，不写入 `listen_addr`。
 - 运维可以挂载部署配置并通过 `--config` 指定，实际加载的配置才决定监听及后端地址；容器映射的目标端口必须与监听端口一致。
-- `allowed_origins` 包含 `http://localhost:8080`、`http://127.0.0.1:8080` 和 `https://dev.dex.biya.io`，它们是浏览器页面来源，与网关监听／映射端口无关。此白名单变更不启用网关自身的 HTTPS/WSS 监听。
+- `allowed_origins` 包含 `http://localhost:8080`、`http://127.0.0.1:8080`、`https://dev.dex.biya.io` 和 `https://dev.dex-api.biya.io`（最后者是 API 文档站，供 `/docs` 页内 Test Request），它们是浏览器页面来源，与网关监听／映射端口无关。此白名单变更不启用网关自身的 HTTPS/WSS 监听。
 
 ### Docker 部署
 
@@ -136,7 +136,7 @@ Compose 默认挂载项目配置、使用内置 `bridge` 网络并配置宿主�
 
 上述不是生产容量承诺。HTTP 完整缓冲响应，部署前需按内存与并发预算调整。
 
-默认允许 `http://localhost:8080`、`http://127.0.0.1:8080` 和 `https://dev.dex.biya.io`。Origin 按协议、主机和端口精确匹配，不放行该域名的 HTTP 来源或 `:35002` 来源；无 Origin 的 SDK／服务端请求不受影响。
+默认允许 `http://localhost:8080`、`http://127.0.0.1:8080`、`https://dev.dex.biya.io` 和 `https://dev.dex-api.biya.io`。Origin 按协议、主机和端口精确匹配，不放行这些域名的 HTTP 来源或带端口来源；无 Origin 的 SDK／服务端请求不受影响。
 `["*"]` 显式允许任意来源，或填写准确域名（无尾部 `/`）。支持 OPTIONS，不启用 Cookie 跨域凭证模式。
 Origin 检查不是身份鉴权；Token 验证、每 IP 限流与可信代理链暂不实现。
 日志按配置过滤，不读 `RUST_LOG`，不记录请求体、签名或凭证。
