@@ -1,0 +1,2396 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "BIYA DEX API（网关聚合）",
+    "version": "7e01d0910fb0aab261873530147fcf5ec1e4776a",
+    "description": "前端唯一入口：`POST /info`、`POST /exchange`、`GET /ws` 均打网关，由网关按 type/订阅分流到三后端，网关不改业务字段、不回退。\n\n## 版本矩阵（本次构建拉取）\n\n| 服务 | rev |\n|---|---|\n| `gateway` | `7e01d0910fb0aab261873530147fcf5ec1e4776a` |\n| `exchange-apiserver` | `c601f4da12563d20931dce1952d49517c576a100` |\n| `bybchain-api-server` | `3808341d403f0122e1e8715c7c308c2a92f34a25` |\n| `biya-indexer` | `e9ca86d98a52a6855f95e0f502ff7a0c40cd4d3c` |\n\n网关按 `type` 分流（以本次构建的 `src/routing.rs` 为准）：\n\n- State：`meta`, `metaAndAssetCtxs`, `extraAgents`, `clearinghouseState`, `activeAssetData`, `openOrders`, `frontendOpenOrders`, `orderStatus`, `userFees`, `unifiedBalances`, `accountNonces`, `marketSnapshot`, `exchangeStatus`\n- Indexer：`allMids`, `recentTrades`, `l2Book`, `webData2`, `candleSnapshot`, `historicalOrders`, `userFills`, `userFillsByTime`, `userFunding`, `fundingHistory`, `userNonFundingLedgerUpdates`\n\nWS 订阅：`assetCtxs` / `clearinghouseState` 走状态服务，其余走 indexer。\n\n## WebSocket 订阅\n\n### Indexer（17 种）\n\n| 订阅 | 参数 | 推送 channel | 数据 | 来源 |\n|---|---|---|---|---|\n| `trades` | `coin` | `trades` | 指定市场成交数组 | 官方 |\n| `l2Book` | `coin`, `nSigFigs?`, `nLevels?`, `mantissa?` | `l2Book` | L2 快照及变化；订阅成功可能先回一次快照 | 官方 |\n| `l4Book` | `coin` | `l4Book` | L4 订单簿 | 官方 |\n| `bbo` | `coin` | `bbo` | 最优买卖报价 | 官方 |\n| `bookDiffs` | `coin` | `bookDiffs` | 订单簿差异 | 自加扩展 |\n| `activeAssetCtx` | `coin` | `activeAssetCtx` | {coin, ctx: PerpAssetCtx}（标记价/资金费/持仓量） | 官方 |\n| `activeSpotAssetCtx` | `coin` | `activeSpotAssetCtx` | {coin, ctx: SpotAssetCtx} | 官方 |\n| `allMids` | — | `allMids` | {mids:{coin:px}}（SDK AllMidsData） | 官方 |\n| `candle` | `coin`, `interval` | `candle` | {t,T,s,i,o,c,h,l,v,n}（SDK candle wire） | 官方 |\n| `orderUpdates` | `user` | `orderUpdates` | 用户订单状态更新（与 REST historicalOrders 同源的 node_order_statuses 广播过滤） | 官方 |\n| `userFills` | `user`, `aggregateByTime?` | `userFills` | {user, isSnapshot, fills:[...]} | 官方 |\n| `userEvents` | `user` | `user` | fills/funding/liquidation/nonUserCancel（注意入站 channel 名为 user） | 官方 |\n| `userFundings` | `user` | `userFundings` | {user, isSnapshot, fundings} | 官方 |\n| `userNonFundingLedgerUpdates` | `user` | `userNonFundingLedgerUpdates` | {user, isSnapshot, nonFundingLedgerUpdates} | 官方 |\n| `userHistoricalOrders` | `user` | `userHistoricalOrders` | {user, orderHistory:[{order,status,statusTimestamp}]}（条目与 REST historicalOrders 完全一致；非官方扩展，标准 HL SDK 不会发送） | 自加扩展 |\n| `openOrders` | `user`, `dex?` | `openOrders` | 用户当前订单变化（轮询节点 frontendOpenOrders 中继；经网关仍走 indexer） | 自加扩展 |\n| `activeAssetData` | `user`, `coin` | `activeAssetData` | {user,coin,leverage,maxTradeSzs,availableToTrade,markPx} | 官方 |"
+  },
+  "tags": [
+    {
+      "name": "Exchange",
+      "description": "交易池：签名动作接收与本地校验入池。"
+    },
+    {
+      "name": "State",
+      "description": "状态服务：当前状态查询。"
+    },
+    {
+      "name": "Indexer",
+      "description": "Indexer：历史、订单簿与行情订阅。"
+    }
+  ],
+  "paths": {
+    "/exchange": {
+      "post": {
+        "tags": [
+          "Exchange"
+        ],
+        "summary": "提交已签名的 exchange action",
+        "description": "同步完成本地校验（签名标准化、参数校验、签名恢复验签）和入池后返回。accepted 不代表链上执行结果；重复提交返回 1002。",
+        "operationId": "postExchange",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Exchange__SignedAction"
+              },
+              "examples": {
+                "limitOrder": {
+                  "value": {
+                    "action": {
+                      "type": "order",
+                      "orders": [
+                        {
+                          "a": 0,
+                          "b": true,
+                          "p": "65000",
+                          "s": "0.001",
+                          "r": false,
+                          "t": {
+                            "limit": {
+                              "tif": "Gtc"
+                            }
+                          }
+                        }
+                      ],
+                      "grouping": "na"
+                    },
+                    "nonce": 1774952773999,
+                    "signature": {
+                      "r": "0x<32-byte-r>",
+                      "s": "0x<32-byte-s>",
+                      "v": 27
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "本地处理结果（注意：业务失败也走 200 + code 区分，见返回码表）。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Exchange__ExchangeResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "malformed JSON 或字段类型错误，Axum 在进业务逻辑前拒绝。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Exchange__Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/info": {
+      "post": {
+        "tags": [
+          "Exchange",
+          "State",
+          "Indexer"
+        ],
+        "summary": "统一查询入口（网关按 type 分流）",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/Exchange__InfoRequest"
+                  },
+                  {
+                    "$ref": "#/components/schemas/State__InfoRequest"
+                  },
+                  {
+                    "$ref": "#/components/schemas/Indexer__InfoRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "后端查询结果（下游错误也可能以 200 + 业务错误体返回，见各服务说明）。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    true,
+                    {
+                      "$ref": "#/components/schemas/State__InfoResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Indexer__InfoResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "未知 type 或参数错误（网关直接返回，不进后端）。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Gateway__Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "后端返回的未知类型（透传）。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Gateway__Error"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "后端未实现（透传）。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Gateway__Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "后端未就绪或未配置（网关直接返回）。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Gateway__Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Exchange__SignedAction": {
+        "type": "object",
+        "required": [
+          "action",
+          "nonce",
+          "signature"
+        ],
+        "properties": {
+          "action": {
+            "type": "object",
+            "description": "exchange action，必须包含 type。L1-agent 签名动作：order/cancel/cancelByCloid/cancelAll/updateLeverage/batchModify；User-signed EIP-712 动作：usdSend/withdraw3/approveAgent。action 字段和值须满足原生 action 格式，JSON 键顺序不影响验签。",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Exchange__OrderAction"
+              },
+              {
+                "$ref": "#/components/schemas/Exchange__CancelAction"
+              },
+              {
+                "$ref": "#/components/schemas/Exchange__CancelByCloidAction"
+              },
+              {
+                "$ref": "#/components/schemas/Exchange__CancelAllAction"
+              },
+              {
+                "$ref": "#/components/schemas/Exchange__UpdateLeverageAction"
+              },
+              {
+                "$ref": "#/components/schemas/Exchange__BatchModifyAction"
+              },
+              {
+                "$ref": "#/components/schemas/Exchange__UsdSendAction"
+              },
+              {
+                "$ref": "#/components/schemas/Exchange__Withdraw3Action"
+              },
+              {
+                "$ref": "#/components/schemas/Exchange__ApproveAgentAction"
+              }
+            ],
+            "discriminator": {
+              "propertyName": "type"
+            }
+          },
+          "nonce": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "用户 nonce，必须大于 0。"
+          },
+          "signature": {
+            "$ref": "#/components/schemas/Exchange__SignatureWire"
+          },
+          "vaultAddress": {
+            "type": "string",
+            "pattern": "^0x[0-9a-fA-F]{40}$",
+            "description": "可选，20 字节 0x hex；存在时参与签名 payload。"
+          },
+          "expiresAfter": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "可选过期时间；存在时参与签名 payload。"
+          }
+        }
+      },
+      "Exchange__SignatureWire": {
+        "type": "object",
+        "required": [
+          "r",
+          "s",
+          "v"
+        ],
+        "properties": {
+          "r": {
+            "type": "string",
+            "description": "签名标量 r，SDK 可给变长整数，服务端会左补齐到 32 字节；文档示例按 32 字节 0x hex。"
+          },
+          "s": {
+            "type": "string",
+            "description": "签名标量 s，同 r。"
+          },
+          "v": {
+            "type": "integer",
+            "enum": [
+              27,
+              28
+            ]
+          }
+        }
+      },
+      "Exchange__OrderAction": {
+        "type": "object",
+        "required": [
+          "type",
+          "orders",
+          "grouping"
+        ],
+        "properties": {
+          "type": {
+            "const": "order"
+          },
+          "orders": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/Exchange__LimitOrder"
+            }
+          },
+          "grouping": {
+            "type": "string",
+            "example": "na"
+          }
+        }
+      },
+      "Exchange__LimitOrder": {
+        "type": "object",
+        "required": [
+          "a",
+          "b",
+          "p",
+          "s",
+          "r",
+          "t"
+        ],
+        "properties": {
+          "a": {
+            "type": "integer",
+            "description": "市场 id，如 0=BTCUSDC。"
+          },
+          "b": {
+            "type": "boolean",
+            "description": "true=买入/做多，false=卖出/做空。"
+          },
+          "p": {
+            "type": "string",
+            "description": "限价，字符串小数。"
+          },
+          "s": {
+            "type": "string",
+            "description": "数量，字符串小数。"
+          },
+          "r": {
+            "type": "boolean",
+            "description": "是否只减仓（reduceOnly）。"
+          },
+          "t": {
+            "type": "object",
+            "required": [
+              "limit"
+            ],
+            "properties": {
+              "limit": {
+                "type": "object",
+                "required": [
+                  "tif"
+                ],
+                "properties": {
+                  "tif": {
+                    "type": "string",
+                    "enum": [
+                      "Gtc",
+                      "Ioc",
+                      "Alo"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "c": {
+            "type": "string",
+            "description": "可选 client order id（cloid）。"
+          }
+        }
+      },
+      "Exchange__CancelAction": {
+        "type": "object",
+        "required": [
+          "type",
+          "cancels"
+        ],
+        "properties": {
+          "type": {
+            "const": "cancel"
+          },
+          "cancels": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "a",
+                "o"
+              ],
+              "properties": {
+                "a": {
+                  "type": "integer"
+                },
+                "o": {
+                  "type": "integer",
+                  "description": "链上 oid。"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Exchange__CancelByCloidAction": {
+        "type": "object",
+        "required": [
+          "type",
+          "cancels"
+        ],
+        "properties": {
+          "type": {
+            "const": "cancelByCloid"
+          },
+          "cancels": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "asset",
+                "cloid"
+              ],
+              "properties": {
+                "asset": {
+                  "type": "integer"
+                },
+                "cloid": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Exchange__CancelAllAction": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "const": "cancelAll"
+          }
+        }
+      },
+      "Exchange__UpdateLeverageAction": {
+        "type": "object",
+        "required": [
+          "type",
+          "asset",
+          "isCross",
+          "leverage"
+        ],
+        "properties": {
+          "type": {
+            "const": "updateLeverage"
+          },
+          "asset": {
+            "type": "integer"
+          },
+          "isCross": {
+            "type": "boolean"
+          },
+          "leverage": {
+            "type": "integer"
+          }
+        }
+      },
+      "Exchange__BatchModifyAction": {
+        "type": "object",
+        "required": [
+          "type",
+          "modifies"
+        ],
+        "properties": {
+          "type": {
+            "const": "batchModify"
+          },
+          "modifies": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "oid",
+                "order"
+              ],
+              "properties": {
+                "oid": {
+                  "type": "integer"
+                },
+                "order": {
+                  "$ref": "#/components/schemas/Exchange__LimitOrder"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Exchange__UsdSendAction": {
+        "type": "object",
+        "description": "User-signed EIP-712：HyperliquidTransaction:UsdSend。nonce 必须等于 action.time。",
+        "required": [
+          "type",
+          "hyperliquidChain",
+          "signatureChainId",
+          "destination",
+          "amount",
+          "time"
+        ],
+        "properties": {
+          "type": {
+            "const": "usdSend"
+          },
+          "hyperliquidChain": {
+            "type": "string"
+          },
+          "signatureChainId": {
+            "type": "string"
+          },
+          "destination": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "string"
+          },
+          "time": {
+            "type": "integer"
+          }
+        }
+      },
+      "Exchange__Withdraw3Action": {
+        "type": "object",
+        "description": "User-signed EIP-712：HyperliquidTransaction:Withdraw。nonce 必须等于 action.time。",
+        "required": [
+          "type",
+          "hyperliquidChain",
+          "signatureChainId",
+          "destination",
+          "amount",
+          "time"
+        ],
+        "properties": {
+          "type": {
+            "const": "withdraw3"
+          },
+          "hyperliquidChain": {
+            "type": "string"
+          },
+          "signatureChainId": {
+            "type": "string"
+          },
+          "destination": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "string"
+          },
+          "time": {
+            "type": "integer"
+          }
+        }
+      },
+      "Exchange__ApproveAgentAction": {
+        "type": "object",
+        "description": "User-signed EIP-712：HyperliquidTransaction:ApproveAgent。外层 nonce 必须等于 action.nonce。",
+        "required": [
+          "type",
+          "hyperliquidChain",
+          "signatureChainId",
+          "agentAddress",
+          "nonce"
+        ],
+        "properties": {
+          "type": {
+            "const": "approveAgent"
+          },
+          "hyperliquidChain": {
+            "type": "string"
+          },
+          "signatureChainId": {
+            "type": "string"
+          },
+          "agentAddress": {
+            "type": "string"
+          },
+          "agentName": {
+            "type": "string"
+          },
+          "nonce": {
+            "type": "integer"
+          }
+        }
+      },
+      "Exchange__ExchangeResult": {
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "integer",
+            "enum": [
+              0,
+              1001,
+              1002,
+              1003
+            ],
+            "description": "0=accepted（已入本地交易池）；1001 参数/哈希失败；1002 重复交易；1003 签名失败。"
+          },
+          "message": {
+            "type": "string",
+            "enum": [
+              "accepted",
+              "invalid parameter",
+              "duplicate transaction",
+              "invalid signature"
+            ]
+          },
+          "tx_hash": {
+            "type": "string",
+            "description": "成功时返回，Keccak256(JSON(SignedAction))，0x 64 位 hex。失败时省略。"
+          }
+        }
+      },
+      "Exchange__InfoRequest": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "health",
+              "stateInfo",
+              "block",
+              "bridgeSnapshot",
+              "bridgeDepositStatus",
+              "bridgeWithdrawalStatus",
+              "clearinghouseState",
+              "accountOverview",
+              "unifiedBalances",
+              "accountNonces"
+            ],
+            "description": "health 由本服务直接回答；其余透传 connected node，block 需带 height。"
+          },
+          "height": {
+            "type": "integer",
+            "description": "type=block 时必填。"
+          }
+        }
+      },
+      "Exchange__Error": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        }
+      },
+      "State__InfoRequest": {
+        "description": "14 种已实现 type 的联合，discriminator 为 type。",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/State__MetaRequest"
+          },
+          {
+            "$ref": "#/components/schemas/State__MetaAndAssetCtxsRequest"
+          },
+          {
+            "$ref": "#/components/schemas/State__AllMidsRequest"
+          },
+          {
+            "$ref": "#/components/schemas/State__L2BookRequest"
+          },
+          {
+            "$ref": "#/components/schemas/State__ClearinghouseStateRequest"
+          },
+          {
+            "$ref": "#/components/schemas/State__OpenOrdersRequest"
+          },
+          {
+            "$ref": "#/components/schemas/State__FrontendOpenOrdersRequest"
+          },
+          {
+            "$ref": "#/components/schemas/State__ExtraAgentsRequest"
+          },
+          {
+            "$ref": "#/components/schemas/State__ActiveAssetDataRequest"
+          },
+          {
+            "$ref": "#/components/schemas/State__UserFeesRequest"
+          },
+          {
+            "$ref": "#/components/schemas/State__RecentTradesRequest"
+          },
+          {
+            "$ref": "#/components/schemas/State__ExchangeStatusRequest"
+          },
+          {
+            "$ref": "#/components/schemas/State__OrderStatusRequest"
+          },
+          {
+            "$ref": "#/components/schemas/State__WebData2Request"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "type"
+        }
+      },
+      "State__MetaRequest": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "const": "meta"
+          },
+          "dex": {
+            "type": "string",
+            "description": "可选，默认 dex；非默认 dex 返回 501。"
+          }
+        }
+      },
+      "State__MetaAndAssetCtxsRequest": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "const": "metaAndAssetCtxs"
+          },
+          "dex": {
+            "type": "string"
+          }
+        }
+      },
+      "State__AllMidsRequest": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "const": "allMids"
+          },
+          "dex": {
+            "type": "string"
+          }
+        }
+      },
+      "State__L2BookRequest": {
+        "type": "object",
+        "required": [
+          "type",
+          "coin"
+        ],
+        "properties": {
+          "type": {
+            "const": "l2Book"
+          },
+          "coin": {
+            "type": "string",
+            "example": "BTCUSDC"
+          },
+          "nSigFigs": {
+            "type": "integer",
+            "description": "可选有效数字位数。"
+          },
+          "mantissa": {
+            "type": "integer",
+            "description": "可选尾数。"
+          }
+        }
+      },
+      "State__ClearinghouseStateRequest": {
+        "type": "object",
+        "required": [
+          "type",
+          "user"
+        ],
+        "properties": {
+          "type": {
+            "const": "clearinghouseState"
+          },
+          "user": {
+            "type": "string",
+            "description": "42 字符 0x 地址。"
+          },
+          "dex": {
+            "type": "string"
+          }
+        }
+      },
+      "State__OpenOrdersRequest": {
+        "type": "object",
+        "required": [
+          "type",
+          "user"
+        ],
+        "properties": {
+          "type": {
+            "const": "openOrders"
+          },
+          "user": {
+            "type": "string"
+          },
+          "dex": {
+            "type": "string"
+          }
+        }
+      },
+      "State__FrontendOpenOrdersRequest": {
+        "type": "object",
+        "required": [
+          "type",
+          "user"
+        ],
+        "properties": {
+          "type": {
+            "const": "frontendOpenOrders"
+          },
+          "user": {
+            "type": "string"
+          },
+          "dex": {
+            "type": "string"
+          }
+        }
+      },
+      "State__ExtraAgentsRequest": {
+        "type": "object",
+        "required": [
+          "type",
+          "user"
+        ],
+        "properties": {
+          "type": {
+            "const": "extraAgents"
+          },
+          "user": {
+            "type": "string"
+          }
+        }
+      },
+      "State__ActiveAssetDataRequest": {
+        "type": "object",
+        "required": [
+          "type",
+          "user",
+          "coin"
+        ],
+        "properties": {
+          "type": {
+            "const": "activeAssetData"
+          },
+          "user": {
+            "type": "string"
+          },
+          "coin": {
+            "type": "string"
+          }
+        }
+      },
+      "State__UserFeesRequest": {
+        "type": "object",
+        "required": [
+          "type",
+          "user"
+        ],
+        "properties": {
+          "type": {
+            "const": "userFees"
+          },
+          "user": {
+            "type": "string"
+          }
+        }
+      },
+      "State__RecentTradesRequest": {
+        "type": "object",
+        "required": [
+          "type",
+          "coin"
+        ],
+        "properties": {
+          "type": {
+            "const": "recentTrades"
+          },
+          "coin": {
+            "type": "string"
+          }
+        }
+      },
+      "State__ExchangeStatusRequest": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "const": "exchangeStatus"
+          }
+        }
+      },
+      "State__OrderStatusRequest": {
+        "type": "object",
+        "required": [
+          "type",
+          "user",
+          "oid"
+        ],
+        "properties": {
+          "type": {
+            "const": "orderStatus"
+          },
+          "user": {
+            "type": "string"
+          },
+          "oid": {
+            "description": "数字按链上 oid 查；字符串按 cloid 查（经链上 cloid_to_oid 映射）。找不到返回 {\"status\":\"unknownOid\"}。",
+            "oneOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              }
+            ]
+          }
+        }
+      },
+      "State__WebData2Request": {
+        "type": "object",
+        "required": [
+          "type",
+          "user"
+        ],
+        "properties": {
+          "type": {
+            "const": "webData2"
+          },
+          "user": {
+            "type": "string"
+          },
+          "dex": {
+            "type": "string"
+          }
+        }
+      },
+      "State__InfoResponse": {
+        "description": "响应形状随请求 type 变化：meta→State__MetaResponse；metaAndAssetCtxs→[meta, ctxs] 二元数组；allMids→{coin: mid} 对象；l2Book→State__L2BookResponse；clearinghouseState→State__ClearinghouseStateResponse；openOrders→State__OpenOrderResponse 数组；frontendOpenOrders→State__NodeDataOrder 数组；extraAgents→State__ExtraAgentResponse 数组；activeAssetData→State__ActiveAssetDataResponse；userFees→State__UserFeesResponse；recentTrades→State__RecentTradeResponse 数组；exchangeStatus→State__ExchangeStatusResponse；orderStatus→State__OrderStatusResponse；webData2→State__WebData2Response。",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/State__MetaResponse"
+          },
+          {
+            "type": "array",
+            "prefixItems": [
+              {
+                "$ref": "#/components/schemas/State__MetaResponse"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/State__PerpAssetCtxResponse"
+                }
+              }
+            ],
+            "description": "metaAndAssetCtxs：[meta, 行情数组]，与 universe 一一对应。"
+          },
+          {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "allMids：{coin: 中间价}，数值均为字符串小数。"
+          },
+          {
+            "$ref": "#/components/schemas/State__L2BookResponse"
+          },
+          {
+            "$ref": "#/components/schemas/State__ClearinghouseStateResponse"
+          },
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/State__OpenOrderResponse"
+            }
+          },
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/State__NodeDataOrder"
+            }
+          },
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/State__ExtraAgentResponse"
+            }
+          },
+          {
+            "$ref": "#/components/schemas/State__ActiveAssetDataResponse"
+          },
+          {
+            "$ref": "#/components/schemas/State__UserFeesResponse"
+          },
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/State__RecentTradeResponse"
+            }
+          },
+          {
+            "$ref": "#/components/schemas/State__ExchangeStatusResponse"
+          },
+          {
+            "$ref": "#/components/schemas/State__OrderStatusResponse"
+          },
+          {
+            "$ref": "#/components/schemas/State__WebData2Response"
+          }
+        ]
+      },
+      "State__MetaResponse": {
+        "type": "object",
+        "required": [
+          "universe",
+          "marginTables",
+          "collateralToken"
+        ],
+        "properties": {
+          "universe": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/State__MetaAssetResponse"
+            }
+          },
+          "marginTables": {
+            "type": "array",
+            "description": "[保证金表 ID, 保证金表] 数组，按 ID 升序。",
+            "items": {
+              "type": "array",
+              "prefixItems": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "$ref": "#/components/schemas/State__MarginTableResponse"
+                }
+              ]
+            }
+          },
+          "collateralToken": {
+            "type": "integer"
+          }
+        }
+      },
+      "State__MetaAssetResponse": {
+        "type": "object",
+        "required": [
+          "szDecimals",
+          "name",
+          "maxLeverage",
+          "marginTableId"
+        ],
+        "properties": {
+          "szDecimals": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string",
+            "example": "BTCUSDC"
+          },
+          "maxLeverage": {
+            "type": "integer"
+          },
+          "marginTableId": {
+            "type": "integer"
+          },
+          "onlyIsolated": {
+            "type": "boolean",
+            "description": "仅为 true 时输出。"
+          },
+          "isDelisted": {
+            "type": "boolean",
+            "description": "仅为 true 时输出。"
+          },
+          "marginMode": {
+            "type": "string",
+            "description": "strictIsolated 或 noCross；无限制时不输出。"
+          }
+        }
+      },
+      "State__MarginTableResponse": {
+        "type": "object",
+        "required": [
+          "description",
+          "marginTiers"
+        ],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "marginTiers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/State__MarginTierResponse"
+            }
+          }
+        }
+      },
+      "State__MarginTierResponse": {
+        "type": "object",
+        "required": [
+          "lowerBound",
+          "maxLeverage"
+        ],
+        "properties": {
+          "lowerBound": {
+            "type": "string"
+          },
+          "maxLeverage": {
+            "type": "integer"
+          }
+        }
+      },
+      "State__PerpAssetCtxResponse": {
+        "type": "object",
+        "required": [
+          "funding",
+          "openInterest",
+          "prevDayPx",
+          "dayNtlVlm",
+          "oraclePx",
+          "markPx",
+          "dayBaseVlm"
+        ],
+        "properties": {
+          "funding": {
+            "type": "string"
+          },
+          "openInterest": {
+            "type": "string"
+          },
+          "prevDayPx": {
+            "type": "string"
+          },
+          "dayNtlVlm": {
+            "type": "string"
+          },
+          "premium": {
+            "type": "string"
+          },
+          "oraclePx": {
+            "type": "string"
+          },
+          "markPx": {
+            "type": "string"
+          },
+          "midPx": {
+            "type": "string"
+          },
+          "impactPxs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "dayBaseVlm": {
+            "type": "string"
+          }
+        }
+      },
+      "State__ClearinghouseStateResponse": {
+        "type": "object",
+        "required": [
+          "marginSummary",
+          "crossMarginSummary",
+          "crossMaintenanceMarginUsed",
+          "withdrawable",
+          "assetPositions",
+          "time"
+        ],
+        "properties": {
+          "marginSummary": {
+            "$ref": "#/components/schemas/State__MarginSummaryResponse"
+          },
+          "crossMarginSummary": {
+            "$ref": "#/components/schemas/State__MarginSummaryResponse"
+          },
+          "crossMaintenanceMarginUsed": {
+            "type": "string"
+          },
+          "withdrawable": {
+            "type": "string"
+          },
+          "assetPositions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/State__AssetPositionResponse"
+            }
+          },
+          "time": {
+            "type": "integer",
+            "description": "毫秒时间戳。"
+          }
+        }
+      },
+      "State__MarginSummaryResponse": {
+        "type": "object",
+        "required": [
+          "accountValue",
+          "totalNtlPos",
+          "totalRawUsd",
+          "totalMarginUsed"
+        ],
+        "properties": {
+          "accountValue": {
+            "type": "string"
+          },
+          "totalNtlPos": {
+            "type": "string"
+          },
+          "totalRawUsd": {
+            "type": "string"
+          },
+          "totalMarginUsed": {
+            "type": "string"
+          }
+        }
+      },
+      "State__AssetPositionResponse": {
+        "type": "object",
+        "required": [
+          "type",
+          "position"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "oneWay"
+          },
+          "position": {
+            "$ref": "#/components/schemas/State__PositionResponse"
+          }
+        }
+      },
+      "State__PositionResponse": {
+        "type": "object",
+        "required": [
+          "coin",
+          "szi",
+          "leverage",
+          "entryPx",
+          "positionValue",
+          "unrealizedPnl",
+          "returnOnEquity",
+          "marginUsed",
+          "maxLeverage",
+          "cumFunding"
+        ],
+        "properties": {
+          "coin": {
+            "type": "string"
+          },
+          "szi": {
+            "type": "string",
+            "description": "持仓数量，正=多，负=空。"
+          },
+          "leverage": {
+            "$ref": "#/components/schemas/State__LeverageResponse"
+          },
+          "entryPx": {
+            "type": "string"
+          },
+          "positionValue": {
+            "type": "string"
+          },
+          "unrealizedPnl": {
+            "type": "string"
+          },
+          "returnOnEquity": {
+            "type": "string"
+          },
+          "liquidationPx": {
+            "type": "string"
+          },
+          "marginUsed": {
+            "type": "string"
+          },
+          "maxLeverage": {
+            "type": "integer"
+          },
+          "cumFunding": {
+            "$ref": "#/components/schemas/State__CumFundingResponse"
+          }
+        }
+      },
+      "State__LeverageResponse": {
+        "type": "object",
+        "required": [
+          "type",
+          "value"
+        ],
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "value": {
+            "type": "integer"
+          },
+          "rawUsd": {
+            "type": "string"
+          }
+        }
+      },
+      "State__CumFundingResponse": {
+        "type": "object",
+        "required": [
+          "allTime",
+          "sinceOpen",
+          "sinceChange"
+        ],
+        "properties": {
+          "allTime": {
+            "type": "string"
+          },
+          "sinceOpen": {
+            "type": "string"
+          },
+          "sinceChange": {
+            "type": "string"
+          }
+        }
+      },
+      "State__OpenOrderResponse": {
+        "type": "object",
+        "required": [
+          "coin",
+          "side",
+          "limitPx",
+          "sz",
+          "oid",
+          "timestamp"
+        ],
+        "properties": {
+          "coin": {
+            "type": "string"
+          },
+          "side": {
+            "type": "string",
+            "enum": [
+              "B",
+              "A"
+            ],
+            "description": "B=买单，A=卖单。"
+          },
+          "limitPx": {
+            "type": "string"
+          },
+          "sz": {
+            "type": "string",
+            "description": "剩余未成交数量。"
+          },
+          "oid": {
+            "type": "integer"
+          },
+          "timestamp": {
+            "type": "integer"
+          }
+        }
+      },
+      "State__NodeDataOrder": {
+        "type": "object",
+        "required": [
+          "coin",
+          "side",
+          "limitPx",
+          "sz",
+          "oid",
+          "timestamp",
+          "triggerCondition",
+          "isTrigger",
+          "triggerPx",
+          "children",
+          "isPositionTpsl",
+          "reduceOnly",
+          "orderType",
+          "origSz"
+        ],
+        "properties": {
+          "coin": {
+            "type": "string"
+          },
+          "side": {
+            "type": "string"
+          },
+          "limitPx": {
+            "type": "string"
+          },
+          "sz": {
+            "type": "string"
+          },
+          "oid": {
+            "type": "integer"
+          },
+          "timestamp": {
+            "type": "integer"
+          },
+          "triggerCondition": {
+            "type": "string"
+          },
+          "isTrigger": {
+            "type": "boolean"
+          },
+          "triggerPx": {
+            "type": "string"
+          },
+          "children": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/State__NodeDataOrder"
+            }
+          },
+          "isPositionTpsl": {
+            "type": "boolean"
+          },
+          "reduceOnly": {
+            "type": "boolean"
+          },
+          "orderType": {
+            "type": "string"
+          },
+          "origSz": {
+            "type": "string"
+          },
+          "tif": {
+            "type": "string"
+          },
+          "cloid": {
+            "type": "string"
+          }
+        }
+      },
+      "State__ExtraAgentResponse": {
+        "type": "object",
+        "required": [
+          "address",
+          "name"
+        ],
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "description": "已命名且当前有效的 agent；默认钥匙、已撤销、未生效或过期不返回。"
+          },
+          "validUntil": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "到期毫秒时间戳；无期限为 null。"
+          }
+        }
+      },
+      "State__ActiveAssetDataResponse": {
+        "type": "object",
+        "required": [
+          "user",
+          "coin",
+          "leverage",
+          "maxTradeSzs",
+          "availableToTrade",
+          "markPx"
+        ],
+        "properties": {
+          "user": {
+            "type": "string"
+          },
+          "coin": {
+            "type": "string"
+          },
+          "leverage": {
+            "$ref": "#/components/schemas/State__LeverageResponse"
+          },
+          "maxTradeSzs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "availableToTrade": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "markPx": {
+            "type": "string"
+          }
+        }
+      },
+      "State__UserFeesResponse": {
+        "type": "object",
+        "required": [
+          "dailyUserVlm",
+          "feeSchedule",
+          "userCrossRate",
+          "userAddRate",
+          "userSpotCrossRate",
+          "userSpotAddRate",
+          "activeReferralDiscount"
+        ],
+        "properties": {
+          "dailyUserVlm": {
+            "type": "array",
+            "description": "链上无统计，恒为空数组。"
+          },
+          "feeSchedule": {
+            "$ref": "#/components/schemas/State__FeeScheduleResponse"
+          },
+          "userCrossRate": {
+            "type": "string"
+          },
+          "userAddRate": {
+            "type": "string"
+          },
+          "userSpotCrossRate": {
+            "type": "string"
+          },
+          "userSpotAddRate": {
+            "type": "string"
+          },
+          "activeReferralDiscount": {
+            "type": "string"
+          }
+        }
+      },
+      "State__FeeScheduleResponse": {
+        "type": "object",
+        "required": [
+          "cross",
+          "add",
+          "spotCross",
+          "spotAdd",
+          "tiers",
+          "referralDiscount",
+          "stakingDiscountTiers"
+        ],
+        "properties": {
+          "cross": {
+            "type": "string"
+          },
+          "add": {
+            "type": "string"
+          },
+          "spotCross": {
+            "type": "string"
+          },
+          "spotAdd": {
+            "type": "string"
+          },
+          "tiers": {
+            "$ref": "#/components/schemas/State__FeeTiersResponse"
+          },
+          "referralDiscount": {
+            "type": "string"
+          },
+          "stakingDiscountTiers": {
+            "type": "array"
+          }
+        }
+      },
+      "State__FeeTiersResponse": {
+        "type": "object",
+        "required": [
+          "vip",
+          "mm"
+        ],
+        "properties": {
+          "vip": {
+            "type": "array",
+            "description": "固定费率，恒为空数组。"
+          },
+          "mm": {
+            "type": "array",
+            "description": "固定费率，恒为空数组。"
+          }
+        }
+      },
+      "State__L2BookResponse": {
+        "type": "object",
+        "required": [
+          "coin",
+          "time",
+          "levels"
+        ],
+        "properties": {
+          "coin": {
+            "type": "string"
+          },
+          "time": {
+            "type": "integer",
+            "description": "快照对应的区块时间，毫秒。"
+          },
+          "levels": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "description": "[买档, 卖档]，每侧最多 20 档，由最优价向外排列。",
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/State__L2BookLevelResponse"
+              }
+            }
+          }
+        }
+      },
+      "State__L2BookLevelResponse": {
+        "type": "object",
+        "required": [
+          "px",
+          "sz",
+          "n"
+        ],
+        "properties": {
+          "px": {
+            "type": "string"
+          },
+          "sz": {
+            "type": "string"
+          },
+          "n": {
+            "type": "integer",
+            "description": "该价位挂单笔数。"
+          }
+        }
+      },
+      "State__RecentTradeResponse": {
+        "type": "object",
+        "required": [
+          "coin",
+          "side",
+          "px",
+          "sz",
+          "time",
+          "tid"
+        ],
+        "properties": {
+          "coin": {
+            "type": "string"
+          },
+          "side": {
+            "type": "string",
+            "enum": [
+              "B",
+              "A"
+            ],
+            "description": "吃单方向：B=主动买，A=主动卖。"
+          },
+          "px": {
+            "type": "string"
+          },
+          "sz": {
+            "type": "string"
+          },
+          "time": {
+            "type": "integer"
+          },
+          "tid": {
+            "type": "integer",
+            "description": "同一市场内唯一。"
+          }
+        }
+      },
+      "State__OrderStatusResponse": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "\"order\"=活单；\"unknownOid\"=找不到或已终态（链上只保留活单）。"
+          },
+          "order": {
+            "type": "object",
+            "required": [
+              "order",
+              "status",
+              "statusTimestamp"
+            ],
+            "properties": {
+              "order": {
+                "$ref": "#/components/schemas/State__NodeDataOrder"
+              },
+              "status": {
+                "type": "string",
+                "example": "open"
+              },
+              "statusTimestamp": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "State__WebData2Response": {
+        "type": "object",
+        "required": [
+          "clearinghouseState",
+          "leadingVaults",
+          "totalVaultEquity",
+          "openOrders",
+          "cumLedger",
+          "meta",
+          "assetCtxs",
+          "serverTime",
+          "isVault",
+          "user",
+          "twapStates",
+          "spotAssetCtxs",
+          "perpsAtOpenInterestCap"
+        ],
+        "properties": {
+          "clearinghouseState": {
+            "$ref": "#/components/schemas/State__ClearinghouseStateResponse"
+          },
+          "leadingVaults": {
+            "type": "array",
+            "description": "链上无金库，恒为空数组。"
+          },
+          "totalVaultEquity": {
+            "type": "string"
+          },
+          "openOrders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/State__NodeDataOrder"
+            }
+          },
+          "agentAddress": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "agentValidUntil": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "cumLedger": {
+            "type": "string",
+            "description": "恒为 0.0。"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/State__MetaResponse"
+          },
+          "assetCtxs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/State__PerpAssetCtxResponse"
+            }
+          },
+          "serverTime": {
+            "type": "integer"
+          },
+          "isVault": {
+            "type": "boolean"
+          },
+          "user": {
+            "type": "string"
+          },
+          "twapStates": {
+            "type": "array",
+            "description": "恒为空数组。"
+          },
+          "spotAssetCtxs": {
+            "type": "array",
+            "description": "恒为空数组。"
+          },
+          "perpsAtOpenInterestCap": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "恒为空数组。"
+          }
+        }
+      },
+      "State__ExchangeStatusResponse": {
+        "type": "object",
+        "required": [
+          "time"
+        ],
+        "properties": {
+          "specialStatuses": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "description": "本链无公告机制，恒为 null。"
+          },
+          "time": {
+            "type": "integer",
+            "description": "块时间戳。"
+          }
+        }
+      },
+      "State__Error": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        }
+      },
+      "Indexer__InfoRequest": {
+        "description": "13 种本地类型联合，discriminator 为 type。",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/Indexer__MetaAndAssetCtxsRequest"
+          },
+          {
+            "$ref": "#/components/schemas/Indexer__WebData2Request"
+          },
+          {
+            "$ref": "#/components/schemas/Indexer__AllMidsRequest"
+          },
+          {
+            "$ref": "#/components/schemas/Indexer__CandleSnapshotRequest"
+          },
+          {
+            "$ref": "#/components/schemas/Indexer__OrderStatusRequest"
+          },
+          {
+            "$ref": "#/components/schemas/Indexer__L2BookRequest"
+          },
+          {
+            "$ref": "#/components/schemas/Indexer__FundingHistoryRequest"
+          },
+          {
+            "$ref": "#/components/schemas/Indexer__UserFillsByTimeRequest"
+          },
+          {
+            "$ref": "#/components/schemas/Indexer__UserFillsRequest"
+          },
+          {
+            "$ref": "#/components/schemas/Indexer__RecentTradesRequest"
+          },
+          {
+            "$ref": "#/components/schemas/Indexer__UserFundingRequest"
+          },
+          {
+            "$ref": "#/components/schemas/Indexer__UserNonFundingLedgerUpdatesRequest"
+          },
+          {
+            "$ref": "#/components/schemas/Indexer__HistoricalOrdersRequest"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "type"
+        }
+      },
+      "Indexer__MetaAndAssetCtxsRequest": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "const": "metaAndAssetCtxs",
+            "description": "meta 取自上游节点，行情取自本地 ctxs，二者拼装后不可能互相矛盾。"
+          }
+        }
+      },
+      "Indexer__WebData2Request": {
+        "type": "object",
+        "required": [
+          "type",
+          "user"
+        ],
+        "properties": {
+          "type": {
+            "const": "webData2",
+            "description": "页面加载聚合：clearinghouseState/meta/frontendOpenOrders 取自上游节点，assetCtxs 取自本地同一份 ctxs。"
+          },
+          "user": {
+            "type": "string"
+          }
+        }
+      },
+      "Indexer__AllMidsRequest": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "const": "allMids",
+            "description": "中间价取自本地 perp ctx 的 markPx 逻辑，与 WS allMids 同源。"
+          }
+        }
+      },
+      "Indexer__CandleSnapshotRequest": {
+        "type": "object",
+        "required": [
+          "type",
+          "coin",
+          "interval"
+        ],
+        "properties": {
+          "type": {
+            "const": "candleSnapshot"
+          },
+          "coin": {
+            "type": "string"
+          },
+          "interval": {
+            "type": "string",
+            "example": "1h"
+          },
+          "startTime": {
+            "type": "integer",
+            "description": "可选，毫秒，默认 0。"
+          },
+          "endTime": {
+            "type": "integer",
+            "description": "可选，毫秒，默认 u64::MAX。"
+          }
+        }
+      },
+      "Indexer__OrderStatusRequest": {
+        "type": "object",
+        "required": [
+          "type",
+          "user",
+          "oid"
+        ],
+        "properties": {
+          "type": {
+            "const": "orderStatus",
+            "description": "读本地 node_order_statuses 索引，与 historicalOrders 同条目、可互相印证。"
+          },
+          "user": {
+            "type": "string"
+          },
+          "oid": {
+            "description": "数字按 oid 查；字符串按 cloid 查。找不到返回 {\"status\":\"unknownOid\"}。",
+            "oneOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          }
+        }
+      },
+      "Indexer__L2BookRequest": {
+        "type": "object",
+        "required": [
+          "type",
+          "coin"
+        ],
+        "properties": {
+          "type": {
+            "const": "l2Book",
+            "description": "唯一真相源是本地订单簿引擎，不是节点内存簿。"
+          },
+          "coin": {
+            "type": "string"
+          },
+          "nSigFigs": {
+            "type": "integer"
+          },
+          "mantissa": {
+            "type": "integer"
+          },
+          "nLevels": {
+            "type": "integer"
+          }
+        }
+      },
+      "Indexer__FundingHistoryRequest": {
+        "type": "object",
+        "required": [
+          "type",
+          "coin",
+          "startTime"
+        ],
+        "properties": {
+          "type": {
+            "const": "fundingHistory"
+          },
+          "coin": {
+            "type": "string"
+          },
+          "startTime": {
+            "type": "integer",
+            "description": "毫秒。"
+          },
+          "endTime": {
+            "type": "integer",
+            "description": "可选，毫秒，默认 i64::MAX。"
+          }
+        }
+      },
+      "Indexer__UserFillsByTimeRequest": {
+        "type": "object",
+        "required": [
+          "type",
+          "user",
+          "startTime"
+        ],
+        "properties": {
+          "type": {
+            "const": "userFillsByTime",
+            "description": "读 node_fills 小时文件区间，与 userFills 同源。"
+          },
+          "user": {
+            "type": "string"
+          },
+          "startTime": {
+            "type": "integer",
+            "description": "毫秒。"
+          },
+          "endTime": {
+            "type": "integer",
+            "description": "可选，毫秒，默认 i64::MAX。"
+          }
+        }
+      },
+      "Indexer__UserFillsRequest": {
+        "type": "object",
+        "required": [
+          "type",
+          "user"
+        ],
+        "properties": {
+          "type": {
+            "const": "userFills",
+            "description": "最近成交原文透传（SDK Fill 形状）。"
+          },
+          "user": {
+            "type": "string"
+          }
+        }
+      },
+      "Indexer__RecentTradesRequest": {
+        "type": "object",
+        "required": [
+          "type",
+          "coin"
+        ],
+        "properties": {
+          "type": {
+            "const": "recentTrades",
+            "description": "node_fills 尾部窗口，与 WS trades 频道配对方式一致。"
+          },
+          "coin": {
+            "type": "string"
+          }
+        }
+      },
+      "Indexer__UserFundingRequest": {
+        "type": "object",
+        "required": [
+          "type",
+          "user",
+          "startTime"
+        ],
+        "properties": {
+          "type": {
+            "const": "userFunding",
+            "description": "读 misc_events，与 WS userFundings 同源同形。"
+          },
+          "user": {
+            "type": "string"
+          },
+          "startTime": {
+            "type": "integer",
+            "description": "毫秒。"
+          },
+          "endTime": {
+            "type": "integer",
+            "description": "可选，毫秒，默认 i64::MAX。"
+          }
+        }
+      },
+      "Indexer__UserNonFundingLedgerUpdatesRequest": {
+        "type": "object",
+        "required": [
+          "type",
+          "user",
+          "startTime"
+        ],
+        "properties": {
+          "type": {
+            "const": "userNonFundingLedgerUpdates",
+            "description": "读 misc_events，与 WS 同名频道同源同形。"
+          },
+          "user": {
+            "type": "string"
+          },
+          "startTime": {
+            "type": "integer",
+            "description": "毫秒。"
+          },
+          "endTime": {
+            "type": "integer",
+            "description": "可选，毫秒，默认 i64::MAX。"
+          }
+        }
+      },
+      "Indexer__HistoricalOrdersRequest": {
+        "type": "object",
+        "required": [
+          "type",
+          "user"
+        ],
+        "properties": {
+          "type": {
+            "const": "historicalOrders",
+            "description": "读 node_order_statuses，条目为 {order,status,statusTimestamp}，与 orderStatus 共用同一组装函数。"
+          },
+          "user": {
+            "type": "string"
+          }
+        }
+      },
+      "Indexer__InfoResponse": {
+        "description": "响应形状随请求 type 变化（均为 JSON，数值一律字符串小数，地址恒小写）：metaAndAssetCtxs→[meta, ctxs] 二元数组；webData2→页面聚合对象；allMids→{mids:{coin:px}}对象；candleSnapshot→K 线数组（SDK candle wire {t,T,s,i,o,c,h,l,v,n}）；orderStatus→State__OrderStatusResponse 同形 {status,order?,statusTimestamp?}；l2Book→盘口快照；fundingHistory→资金费数组；userFillsByTime/userFills→Fill 数组（SDK Fill 原文透传）；recentTrades→公开成交数组；userFunding→资金费数组；userNonFundingLedgerUpdates→账本变更数组；historicalOrders→Indexer__HistoricalOrderItem 数组（history.rs 按 HL 风格取最近上限）。下面两个 schema 只给历史订单与订单状态精确建模，其余以本描述为准，后续按需补齐。"
+      },
+      "Indexer__HistoricalOrderItem": {
+        "type": "object",
+        "required": [
+          "order",
+          "status",
+          "statusTimestamp"
+        ],
+        "properties": {
+          "order": {
+            "type": "object",
+            "description": "订单体，与 orderStatus 的 order 字段同形。"
+          },
+          "status": {
+            "type": "string",
+            "example": "open"
+          },
+          "statusTimestamp": {
+            "type": "integer"
+          }
+        }
+      },
+      "Indexer__OrderStatusResponse": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "命中为 order，找不到为 unknownOid。"
+          },
+          "order": {
+            "type": "object"
+          },
+          "statusTimestamp": {
+            "type": "integer"
+          }
+        }
+      },
+      "Indexer__Error": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        }
+      },
+      "Gateway__Error": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "x-backend-revs": {
+    "exchange-apiserver": "c601f4da12563d20931dce1952d49517c576a100",
+    "bybchain-api-server": "3808341d403f0122e1e8715c7c308c2a92f34a25",
+    "biya-indexer": "e9ca86d98a52a6855f95e0f502ff7a0c40cd4d3c"
+  },
+  "x-ws-subscriptions": [
+    {
+      "type": "trades",
+      "official": true,
+      "params": [
+        "coin"
+      ],
+      "pushChannel": "trades",
+      "data": "指定市场成交数组",
+      "service": "biya-indexer"
+    },
+    {
+      "type": "l2Book",
+      "official": true,
+      "params": [
+        "coin",
+        "nSigFigs?",
+        "nLevels?",
+        "mantissa?"
+      ],
+      "pushChannel": "l2Book",
+      "data": "L2 快照及变化；订阅成功可能先回一次快照",
+      "service": "biya-indexer"
+    },
+    {
+      "type": "l4Book",
+      "official": true,
+      "params": [
+        "coin"
+      ],
+      "pushChannel": "l4Book",
+      "data": "L4 订单簿",
+      "service": "biya-indexer"
+    },
+    {
+      "type": "bbo",
+      "official": true,
+      "params": [
+        "coin"
+      ],
+      "pushChannel": "bbo",
+      "data": "最优买卖报价",
+      "service": "biya-indexer"
+    },
+    {
+      "type": "bookDiffs",
+      "official": false,
+      "params": [
+        "coin"
+      ],
+      "pushChannel": "bookDiffs",
+      "data": "订单簿差异",
+      "service": "biya-indexer"
+    },
+    {
+      "type": "activeAssetCtx",
+      "official": true,
+      "params": [
+        "coin"
+      ],
+      "pushChannel": "activeAssetCtx",
+      "data": "{coin, ctx: PerpAssetCtx}（标记价/资金费/持仓量）",
+      "service": "biya-indexer"
+    },
+    {
+      "type": "activeSpotAssetCtx",
+      "official": true,
+      "params": [
+        "coin"
+      ],
+      "pushChannel": "activeSpotAssetCtx",
+      "data": "{coin, ctx: SpotAssetCtx}",
+      "service": "biya-indexer"
+    },
+    {
+      "type": "allMids",
+      "official": true,
+      "params": [],
+      "pushChannel": "allMids",
+      "data": "{mids:{coin:px}}（SDK AllMidsData）",
+      "service": "biya-indexer"
+    },
+    {
+      "type": "candle",
+      "official": true,
+      "params": [
+        "coin",
+        "interval"
+      ],
+      "pushChannel": "candle",
+      "data": "{t,T,s,i,o,c,h,l,v,n}（SDK candle wire）",
+      "service": "biya-indexer"
+    },
+    {
+      "type": "orderUpdates",
+      "official": true,
+      "params": [
+        "user"
+      ],
+      "pushChannel": "orderUpdates",
+      "data": "用户订单状态更新（与 REST historicalOrders 同源的 node_order_statuses 广播过滤）",
+      "service": "biya-indexer"
+    },
+    {
+      "type": "userFills",
+      "official": true,
+      "params": [
+        "user",
+        "aggregateByTime?"
+      ],
+      "pushChannel": "userFills",
+      "data": "{user, isSnapshot, fills:[...]}",
+      "service": "biya-indexer"
+    },
+    {
+      "type": "userEvents",
+      "official": true,
+      "params": [
+        "user"
+      ],
+      "pushChannel": "user",
+      "data": "fills/funding/liquidation/nonUserCancel（注意入站 channel 名为 user）",
+      "service": "biya-indexer"
+    },
+    {
+      "type": "userFundings",
+      "official": true,
+      "params": [
+        "user"
+      ],
+      "pushChannel": "userFundings",
+      "data": "{user, isSnapshot, fundings}",
+      "service": "biya-indexer"
+    },
+    {
+      "type": "userNonFundingLedgerUpdates",
+      "official": true,
+      "params": [
+        "user"
+      ],
+      "pushChannel": "userNonFundingLedgerUpdates",
+      "data": "{user, isSnapshot, nonFundingLedgerUpdates}",
+      "service": "biya-indexer"
+    },
+    {
+      "type": "userHistoricalOrders",
+      "official": false,
+      "params": [
+        "user"
+      ],
+      "pushChannel": "userHistoricalOrders",
+      "data": "{user, orderHistory:[{order,status,statusTimestamp}]}（条目与 REST historicalOrders 完全一致；非官方扩展，标准 HL SDK 不会发送）",
+      "service": "biya-indexer"
+    },
+    {
+      "type": "openOrders",
+      "official": false,
+      "params": [
+        "user",
+        "dex?"
+      ],
+      "pushChannel": "openOrders",
+      "data": "用户当前订单变化（轮询节点 frontendOpenOrders 中继；经网关仍走 indexer）",
+      "service": "biya-indexer"
+    },
+    {
+      "type": "activeAssetData",
+      "official": true,
+      "params": [
+        "user",
+        "coin"
+      ],
+      "pushChannel": "activeAssetData",
+      "data": "{user,coin,leverage,maxTradeSzs,availableToTrade,markPx}",
+      "service": "biya-indexer"
+    }
+  ]
+}

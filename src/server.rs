@@ -71,6 +71,10 @@ fn build_router(gateway: Arc<Gateway>) -> Router {
     Router::new()
         // Liveness is not a promise that any downstream is ready.
         .route("/healthz", get(|| async { "ok" }))
+        // Aggregated API reference (Scalar) + merged spec. Content is the
+        // build-time merge of the three backend fragments; see docs/.
+        .route("/docs", get(crate::docs::docs_page))
+        .route("/openapi.json", get(crate::docs::openapi_json))
         .route("/info", post(http_proxy::info))
         .route("/exchange", post(http_proxy::exchange))
         .route("/ws", get(websocket::proxy))

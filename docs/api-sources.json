@@ -1,0 +1,35 @@
+{
+  "_comment": "网关聚合文档的数据源清单。发版构建时 merge 脚本按此清单拉取三后端的 openapi.json + version，拼成 docs/.generated/ 并 embed 进镜像。正式发版用 git 源；live 源只用于联调快照。",
+  "backends": [
+    {
+      "service": "exchange-apiserver",
+      "tag": "Exchange",
+      "git": "git@github.com:biya-coin/exchange-apiserver.git",
+      "branch": "dev",
+      "rev": "c601f4da12563d20931dce1952d49517c576a100",
+      "spec_path": "docs/openapi.json",
+      "ws_path": null,
+      "live_openapi": "http://host.docker.internal:36014/openapi.json"
+    },
+    {
+      "service": "bybchain-api-server",
+      "tag": "State",
+      "git": "git@github.com:biya-coin/bybchain-api-server.git",
+      "branch": "dev",
+      "rev": "3808341d403f0122e1e8715c7c308c2a92f34a25",
+      "spec_path": "docs/openapi.json",
+      "ws_path": null,
+      "live_openapi": "http://host.docker.internal:36020/openapi.json"
+    },
+    {
+      "service": "biya-indexer",
+      "tag": "Indexer",
+      "git": "git@github.com:biya-coin/biya-indexer.git",
+      "branch": "main",
+      "rev": "e9ca86d98a52a6855f95e0f502ff7a0c40cd4d3c",
+      "spec_path": "docs/openapi.json",
+      "ws_path": "docs/ws-subscriptions.json",
+      "live_openapi": "http://host.docker.internal:36018/openapi.json"
+    }
+  ]
+}

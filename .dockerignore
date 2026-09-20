@@ -8,3 +8,5 @@
 !src/**
 !config/
 !config/default.toml
+!docs/.generated/
+!docs/.generated/**
