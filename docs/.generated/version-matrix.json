@@ -1,6 +1,6 @@
 {
-  "gateway_rev": "bb24929b47ec27e2056d46632cb0453005c50030",
-  "fetched_at": "2026-09-20T13:46:12.248209+00:00",
+  "gateway_rev": "ebf5a890dd525d498a7df51ce9397fc47bebc68f",
+  "fetched_at": "2026-09-20T15:43:19.868344+00:00",
   "backends": [
     {
       "service": "exchange-apiserver",

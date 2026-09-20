@@ -429,7 +429,7 @@ def render(store, spec):
 
 
 def render_nav(store):
-    parts = ['<div class="brand"><span class="brand-mark">B</span><div><b>BIYA DEX API</b><span>网关聚合文档</span></div></div>']
+    parts = ['<div class="brand"><div><b>BIYA DEX API</b><span>网关聚合文档</span></div></div>']
     parts.append('<input id="nav-search" type="search" placeholder="搜索接口，如 orderStatus / l2Book" autocomplete="off">')
     parts.append('<a class="nav-item nav-overview" href="#overview">总览<span class="nav-sub">版本矩阵 · 路由 · 测试指南</span></a>')
     for svc in store["services"]:
@@ -514,14 +514,12 @@ def render_post(store, item):
 <h3>测试用例</h3>
 <div class="try" data-kind="post" data-id="{item['id']}">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-
-<textarea class="try-body\" spellcheck="false">{esc(prefill)}</textarea>
-<div class="prev-head">cURL（随上方实时更新） <button class="copy" data-copy="curl">复制</button></div>
-<pre class="code" data-preview="curl"></pre>
-<div class="prev-head">TypeScript（随上方实时更新） <button class="copy" data-copy="ts">复制</button></div>
-<pre class="code" data-preview="ts"></pre>
-<div class="try-bar\"><button class="send\">发送</button><span class="try-meta\"></span></div>
-<pre class="code try-resp\" hidden></pre>
+<div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
+<button class="send">发送</button><span class="try-meta"></span></div>
+<textarea class="try-body" spellcheck="false">{esc(prefill)}</textarea>
+<pre class="code try-view hidden"></pre>
+<div class="try-bar"><button class="copybtn hidden">复制当前预览</button></div>
+<pre class="code try-resp" hidden></pre>
 </div></section>"""
 
 
@@ -565,7 +563,7 @@ a{color:var(--sky)}
 .layout{display:flex; min-height:100vh;}
 aside{width:308px; flex:none; background:#ffffff; color:var(--ink); position:sticky; top:0; height:100vh; overflow-y:auto; padding:20px 14px; border-right:1px solid var(--line);}
 .brand{display:flex; gap:10px; align-items:center; padding:2px 6px 14px;}
-.brand-mark{width:34px; height:34px; border-radius:9px; background:linear-gradient(135deg,#0b6b4f,#0284c7); color:#fff; font-weight:800; display:flex; align-items:center; justify-content:center; font-size:19px;}
+
 .brand b{display:block; color:var(--ink); font-size:15px; letter-spacing:.4px;}
 .brand span{display:block; font-size:12px; color:var(--muted);}
 #nav-search{width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:#fff; color:var(--ink); margin-bottom:12px;}
@@ -573,9 +571,10 @@ aside{width:308px; flex:none; background:#ffffff; color:var(--ink); position:sti
 .nav-item:hover{background:#e2e8f0;}
 .nav-item.active{background:var(--accent); color:#fff;}
 .nav-sub{display:block; font-size:11.5px; color:var(--muted);}
+.nav-item.active .nav-sub{color:rgba(255,255,255,.85);}
 .nav-group{margin-top:10px; border-top:1px solid var(--line); padding-top:10px;}
 .nav-group-title{padding:4px 8px; font-weight:700; color:var(--ink); font-size:14px; display:flex; justify-content:space-between;}
-.nav-group-title span{font-weight:400; font-size:11px; color:var(--sky); border:1px solid var(--sky); border-radius:20px; padding:0 8px;}
+.nav-group-title span{font-weight:400; font-size:11px; color:#fff; background:var(--sky); border:1px solid var(--sky); border-radius:20px; padding:0 8px;}
 .nav-sec{padding:8px 8px 2px; font-size:11.5px; letter-spacing:1px; color:var(--muted);}
 .nav-label{margin-left:7px;}
 .nav-empty{padding:2px 8px 6px 30px; font-size:12.5px; color:#64748b;}
@@ -602,10 +601,10 @@ pre.code{background:var(--code-bg); color:var(--code-ink); border-radius:10px; p
 .try{border:1px dashed #b9c6d8; border-radius:10px; padding:12px 14px; background:#fafcff;}
 .try-bar{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:8px;}
 .try-bar select{padding:5px 8px; border-radius:7px; border:1px solid var(--line); background:#fff; max-width:340px;}
-.prev-head{display:flex; justify-content:space-between; align-items:center; margin:10px 0 4px; font-size:13px; color:var(--muted);}
-.copy{border:1px solid var(--line); background:#fff; border-radius:7px; padding:3px 12px; cursor:pointer; color:var(--sky); font-weight:700;}
+
+
 .nav-hint{font-size:11px; border-radius:5px; padding:0 6px; margin-left:6px;}
-textarea.try-body{width:100%; min-height:150px; border:1px solid var(--line); border-radius:8px; padding:10px 12px; background:#fff; resize:vertical;}
+textarea.try-body,pre.try-view{width:100%; height:220px; overflow:auto; resize:none;} textarea.try-body{border:1px solid var(--line); border-radius:8px; padding:10px 12px; background:#fff;} .modetabs{display:flex; gap:6px;} .mode{border:1px solid var(--line); background:#fff; border-radius:7px; padding:4px 12px; cursor:pointer;} .mode.on{background:var(--ink); color:#fff; border-color:var(--ink);} .copybtn{border:1px solid var(--line); background:#fff; border-radius:7px; padding:4px 12px; cursor:pointer; color:var(--sky); font-weight:700;}
 button.send,.ws-connect,.ws-ping,.ws-close{border:none; border-radius:8px; padding:7px 18px; cursor:pointer; font-weight:700;}
 button.send,.ws-connect{background:var(--accent); color:#fff;}
 button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
@@ -669,18 +668,21 @@ $all(".try[data-kind='post']").forEach(function(box){
   var meta = STORE.posts[id];
   var area = $(".try-body", box), resp = $(".try-resp", box), info = $(".try-meta", box);
   var server = function(){ return $(".try-server", box).value; };
-  var preCurl = $("[data-preview='curl']", box), preTs = $("[data-preview='ts']", box);
-  function refresh(){ preCurl.textContent = curlFor(server(), meta.path, area.value); preTs.textContent = tsFor(server(), meta.path, area.value); }
-  area.addEventListener("input", refresh);
-  $(".try-server", box).addEventListener("change", refresh);
-  refresh();
-  $all(".copy", box).forEach(function(b){ b.addEventListener("click", function(){
-    var text = b.getAttribute("data-copy") === "curl" ? preCurl.textContent : preTs.textContent;
-    function done(){ b.textContent = "已复制"; setTimeout(function(){ b.textContent = "复制"; }, 1200); }
-    if (navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done, function(){ fallback(); }); }
+  var view = $(".try-view", box), copyBtn = $(".copybtn", box);
+  function show(mode){
+    $all(".mode", box).forEach(function(x){ x.classList.toggle("on", x.getAttribute("data-mode") === mode); });
+    if (mode === "json"){ area.classList.remove("hidden"); view.classList.add("hidden"); copyBtn.classList.add("hidden"); }
+    else { area.classList.add("hidden"); view.classList.remove("hidden"); copyBtn.classList.remove("hidden");
+      view.textContent = mode === "curl" ? curlFor(server(), meta.path, area.value) : tsFor(server(), meta.path, area.value); }
+  }
+  $all(".mode", box).forEach(function(x){ x.addEventListener("click", function(){ show(x.getAttribute("data-mode")); }); });
+  area.addEventListener("input", function(){ var m = $(".mode.on", box).getAttribute("data-mode"); if (m !== "json") show(m); });
+  copyBtn.addEventListener("click", function(){
+    function done(){ copyBtn.textContent = "已复制"; setTimeout(function(){ copyBtn.textContent = "复制当前预览"; }, 1200); }
+    if (navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(view.textContent).then(done, function(){ fallback(); }); }
     else { fallback(); }
-    function fallback(){ var ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); done(); } catch(e){} document.body.removeChild(ta); }
-  }); });
+    function fallback(){ var ta = document.createElement("textarea"); ta.value = view.textContent; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); done(); } catch(e){} document.body.removeChild(ta); }
+  });
   $(".send", box).addEventListener("click", function(){
     var payload;
     try { payload = JSON.parse(area.value); } catch(e){ resp.classList.remove("hidden"); resp.innerHTML = "<span class='err'>JSON 解析失败：</span>" + e.message; return; }
