@@ -26,7 +26,7 @@
       "tag": "Indexer",
       "git": "git@github.com:biya-coin/biya-indexer.git",
       "branch": "main",
-      "rev": "e9ca86d98a52a6855f95e0f502ff7a0c40cd4d3c",
+      "rev": "f8fcb4815c56f16e0b65537a905c4d1c05f27e5c",
       "spec_path": "docs/openapi.json",
       "ws_path": "docs/ws-subscriptions.json",
       "live_openapi": "http://host.docker.internal:36018/openapi.json"
