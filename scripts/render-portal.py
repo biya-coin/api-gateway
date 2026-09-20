@@ -516,10 +516,10 @@ def render_post(store, item):
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
 <div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
 <button class="send">发送</button><span class="try-meta"></span></div>
+<pre class="code try-resp" hidden></pre>
 <textarea class="try-body" spellcheck="false">{esc(prefill)}</textarea>
 <pre class="code try-view hidden"></pre>
 <div class="try-bar"><button class="copybtn hidden">复制当前预览</button></div>
-<pre class="code try-resp" hidden></pre>
 </div></section>"""
 
 
@@ -692,7 +692,10 @@ $all(".try[data-kind='post']").forEach(function(box){
       .then(function(r){ return r.text().then(function(t){ return {status: r.status, body: t}; }); })
       .then(function(r){
         info.innerHTML = "HTTP <b>" + r.status + "</b> · " + (Date.now() - t0) + "ms";
-        resp.classList.remove("hidden"); resp.textContent = "HTTP " + r.status + String.fromCharCode(10) + r.body;
+        resp.classList.remove("hidden");
+        try { resp.textContent = "HTTP " + r.status + String.fromCharCode(10) + JSON.stringify(JSON.parse(r.body), null, 2); }
+        catch(e){ resp.textContent = "HTTP " + r.status + String.fromCharCode(10) + r.body; }
+        if (resp.scrollIntoView){ resp.scrollIntoView({block: "nearest"}); }
       })
       .catch(function(e){ info.textContent = "请求失败"; resp.classList.remove("hidden"); resp.textContent = String(e); });
   });
