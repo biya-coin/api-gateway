@@ -142,8 +142,8 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <p class="lede">前端唯一入口：<code>POST /info</code>、<code>POST /exchange</code>、<code>GET /ws</code> 均打网关，由网关按 type / 订阅分流到三后端，网关不改业务字段、不回退。左侧选接口，右侧看说明、改参数、直接发送。</p>
 <p>共 <b>22</b> 个 POST 接口、<b>19</b> 个 WS 订阅。</p>
 <h2>版本矩阵（本次构建拉取）</h2>
-<table class="kv"><thead><tr><th>服务</th><th>rev</th></tr></thead><tbody><tr><td><code>gateway</code></td><td><code>c14aa14fe7e4</code></td></tr><tr><td><code>exchange-apiserver</code></td><td><code>ef23fbc3ade2</code></td></tr><tr><td><code>bybchain-api-server</code></td><td><code>5e1073e20c05</code></td></tr><tr><td><code>biya-indexer</code></td><td><code>731ec3b31f33</code></td></tr></tbody></table>
-<p class="note">构建时间 2026-09-21T04:14:30.617908+00:00。文档内容与上表 rev 严格对应；发版即重拉，旧页面不复用。</p>
+<table class="kv"><thead><tr><th>服务</th><th>rev</th></tr></thead><tbody><tr><td><code>gateway</code></td><td><code>24a90fccbde8</code></td></tr><tr><td><code>exchange-apiserver</code></td><td><code>4294a35fad7c</code></td></tr><tr><td><code>bybchain-api-server</code></td><td><code>5e1073e20c05</code></td></tr><tr><td><code>biya-indexer</code></td><td><code>731ec3b31f33</code></td></tr></tbody></table>
+<p class="note">构建时间 2026-09-21T04:19:30.741140+00:00。文档内容与上表 rev 严格对应；发版即重拉，旧页面不复用。</p>
 <h2>测试指南</h2>
 <ul class="guide">
 <li>每个 POST 接口自带填好参数的测试用例，改完点发送，结果原样展示（含业务错误体）。</li>

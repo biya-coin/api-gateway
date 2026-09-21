@@ -6,7 +6,7 @@
       "tag": "Exchange",
       "git": "git@github.com:biya-coin/exchange-apiserver.git",
       "branch": "dev",
-      "rev": "ef23fbc3ade2196065deb439316f05667831f444",
+      "rev": "4294a35fad7c0f13df2e1c820cc9eb824125ad96",
       "spec_path": "docs/openapi.json",
       "ws_path": null,
       "live_openapi": "http://host.docker.internal:36014/openapi.json"

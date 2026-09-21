@@ -1,11 +1,11 @@
 {
-  "gateway_rev": "c14aa14fe7e47af6cd561fd0105b30fa7b573a80",
-  "fetched_at": "2026-09-21T04:14:30.617908+00:00",
+  "gateway_rev": "24a90fccbde887fdfa62e333dae600b169c86dda",
+  "fetched_at": "2026-09-21T04:19:30.741140+00:00",
   "backends": [
     {
       "service": "exchange-apiserver",
-      "rev": "ef23fbc3ade2196065deb439316f05667831f444",
-      "source": "git:dev@ef23fbc3ade2196065deb439316f05667831f444"
+      "rev": "4294a35fad7c0f13df2e1c820cc9eb824125ad96",
+      "source": "git:dev@4294a35fad7c0f13df2e1c820cc9eb824125ad96"
     },
     {
       "service": "bybchain-api-server",
