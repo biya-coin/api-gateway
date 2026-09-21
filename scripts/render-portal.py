@@ -220,6 +220,45 @@ def prefill_of(schemas, schema):
     return out
 
 
+_EX_NONCE = 1774952773999
+_EX_SIG = {"r": "0x" + "11" * 32, "s": "0x" + "22" * 32, "v": 27}
+_EX_LIMIT = {"a": 0, "b": True, "p": "65000", "s": "0.001", "r": False, "t": {"limit": {"tif": "Gtc"}}}
+_EX_EIP = {"hyperliquidChain": "Testnet", "signatureChainId": "0x66eee"}
+EXCHANGE_ACTION_EXAMPLES = {
+    "order": {"orders": [_EX_LIMIT], "grouping": "na"},
+    "cancel": {"cancels": [{"a": 0, "o": 1}]},
+    "cancelByCloid": {"cancels": [{"asset": 0, "cloid": "0x" + "ab" * 16}]},
+    "cancelAll": {},
+    "updateLeverage": {"asset": 0, "isCross": True, "leverage": 10},
+    "batchModify": {"modifies": [{"oid": 1, "order": dict(_EX_LIMIT)}]},
+    "usdSend": {**_EX_EIP, "destination": "0x" + "42" * 20, "amount": "1.0", "time": _EX_NONCE},
+    "withdraw3": {**_EX_EIP, "destination": "0x" + "42" * 20, "amount": "1.0", "time": _EX_NONCE},
+    "approveAgent": {**_EX_EIP, "agentAddress": "0x" + "42" * 20, "agentName": None, "nonce": _EX_NONCE},
+}
+
+
+def params_table(params):
+    rows = "".join(
+        f"<tr><td><code>{esc(p['name'])}</code>{' <b class=\"req\">*</b>' if p['required'] else ''}</td>"
+        f"<td><code>{esc(p['type'])}</code></td><td>{esc(p['desc'])}</td></tr>"
+        for p in params
+    )
+    return f"<table class=\"kv\"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody>{rows}</tbody></table>"
+
+
+def try_card(card_id, prefill):
+    body = json.dumps(prefill, ensure_ascii=False, indent=2)
+    return f"""<div class="try" data-kind="post" data-id="{card_id}">
+<div class="try-bar"><label>服务器 <select class="try-server"></select></label>
+<div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
+<button class="send">发送</button><span class="try-meta"></span></div>
+<pre class="code try-resp hidden"></pre>
+<textarea class="try-body" spellcheck="false">{esc(body)}</textarea>
+<pre class="code try-view hidden"></pre>
+<div class="try-bar"><button class="copybtn hidden">复制当前预览</button></div>
+</div>"""
+
+
 def type_const_of(variant):
     props = variant.get("properties", {})
     type_prop = props.get("type", {})
@@ -299,7 +338,7 @@ def main():
             "title": "/exchange · 提交签名动作",
             "desc": "提交已签名的 exchange action；accepted 仅表示通过本地校验进入交易池，不代表链上执行。",
             "params": [
-                {"name": "action", "type": "object", "required": True, "desc": "9 种动作 oneOf（order/cancel/cancelByCloid/cancelAll/updateLeverage/batchModify/usdSend/withdraw3/approveAgent），。各动作字段见下表与片段说明。"},
+                {"name": "action", "type": "object", "required": True, "desc": "9 种动作 oneOf（order/cancel/cancelByCloid/cancelAll/updateLeverage/batchModify/usdSend/withdraw3/approveAgent），各动作字段、说明与默认用例见下方 9 个分节。"},
                 {"name": "nonce", "type": "integer", "required": True, "desc": "用户 nonce，必须大于 0。"},
                 {"name": "signature", "type": "object", "required": True, "desc": "{r, s, v}；r/s 32 字节 hex，v 为 27/28。"},
                 {"name": "vaultAddress", "type": "string", "required": False, "desc": "可选，20 字节 hex。"},
@@ -315,6 +354,35 @@ def main():
         },
     )
     RESPONSE_MAP[("Exchange", "__exchange__")] = ("schema", "Exchange__ExchangeResult")
+    _ex_item = post_items[0]
+    _ex_actions = []
+    for _ref in schemas["Exchange__SignedAction"]["properties"]["action"]["oneOf"]:
+        _variant = resolve(schemas, _ref)
+        _act = type_const_of(_variant)
+        if not _act or _act not in EXCHANGE_ACTION_EXAMPLES:
+            continue
+        _props = _variant.get("properties", {})
+        _req = _variant.get("required", [])
+        _params = [
+            {
+                "name": _name,
+                "type": ('常量 "' + _act + '"') if _name == "type" else type_label(_prop),
+                "required": _name in _req,
+                "desc": _prop.get("description", ""),
+            }
+            for _name, _prop in _props.items()
+        ]
+        _ex_actions.append(
+            {
+                "act": _act,
+                "sub_id": f"post-Exchange-exchange-{_act}",
+                "desc": _variant.get("description", ""),
+                "params": _params,
+                "prefill": {"action": {"type": _act, **EXCHANGE_ACTION_EXAMPLES[_act]}, "nonce": _EX_NONCE, "signature": dict(_EX_SIG)},
+            }
+        )
+    assert len(_ex_actions) == 9, f"exchange actions: {len(_ex_actions)}"
+    _ex_item["actions"] = _ex_actions
 
     ws_items = []
     for tag in SERVICE_ORDER:
@@ -416,7 +484,8 @@ def render(store, spec):
     main += "".join(render_ws(store, item) for svc in store["services"] for item in svc["subs"])
     data_json = json.dumps(
         {
-            "posts": {i["id"]: {"path": i["path"]} for svc in store["services"] for i in svc["posts"]},
+            "posts": {**{i["id"]: {"path": i["path"]} for svc in store["services"] for i in svc["posts"]},
+                     **{a["sub_id"]: {"path": "/exchange"} for svc in store["services"] for i in svc["posts"] for a in i.get("actions", [])}},
             "httpServers": store["httpServers"],
             "wsUrls": store["wsUrls"],
         },
@@ -487,13 +556,18 @@ def render_overview(store):
 
 
 def render_post(store, item):
-    if item["params"]:
-        param_rows = "".join(
-            f"<tr><td><code>{esc(p['name'])}</code>{' <b class=\"req\">*</b>' if p['required'] else ''}</td>"
-            f"<td><code>{esc(p['type'])}</code></td><td>{esc(p['desc'])}</td></tr>"
-            for p in item["params"]
-        )
-        params = f"<table class=\"kv\"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody>{param_rows}</tbody></table>"
+    if item.get("actions"):
+        blocks = []
+        for n, a in enumerate(item["actions"], 1):
+            blocks.append(
+                f"<h4>{n}. <code>{esc(a['act'])}</code> — {esc(a['desc'])}</h4>"
+                + params_table(a["params"])
+                + try_card(a["sub_id"], a["prefill"])
+            )
+        params = params_table(item["params"]) + "".join(blocks)
+        prefill = None
+    elif item["params"]:
+        params = params_table(item["params"])
     else:
         params = "<p class=\"note\">无业务参数（仅 type 常量）。</p>"
     route = item.get("route")
@@ -507,23 +581,18 @@ def render_post(store, item):
             "State": "经网关走 <b>状态服务</b>。",
             "Indexer": "经网关走 <b>Indexer</b>。",
         }[item["service"]]
-    prefill = json.dumps(item["prefill"], ensure_ascii=False, indent=2)
+    if item.get("actions"):
+        try_html = ""
+    else:
+        prefill = json.dumps(item["prefill"], ensure_ascii=False, indent=2)
+        try_html = f"<h3>测试用例</h3>" + try_card(item["id"], item["prefill"])
     return f"""<section id="{item['id']}" class="card">
 <div class="crumb">{esc(item['service'])} · POST {esc(item['path'])}</div>
 <h2><span class="badge post">POST</span> {esc(item['title'])} <span class=\"route\">{route_note}</span></h2>
 <p>{esc(item['desc'])}</p>
 <h3>入参</h3>{params}
 <h3>响应</h3>{status_html(item['service'], item['path'])}{response_html(store, item['service'], item['type'])}
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="{item['id']}">
-<div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
-<button class="send">发送</button><span class="try-meta"></span></div>
-<pre class="code try-resp hidden"></pre>
-<textarea class="try-body" spellcheck="false">{esc(prefill)}</textarea>
-<pre class="code try-view hidden"></pre>
-<div class="try-bar"><button class="copybtn hidden">复制当前预览</button></div>
-</div></section>"""
+{try_html}</section>"""
 
 
 def render_ws(store, item):

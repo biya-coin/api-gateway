@@ -16,7 +16,7 @@
       "tag": "State",
       "git": "git@github.com:biya-coin/bybchain-api-server.git",
       "branch": "dev",
-      "rev": "7c7a18982882b7f7ff551d24b8aea7ef093a2ce9",
+      "rev": "5e1073e20c053fe8d0ab6676210ea63395680974",
       "spec_path": "docs/openapi.json",
       "ws_path": "docs/ws-subscriptions.json",
       "live_openapi": "http://host.docker.internal:36020/openapi.json"

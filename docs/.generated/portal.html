@@ -142,8 +142,8 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <p class="lede">前端唯一入口：<code>POST /info</code>、<code>POST /exchange</code>、<code>GET /ws</code> 均打网关，由网关按 type / 订阅分流到三后端，网关不改业务字段、不回退。左侧选接口，右侧看说明、改参数、直接发送。</p>
 <p>共 <b>22</b> 个 POST 接口、<b>19</b> 个 WS 订阅。</p>
 <h2>版本矩阵（本次构建拉取）</h2>
-<table class="kv"><thead><tr><th>服务</th><th>rev</th></tr></thead><tbody><tr><td><code>gateway</code></td><td><code>ebf5a890dd52</code></td></tr><tr><td><code>exchange-apiserver</code></td><td><code>ef23fbc3ade2</code></td></tr><tr><td><code>bybchain-api-server</code></td><td><code>7c7a18982882</code></td></tr><tr><td><code>biya-indexer</code></td><td><code>731ec3b31f33</code></td></tr></tbody></table>
-<p class="note">构建时间 2026-09-20T15:43:19.868344+00:00。文档内容与上表 rev 严格对应；发版即重拉，旧页面不复用。</p>
+<table class="kv"><thead><tr><th>服务</th><th>rev</th></tr></thead><tbody><tr><td><code>gateway</code></td><td><code>c14aa14fe7e4</code></td></tr><tr><td><code>exchange-apiserver</code></td><td><code>ef23fbc3ade2</code></td></tr><tr><td><code>bybchain-api-server</code></td><td><code>5e1073e20c05</code></td></tr><tr><td><code>biya-indexer</code></td><td><code>731ec3b31f33</code></td></tr></tbody></table>
+<p class="note">构建时间 2026-09-21T04:14:30.617908+00:00。文档内容与上表 rev 严格对应；发版即重拉，旧页面不复用。</p>
 <h2>测试指南</h2>
 <ul class="guide">
 <li>每个 POST 接口自带填好参数的测试用例，改完点发送，结果原样展示（含业务错误体）。</li>
@@ -153,14 +153,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <div class="crumb">Exchange · POST /exchange</div>
 <h2><span class="badge post">POST</span> /exchange · 提交签名动作 <span class="route">经网关走 <b>交易池</b>。</span></h2>
 <p>提交已签名的 exchange action；accepted 仅表示通过本地校验进入交易池，不代表链上执行。</p>
-<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>action</code> <b class="req">*</b></td><td><code>object</code></td><td>9 种动作 oneOf（order/cancel/cancelByCloid/cancelAll/updateLeverage/batchModify/usdSend/withdraw3/approveAgent），。各动作字段见下表与片段说明。</td></tr><tr><td><code>nonce</code> <b class="req">*</b></td><td><code>integer</code></td><td>用户 nonce，必须大于 0。</td></tr><tr><td><code>signature</code> <b class="req">*</b></td><td><code>object</code></td><td>{r, s, v}；r/s 32 字节 hex，v 为 27/28。</td></tr><tr><td><code>vaultAddress</code></td><td><code>string</code></td><td>可选，20 字节 hex。</td></tr><tr><td><code>expiresAfter</code></td><td><code>integer</code></td><td>可选，参与签名。</td></tr></tbody></table>
-<h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>本地处理结果：code 0=已入池；1001 参数/哈希失败；1002 重复交易；1003 签名失败。</td></tr><tr><td><code>400</code></td><td>malformed JSON，Axum 在进业务逻辑前拒绝。</td></tr></tbody></table><p class="resp-label">Exchange__ExchangeResult</p><pre class="code">{
-  &quot;code&quot;: 0,
-  &quot;message&quot;: &quot;accepted&quot;,
-  &quot;tx_hash&quot;: &quot;&quot;
-}</pre>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-Exchange-exchange">
+<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>action</code> <b class="req">*</b></td><td><code>object</code></td><td>9 种动作 oneOf（order/cancel/cancelByCloid/cancelAll/updateLeverage/batchModify/usdSend/withdraw3/approveAgent），各动作字段、说明与默认用例见下方 9 个分节。</td></tr><tr><td><code>nonce</code> <b class="req">*</b></td><td><code>integer</code></td><td>用户 nonce，必须大于 0。</td></tr><tr><td><code>signature</code> <b class="req">*</b></td><td><code>object</code></td><td>{r, s, v}；r/s 32 字节 hex，v 为 27/28。</td></tr><tr><td><code>vaultAddress</code></td><td><code>string</code></td><td>可选，20 字节 hex。</td></tr><tr><td><code>expiresAfter</code></td><td><code>integer</code></td><td>可选，参与签名。</td></tr></tbody></table><h4>1. <code>order</code> — 批量提交限价单（L1 agent 签名）。</h4><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>type</code> <b class="req">*</b></td><td><code>常量 &quot;order&quot;</code></td><td>动作名常量 order。</td></tr><tr><td><code>orders</code> <b class="req">*</b></td><td><code>array</code></td><td>限价单数组，逐个送交易池。</td></tr><tr><td><code>grouping</code> <b class="req">*</b></td><td><code>string</code></td><td>订单分组，通常填 na。</td></tr></tbody></table><div class="try" data-kind="post" data-id="post-Exchange-exchange-order">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
 <div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
 <button class="send">发送</button><span class="try-meta"></span></div>
@@ -193,7 +186,204 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 }</textarea>
 <pre class="code try-view hidden"></pre>
 <div class="try-bar"><button class="copybtn hidden">复制当前预览</button></div>
-</div></section><section id="post-State-meta" class="card">
+</div><h4>2. <code>cancel</code> — 按 oid 撤单（L1 agent 签名）。</h4><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>type</code> <b class="req">*</b></td><td><code>常量 &quot;cancel&quot;</code></td><td>动作名常量 cancel。</td></tr><tr><td><code>cancels</code> <b class="req">*</b></td><td><code>array</code></td><td>撤单数组，每项按 oid 精确撤单。</td></tr></tbody></table><div class="try" data-kind="post" data-id="post-Exchange-exchange-cancel">
+<div class="try-bar"><label>服务器 <select class="try-server"></select></label>
+<div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
+<button class="send">发送</button><span class="try-meta"></span></div>
+<pre class="code try-resp hidden"></pre>
+<textarea class="try-body" spellcheck="false">{
+  &quot;action&quot;: {
+    &quot;type&quot;: &quot;cancel&quot;,
+    &quot;cancels&quot;: [
+      {
+        &quot;a&quot;: 0,
+        &quot;o&quot;: 1
+      }
+    ]
+  },
+  &quot;nonce&quot;: 1774952773999,
+  &quot;signature&quot;: {
+    &quot;r&quot;: &quot;0x1111111111111111111111111111111111111111111111111111111111111111&quot;,
+    &quot;s&quot;: &quot;0x2222222222222222222222222222222222222222222222222222222222222222&quot;,
+    &quot;v&quot;: 27
+  }
+}</textarea>
+<pre class="code try-view hidden"></pre>
+<div class="try-bar"><button class="copybtn hidden">复制当前预览</button></div>
+</div><h4>3. <code>cancelByCloid</code> — 按 cloid 撤单（L1 agent 签名）。</h4><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>type</code> <b class="req">*</b></td><td><code>常量 &quot;cancelByCloid&quot;</code></td><td>动作名常量 cancelByCloid。</td></tr><tr><td><code>cancels</code> <b class="req">*</b></td><td><code>array</code></td><td>撤单数组，每项按 cloid 精确撤单。</td></tr></tbody></table><div class="try" data-kind="post" data-id="post-Exchange-exchange-cancelByCloid">
+<div class="try-bar"><label>服务器 <select class="try-server"></select></label>
+<div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
+<button class="send">发送</button><span class="try-meta"></span></div>
+<pre class="code try-resp hidden"></pre>
+<textarea class="try-body" spellcheck="false">{
+  &quot;action&quot;: {
+    &quot;type&quot;: &quot;cancelByCloid&quot;,
+    &quot;cancels&quot;: [
+      {
+        &quot;asset&quot;: 0,
+        &quot;cloid&quot;: &quot;0xabababababababababababababababab&quot;
+      }
+    ]
+  },
+  &quot;nonce&quot;: 1774952773999,
+  &quot;signature&quot;: {
+    &quot;r&quot;: &quot;0x1111111111111111111111111111111111111111111111111111111111111111&quot;,
+    &quot;s&quot;: &quot;0x2222222222222222222222222222222222222222222222222222222222222222&quot;,
+    &quot;v&quot;: 27
+  }
+}</textarea>
+<pre class="code try-view hidden"></pre>
+<div class="try-bar"><button class="copybtn hidden">复制当前预览</button></div>
+</div><h4>4. <code>cancelAll</code> — 撤销全部挂单（L1 agent 签名）。</h4><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>type</code> <b class="req">*</b></td><td><code>常量 &quot;cancelAll&quot;</code></td><td>动作名常量 cancelAll。</td></tr></tbody></table><div class="try" data-kind="post" data-id="post-Exchange-exchange-cancelAll">
+<div class="try-bar"><label>服务器 <select class="try-server"></select></label>
+<div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
+<button class="send">发送</button><span class="try-meta"></span></div>
+<pre class="code try-resp hidden"></pre>
+<textarea class="try-body" spellcheck="false">{
+  &quot;action&quot;: {
+    &quot;type&quot;: &quot;cancelAll&quot;
+  },
+  &quot;nonce&quot;: 1774952773999,
+  &quot;signature&quot;: {
+    &quot;r&quot;: &quot;0x1111111111111111111111111111111111111111111111111111111111111111&quot;,
+    &quot;s&quot;: &quot;0x2222222222222222222222222222222222222222222222222222222222222222&quot;,
+    &quot;v&quot;: 27
+  }
+}</textarea>
+<pre class="code try-view hidden"></pre>
+<div class="try-bar"><button class="copybtn hidden">复制当前预览</button></div>
+</div><h4>5. <code>updateLeverage</code> — 调整某资产的杠杆倍数与保证金模式（L1 agent 签名）。</h4><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>type</code> <b class="req">*</b></td><td><code>常量 &quot;updateLeverage&quot;</code></td><td>动作名常量 updateLeverage。</td></tr><tr><td><code>asset</code> <b class="req">*</b></td><td><code>integer</code></td><td>资产索引（与 meta 的 universe 下标一致）。</td></tr><tr><td><code>isCross</code> <b class="req">*</b></td><td><code>boolean</code></td><td>true 全仓，false 逐仓。</td></tr><tr><td><code>leverage</code> <b class="req">*</b></td><td><code>integer</code></td><td>杠杆倍数，如 10 表示 10x。</td></tr></tbody></table><div class="try" data-kind="post" data-id="post-Exchange-exchange-updateLeverage">
+<div class="try-bar"><label>服务器 <select class="try-server"></select></label>
+<div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
+<button class="send">发送</button><span class="try-meta"></span></div>
+<pre class="code try-resp hidden"></pre>
+<textarea class="try-body" spellcheck="false">{
+  &quot;action&quot;: {
+    &quot;type&quot;: &quot;updateLeverage&quot;,
+    &quot;asset&quot;: 0,
+    &quot;isCross&quot;: true,
+    &quot;leverage&quot;: 10
+  },
+  &quot;nonce&quot;: 1774952773999,
+  &quot;signature&quot;: {
+    &quot;r&quot;: &quot;0x1111111111111111111111111111111111111111111111111111111111111111&quot;,
+    &quot;s&quot;: &quot;0x2222222222222222222222222222222222222222222222222222222222222222&quot;,
+    &quot;v&quot;: 27
+  }
+}</textarea>
+<pre class="code try-view hidden"></pre>
+<div class="try-bar"><button class="copybtn hidden">复制当前预览</button></div>
+</div><h4>6. <code>batchModify</code> — 批量改单：按 oid 逐个替换为新订单（L1 agent 签名）。</h4><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>type</code> <b class="req">*</b></td><td><code>常量 &quot;batchModify&quot;</code></td><td>动作名常量 batchModify。</td></tr><tr><td><code>modifies</code> <b class="req">*</b></td><td><code>array</code></td><td>改单数组，每项按 oid 撤掉旧单并提交 order 作为新单。</td></tr></tbody></table><div class="try" data-kind="post" data-id="post-Exchange-exchange-batchModify">
+<div class="try-bar"><label>服务器 <select class="try-server"></select></label>
+<div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
+<button class="send">发送</button><span class="try-meta"></span></div>
+<pre class="code try-resp hidden"></pre>
+<textarea class="try-body" spellcheck="false">{
+  &quot;action&quot;: {
+    &quot;type&quot;: &quot;batchModify&quot;,
+    &quot;modifies&quot;: [
+      {
+        &quot;oid&quot;: 1,
+        &quot;order&quot;: {
+          &quot;a&quot;: 0,
+          &quot;b&quot;: true,
+          &quot;p&quot;: &quot;65000&quot;,
+          &quot;s&quot;: &quot;0.001&quot;,
+          &quot;r&quot;: false,
+          &quot;t&quot;: {
+            &quot;limit&quot;: {
+              &quot;tif&quot;: &quot;Gtc&quot;
+            }
+          }
+        }
+      }
+    ]
+  },
+  &quot;nonce&quot;: 1774952773999,
+  &quot;signature&quot;: {
+    &quot;r&quot;: &quot;0x1111111111111111111111111111111111111111111111111111111111111111&quot;,
+    &quot;s&quot;: &quot;0x2222222222222222222222222222222222222222222222222222222222222222&quot;,
+    &quot;v&quot;: 27
+  }
+}</textarea>
+<pre class="code try-view hidden"></pre>
+<div class="try-bar"><button class="copybtn hidden">复制当前预览</button></div>
+</div><h4>7. <code>usdSend</code> — User-signed EIP-712：HyperliquidTransaction:UsdSend。nonce 必须等于 action.time。</h4><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>type</code> <b class="req">*</b></td><td><code>常量 &quot;usdSend&quot;</code></td><td>动作名常量 usdSend。</td></tr><tr><td><code>hyperliquidChain</code> <b class="req">*</b></td><td><code>string</code></td><td>链名，如 Mainnet。</td></tr><tr><td><code>signatureChainId</code> <b class="req">*</b></td><td><code>string</code></td><td>EIP-712 签名链 ID（hex）。</td></tr><tr><td><code>destination</code> <b class="req">*</b></td><td><code>string</code></td><td>收款地址（20 字节 hex）。</td></tr><tr><td><code>amount</code> <b class="req">*</b></td><td><code>string</code></td><td>转账金额字符串，如 &quot;1.0&quot;。</td></tr><tr><td><code>time</code> <b class="req">*</b></td><td><code>integer</code></td><td>动作时间毫秒戳，必须等于外层 nonce。</td></tr></tbody></table><div class="try" data-kind="post" data-id="post-Exchange-exchange-usdSend">
+<div class="try-bar"><label>服务器 <select class="try-server"></select></label>
+<div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
+<button class="send">发送</button><span class="try-meta"></span></div>
+<pre class="code try-resp hidden"></pre>
+<textarea class="try-body" spellcheck="false">{
+  &quot;action&quot;: {
+    &quot;type&quot;: &quot;usdSend&quot;,
+    &quot;hyperliquidChain&quot;: &quot;Testnet&quot;,
+    &quot;signatureChainId&quot;: &quot;0x66eee&quot;,
+    &quot;destination&quot;: &quot;0x4242424242424242424242424242424242424242&quot;,
+    &quot;amount&quot;: &quot;1.0&quot;,
+    &quot;time&quot;: 1774952773999
+  },
+  &quot;nonce&quot;: 1774952773999,
+  &quot;signature&quot;: {
+    &quot;r&quot;: &quot;0x1111111111111111111111111111111111111111111111111111111111111111&quot;,
+    &quot;s&quot;: &quot;0x2222222222222222222222222222222222222222222222222222222222222222&quot;,
+    &quot;v&quot;: 27
+  }
+}</textarea>
+<pre class="code try-view hidden"></pre>
+<div class="try-bar"><button class="copybtn hidden">复制当前预览</button></div>
+</div><h4>8. <code>withdraw3</code> — User-signed EIP-712：HyperliquidTransaction:Withdraw。nonce 必须等于 action.time。</h4><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>type</code> <b class="req">*</b></td><td><code>常量 &quot;withdraw3&quot;</code></td><td>动作名常量 withdraw3。</td></tr><tr><td><code>hyperliquidChain</code> <b class="req">*</b></td><td><code>string</code></td><td>链名，如 Mainnet。</td></tr><tr><td><code>signatureChainId</code> <b class="req">*</b></td><td><code>string</code></td><td>EIP-712 签名链 ID（hex）。</td></tr><tr><td><code>destination</code> <b class="req">*</b></td><td><code>string</code></td><td>提现代收地址（20 字节 hex）。</td></tr><tr><td><code>amount</code> <b class="req">*</b></td><td><code>string</code></td><td>提现金额字符串，如 &quot;1.0&quot;。</td></tr><tr><td><code>time</code> <b class="req">*</b></td><td><code>integer</code></td><td>动作时间毫秒戳，必须等于外层 nonce。</td></tr></tbody></table><div class="try" data-kind="post" data-id="post-Exchange-exchange-withdraw3">
+<div class="try-bar"><label>服务器 <select class="try-server"></select></label>
+<div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
+<button class="send">发送</button><span class="try-meta"></span></div>
+<pre class="code try-resp hidden"></pre>
+<textarea class="try-body" spellcheck="false">{
+  &quot;action&quot;: {
+    &quot;type&quot;: &quot;withdraw3&quot;,
+    &quot;hyperliquidChain&quot;: &quot;Testnet&quot;,
+    &quot;signatureChainId&quot;: &quot;0x66eee&quot;,
+    &quot;destination&quot;: &quot;0x4242424242424242424242424242424242424242&quot;,
+    &quot;amount&quot;: &quot;1.0&quot;,
+    &quot;time&quot;: 1774952773999
+  },
+  &quot;nonce&quot;: 1774952773999,
+  &quot;signature&quot;: {
+    &quot;r&quot;: &quot;0x1111111111111111111111111111111111111111111111111111111111111111&quot;,
+    &quot;s&quot;: &quot;0x2222222222222222222222222222222222222222222222222222222222222222&quot;,
+    &quot;v&quot;: 27
+  }
+}</textarea>
+<pre class="code try-view hidden"></pre>
+<div class="try-bar"><button class="copybtn hidden">复制当前预览</button></div>
+</div><h4>9. <code>approveAgent</code> — User-signed EIP-712：HyperliquidTransaction:ApproveAgent。外层 nonce 必须等于 action.nonce。</h4><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>type</code> <b class="req">*</b></td><td><code>常量 &quot;approveAgent&quot;</code></td><td>动作名常量 approveAgent。</td></tr><tr><td><code>hyperliquidChain</code> <b class="req">*</b></td><td><code>string</code></td><td>链名，如 Mainnet。</td></tr><tr><td><code>signatureChainId</code> <b class="req">*</b></td><td><code>string</code></td><td>EIP-712 签名链 ID（hex）。</td></tr><tr><td><code>agentAddress</code> <b class="req">*</b></td><td><code>string</code></td><td>被授权的 agent 地址（20 字节 hex）。</td></tr><tr><td><code>agentName</code></td><td><code>string</code></td><td>agent 备注名，可为 null。</td></tr><tr><td><code>nonce</code> <b class="req">*</b></td><td><code>integer</code></td><td>授权 nonce，必须等于外层 nonce。</td></tr></tbody></table><div class="try" data-kind="post" data-id="post-Exchange-exchange-approveAgent">
+<div class="try-bar"><label>服务器 <select class="try-server"></select></label>
+<div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
+<button class="send">发送</button><span class="try-meta"></span></div>
+<pre class="code try-resp hidden"></pre>
+<textarea class="try-body" spellcheck="false">{
+  &quot;action&quot;: {
+    &quot;type&quot;: &quot;approveAgent&quot;,
+    &quot;hyperliquidChain&quot;: &quot;Testnet&quot;,
+    &quot;signatureChainId&quot;: &quot;0x66eee&quot;,
+    &quot;agentAddress&quot;: &quot;0x4242424242424242424242424242424242424242&quot;,
+    &quot;agentName&quot;: null,
+    &quot;nonce&quot;: 1774952773999
+  },
+  &quot;nonce&quot;: 1774952773999,
+  &quot;signature&quot;: {
+    &quot;r&quot;: &quot;0x1111111111111111111111111111111111111111111111111111111111111111&quot;,
+    &quot;s&quot;: &quot;0x2222222222222222222222222222222222222222222222222222222222222222&quot;,
+    &quot;v&quot;: 27
+  }
+}</textarea>
+<pre class="code try-view hidden"></pre>
+<div class="try-bar"><button class="copybtn hidden">复制当前预览</button></div>
+</div>
+<h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>本地处理结果：code 0=已入池；1001 参数/哈希失败；1002 重复交易；1003 签名失败。</td></tr><tr><td><code>400</code></td><td>malformed JSON，Axum 在进业务逻辑前拒绝。</td></tr></tbody></table><p class="resp-label">Exchange__ExchangeResult</p><pre class="code">{
+  &quot;code&quot;: 0,
+  &quot;message&quot;: &quot;accepted&quot;,
+  &quot;tx_hash&quot;: &quot;&quot;
+}</pre>
+</section><section id="post-State-meta" class="card">
 <div class="crumb">State · POST /info</div>
 <h2><span class="badge post">POST</span> meta <span class="route">经网关走 <b>状态服务</b>。</span></h2>
 <p>市场元数据、交易品种列表和基础配置。</p>
@@ -226,8 +416,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
   ],
   &quot;collateralToken&quot;: 0
 }</pre>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-State-meta">
+<h3>测试用例</h3><div class="try" data-kind="post" data-id="post-State-meta">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
 <div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
 <button class="send">发送</button><span class="try-meta"></span></div>
@@ -243,8 +432,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <p>市场元数据及市场上下文（与 universe 一一对应）。</p>
 <h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>dex</code></td><td><code>string</code></td><td>可选，默认 dex（空字符串）；非默认 dex 返回 501。</td></tr></tbody></table>
 <h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果。</td></tr><tr><td><code>400</code></td><td>未知 type 或参数错误。</td></tr><tr><td><code>501</code></td><td>type 可解析但尚未实现，或 dex 不是默认 dex。</td></tr><tr><td><code>503</code></td><td>副本尚未同步就绪。</td></tr></tbody></table><p class="note">[meta, 行情数组] 二元数组，行情与 universe 一一对应、顺序相同。</p>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-State-metaAndAssetCtxs">
+<h3>测试用例</h3><div class="try" data-kind="post" data-id="post-State-metaAndAssetCtxs">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
 <div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
 <button class="send">发送</button><span class="try-meta"></span></div>
@@ -302,8 +490,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
   ],
   &quot;time&quot;: 0
 }</pre>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-State-clearinghouseState">
+<h3>测试用例</h3><div class="try" data-kind="post" data-id="post-State-clearinghouseState">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
 <div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
 <button class="send">发送</button><span class="try-meta"></span></div>
@@ -329,8 +516,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
     &quot;timestamp&quot;: 0
   }
 ]</pre>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-State-openOrders">
+<h3>测试用例</h3><div class="try" data-kind="post" data-id="post-State-openOrders">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
 <div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
 <button class="send">发送</button><span class="try-meta"></span></div>
@@ -423,8 +609,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
     &quot;cloid&quot;: &quot;&quot;
   }
 ]</pre>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-State-frontendOpenOrders">
+<h3>测试用例</h3><div class="try" data-kind="post" data-id="post-State-frontendOpenOrders">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
 <div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
 <button class="send">发送</button><span class="try-meta"></span></div>
@@ -447,8 +632,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
     &quot;validUntil&quot;: 0
   }
 ]</pre>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-State-extraAgents">
+<h3>测试用例</h3><div class="try" data-kind="post" data-id="post-State-extraAgents">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
 <div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
 <button class="send">发送</button><span class="try-meta"></span></div>
@@ -480,8 +664,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
   ],
   &quot;markPx&quot;: &quot;&quot;
 }</pre>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-State-activeAssetData">
+<h3>测试用例</h3><div class="try" data-kind="post" data-id="post-State-activeAssetData">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
 <div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
 <button class="send">发送</button><span class="try-meta"></span></div>
@@ -518,8 +701,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
   &quot;userSpotAddRate&quot;: &quot;&quot;,
   &quot;activeReferralDiscount&quot;: &quot;&quot;
 }</pre>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-State-userFees">
+<h3>测试用例</h3><div class="try" data-kind="post" data-id="post-State-userFees">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
 <div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
 <button class="send">发送</button><span class="try-meta"></span></div>
@@ -541,8 +723,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
     &quot;&quot;
   ]
 }</pre>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-State-exchangeStatus">
+<h3>测试用例</h3><div class="try" data-kind="post" data-id="post-State-exchangeStatus">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
 <div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
 <button class="send">发送</button><span class="try-meta"></span></div>
@@ -620,8 +801,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
     &quot;statusTimestamp&quot;: 0
   }
 }</pre>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-State-orderStatus">
+<h3>测试用例</h3><div class="try" data-kind="post" data-id="post-State-orderStatus">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
 <div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
 <button class="send">发送</button><span class="try-meta"></span></div>
@@ -639,8 +819,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <p>前端页面加载所需的账户和市场聚合数据。</p>
 <h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>string</code></td><td>42 字符 0x 十六进制地址。</td></tr></tbody></table>
 <h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果；历史存储未启用时历史类返回 []。</td></tr><tr><td><code>400</code></td><td>请求参数错误，或时间范围超出留存窗口。</td></tr><tr><td><code>404</code></td><td>非 indexer info type。</td></tr></tbody></table><p class="note">页面加载聚合对象（账户 + 挂单 + 元数据 + 行情）。</p>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-Indexer-webData2">
+<h3>测试用例</h3><div class="try" data-kind="post" data-id="post-Indexer-webData2">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
 <div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
 <button class="send">发送</button><span class="try-meta"></span></div>
@@ -661,8 +840,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
     &quot;BTCUSDC&quot;: &quot;76600.5&quot;
   }
 }</pre>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-Indexer-allMids">
+<h3>测试用例</h3><div class="try" data-kind="post" data-id="post-Indexer-allMids">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
 <div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
 <button class="send">发送</button><span class="try-meta"></span></div>
@@ -678,8 +856,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <p>K 线快照。</p>
 <h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>coin</code> <b class="req">*</b></td><td><code>string</code></td><td>币种，如 BTCUSDC。</td></tr><tr><td><code>interval</code> <b class="req">*</b></td><td><code>string</code></td><td>K 线周期（1m/5m/15m/1h/4h/1d）。</td></tr><tr><td><code>startTime</code></td><td><code>integer</code></td><td>可选，毫秒，默认 0。</td></tr><tr><td><code>endTime</code></td><td><code>integer</code></td><td>可选，毫秒，默认 u64::MAX。</td></tr></tbody></table>
 <h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果；历史存储未启用时历史类返回 []。</td></tr><tr><td><code>400</code></td><td>请求参数错误，或时间范围超出留存窗口。</td></tr><tr><td><code>404</code></td><td>非 indexer info type。</td></tr></tbody></table><p class="note">K 线数组（SDK candle wire {t,T,s,i,o,c,h,l,v,n}）。</p>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-Indexer-candleSnapshot">
+<h3>测试用例</h3><div class="try" data-kind="post" data-id="post-Indexer-candleSnapshot">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
 <div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
 <button class="send">发送</button><span class="try-meta"></span></div>
@@ -697,8 +874,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <p>L2 聚合订单簿（本地订单簿引擎）。</p>
 <h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>coin</code> <b class="req">*</b></td><td><code>string</code></td><td>币种，如 BTCUSDC。</td></tr><tr><td><code>nSigFigs</code></td><td><code>integer</code></td><td>可选，有上限校验。</td></tr><tr><td><code>mantissa</code></td><td><code>integer</code></td><td>可选，有上限校验。</td></tr><tr><td><code>nLevels</code></td><td><code>integer</code></td><td>可选，有上限校验。</td></tr></tbody></table>
 <h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果；历史存储未启用时历史类返回 []。</td></tr><tr><td><code>400</code></td><td>请求参数错误，或时间范围超出留存窗口。</td></tr><tr><td><code>404</code></td><td>非 indexer info type。</td></tr></tbody></table><p class="note">本地订单簿引擎的盘口快照。</p>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-Indexer-l2Book">
+<h3>测试用例</h3><div class="try" data-kind="post" data-id="post-Indexer-l2Book">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
 <div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
 <button class="send">发送</button><span class="try-meta"></span></div>
@@ -715,8 +891,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <p>按时间范围查询市场资金费历史。</p>
 <h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>coin</code> <b class="req">*</b></td><td><code>string</code></td><td>币种，如 BTCUSDC。</td></tr><tr><td><code>startTime</code> <b class="req">*</b></td><td><code>integer</code></td><td>毫秒。</td></tr><tr><td><code>endTime</code></td><td><code>integer</code></td><td>可选，毫秒，默认 i64::MAX。</td></tr></tbody></table>
 <h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果；历史存储未启用时历史类返回 []。</td></tr><tr><td><code>400</code></td><td>请求参数错误，或时间范围超出留存窗口。</td></tr><tr><td><code>404</code></td><td>非 indexer info type。</td></tr></tbody></table><p class="note">资金费历史数组。</p>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-Indexer-fundingHistory">
+<h3>测试用例</h3><div class="try" data-kind="post" data-id="post-Indexer-fundingHistory">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
 <div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
 <button class="send">发送</button><span class="try-meta"></span></div>
@@ -734,8 +909,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <p>按时间范围查询用户成交。</p>
 <h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>string</code></td><td>42 字符 0x 十六进制地址。</td></tr><tr><td><code>startTime</code> <b class="req">*</b></td><td><code>integer</code></td><td>毫秒。</td></tr><tr><td><code>endTime</code></td><td><code>integer</code></td><td>可选，毫秒，默认 i64::MAX。</td></tr></tbody></table>
 <h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果；历史存储未启用时历史类返回 []。</td></tr><tr><td><code>400</code></td><td>请求参数错误，或时间范围超出留存窗口。</td></tr><tr><td><code>404</code></td><td>非 indexer info type。</td></tr></tbody></table><p class="note">Fill 数组（Hyperliquid SDK Fill 原文透传）。</p>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-Indexer-userFillsByTime">
+<h3>测试用例</h3><div class="try" data-kind="post" data-id="post-Indexer-userFillsByTime">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
 <div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
 <button class="send">发送</button><span class="try-meta"></span></div>
@@ -753,8 +927,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <p>用户近期成交（Fill 原文）。</p>
 <h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>string</code></td><td>42 字符 0x 十六进制地址。</td></tr></tbody></table>
 <h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果；历史存储未启用时历史类返回 []。</td></tr><tr><td><code>400</code></td><td>请求参数错误，或时间范围超出留存窗口。</td></tr><tr><td><code>404</code></td><td>非 indexer info type。</td></tr></tbody></table><p class="note">Fill 数组（Hyperliquid SDK Fill 原文透传）。</p>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-Indexer-userFills">
+<h3>测试用例</h3><div class="try" data-kind="post" data-id="post-Indexer-userFills">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
 <div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
 <button class="send">发送</button><span class="try-meta"></span></div>
@@ -771,8 +944,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <p>最近成交（与 WS trades 配对方式一致）。</p>
 <h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>coin</code> <b class="req">*</b></td><td><code>string</code></td><td>币种，如 BTCUSDC。</td></tr></tbody></table>
 <h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果；历史存储未启用时历史类返回 []。</td></tr><tr><td><code>400</code></td><td>请求参数错误，或时间范围超出留存窗口。</td></tr><tr><td><code>404</code></td><td>非 indexer info type。</td></tr></tbody></table><p class="note">公开成交数组（与 WS trades 频道配对方式一致）。</p>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-Indexer-recentTrades">
+<h3>测试用例</h3><div class="try" data-kind="post" data-id="post-Indexer-recentTrades">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
 <div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
 <button class="send">发送</button><span class="try-meta"></span></div>
@@ -789,8 +961,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <p>按时间范围查询用户资金费。</p>
 <h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>string</code></td><td>42 字符 0x 十六进制地址。</td></tr><tr><td><code>startTime</code> <b class="req">*</b></td><td><code>integer</code></td><td>毫秒。</td></tr><tr><td><code>endTime</code></td><td><code>integer</code></td><td>可选，毫秒，默认 i64::MAX。</td></tr></tbody></table>
 <h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果；历史存储未启用时历史类返回 []。</td></tr><tr><td><code>400</code></td><td>请求参数错误，或时间范围超出留存窗口。</td></tr><tr><td><code>404</code></td><td>非 indexer info type。</td></tr></tbody></table><p class="note">资金费数组。</p>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-Indexer-userFunding">
+<h3>测试用例</h3><div class="try" data-kind="post" data-id="post-Indexer-userFunding">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
 <div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
 <button class="send">发送</button><span class="try-meta"></span></div>
@@ -808,8 +979,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <p>按时间范围查询用户非资金类账本变更。</p>
 <h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>user</code> <b class="req">*</b></td><td><code>string</code></td><td>42 字符 0x 十六进制地址。</td></tr><tr><td><code>startTime</code> <b class="req">*</b></td><td><code>integer</code></td><td>毫秒。</td></tr><tr><td><code>endTime</code></td><td><code>integer</code></td><td>可选，毫秒，默认 i64::MAX。</td></tr></tbody></table>
 <h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果；历史存储未启用时历史类返回 []。</td></tr><tr><td><code>400</code></td><td>请求参数错误，或时间范围超出留存窗口。</td></tr><tr><td><code>404</code></td><td>非 indexer info type。</td></tr></tbody></table><p class="note">非资金类账本变更数组。</p>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-Indexer-userNonFundingLedgerUpdates">
+<h3>测试用例</h3><div class="try" data-kind="post" data-id="post-Indexer-userNonFundingLedgerUpdates">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
 <div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
 <button class="send">发送</button><span class="try-meta"></span></div>
@@ -833,8 +1003,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
     &quot;statusTimestamp&quot;: 0
   }
 ]</pre>
-<h3>测试用例</h3>
-<div class="try" data-kind="post" data-id="post-Indexer-historicalOrders">
+<h3>测试用例</h3><div class="try" data-kind="post" data-id="post-Indexer-historicalOrders">
 <div class="try-bar"><label>服务器 <select class="try-server"></select></label>
 <div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
 <button class="send">发送</button><span class="try-meta"></span></div>
@@ -1246,7 +1415,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <pre class="code ws-log">等待连接…</pre>
 </div></section></main></div>
 <script>
-var STORE = {"posts": {"post-Exchange-exchange": {"path": "/exchange"}, "post-State-meta": {"path": "/info"}, "post-State-metaAndAssetCtxs": {"path": "/info"}, "post-State-clearinghouseState": {"path": "/info"}, "post-State-openOrders": {"path": "/info"}, "post-State-frontendOpenOrders": {"path": "/info"}, "post-State-extraAgents": {"path": "/info"}, "post-State-activeAssetData": {"path": "/info"}, "post-State-userFees": {"path": "/info"}, "post-State-exchangeStatus": {"path": "/info"}, "post-State-orderStatus": {"path": "/info"}, "post-Indexer-webData2": {"path": "/info"}, "post-Indexer-allMids": {"path": "/info"}, "post-Indexer-candleSnapshot": {"path": "/info"}, "post-Indexer-l2Book": {"path": "/info"}, "post-Indexer-fundingHistory": {"path": "/info"}, "post-Indexer-userFillsByTime": {"path": "/info"}, "post-Indexer-userFills": {"path": "/info"}, "post-Indexer-recentTrades": {"path": "/info"}, "post-Indexer-userFunding": {"path": "/info"}, "post-Indexer-userNonFundingLedgerUpdates": {"path": "/info"}, "post-Indexer-historicalOrders": {"path": "/info"}}, "httpServers": ["https://dev.dex-api.biya.io", "http://127.0.0.1:36016"], "wsUrls": ["wss://dev.dex-api.biya.io/ws", "ws://127.0.0.1:36016/ws"]};
+var STORE = {"posts": {"post-Exchange-exchange": {"path": "/exchange"}, "post-State-meta": {"path": "/info"}, "post-State-metaAndAssetCtxs": {"path": "/info"}, "post-State-clearinghouseState": {"path": "/info"}, "post-State-openOrders": {"path": "/info"}, "post-State-frontendOpenOrders": {"path": "/info"}, "post-State-extraAgents": {"path": "/info"}, "post-State-activeAssetData": {"path": "/info"}, "post-State-userFees": {"path": "/info"}, "post-State-exchangeStatus": {"path": "/info"}, "post-State-orderStatus": {"path": "/info"}, "post-Indexer-webData2": {"path": "/info"}, "post-Indexer-allMids": {"path": "/info"}, "post-Indexer-candleSnapshot": {"path": "/info"}, "post-Indexer-l2Book": {"path": "/info"}, "post-Indexer-fundingHistory": {"path": "/info"}, "post-Indexer-userFillsByTime": {"path": "/info"}, "post-Indexer-userFills": {"path": "/info"}, "post-Indexer-recentTrades": {"path": "/info"}, "post-Indexer-userFunding": {"path": "/info"}, "post-Indexer-userNonFundingLedgerUpdates": {"path": "/info"}, "post-Indexer-historicalOrders": {"path": "/info"}, "post-Exchange-exchange-order": {"path": "/exchange"}, "post-Exchange-exchange-cancel": {"path": "/exchange"}, "post-Exchange-exchange-cancelByCloid": {"path": "/exchange"}, "post-Exchange-exchange-cancelAll": {"path": "/exchange"}, "post-Exchange-exchange-updateLeverage": {"path": "/exchange"}, "post-Exchange-exchange-batchModify": {"path": "/exchange"}, "post-Exchange-exchange-usdSend": {"path": "/exchange"}, "post-Exchange-exchange-withdraw3": {"path": "/exchange"}, "post-Exchange-exchange-approveAgent": {"path": "/exchange"}}, "httpServers": ["https://dev.dex-api.biya.io", "http://127.0.0.1:36016"], "wsUrls": ["wss://dev.dex-api.biya.io/ws", "ws://127.0.0.1:36016/ws"]};
 function $(s, r){ return (r||document).querySelector(s); }
 function $all(s, r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); }
 // nav search + active state

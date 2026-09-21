@@ -78,6 +78,7 @@ mod tests {
         for marker in [
             "BIYA DEX API",
             "nav-search",
+            "post-Exchange-exchange-approveAgent",
             "post-State-orderStatus",
             "ws-Indexer-userHistoricalOrders",
             "TypeScript",

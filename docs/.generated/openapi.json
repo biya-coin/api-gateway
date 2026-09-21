@@ -12,8 +12,8 @@
   ],
   "info": {
     "title": "BIYA DEX API（网关聚合）",
-    "version": "ebf5a890dd525d498a7df51ce9397fc47bebc68f",
-    "description": "前端唯一入口：`POST /info`、`POST /exchange`、`GET /ws` 均打网关，由网关按 type/订阅分流到三后端，网关不改业务字段、不回退。\n\n## 版本矩阵（本次构建拉取）\n\n| 服务 | rev |\n|---|---|\n| `gateway` | `ebf5a890dd525d498a7df51ce9397fc47bebc68f` |\n| `exchange-apiserver` | `ef23fbc3ade2196065deb439316f05667831f444` |\n| `bybchain-api-server` | `7c7a18982882b7f7ff551d24b8aea7ef093a2ce9` |\n| `biya-indexer` | `731ec3b31f33caf98e1a24eac39b69740c56510d` |\n\n网关按 `type` 分流（以本次构建的 `src/routing.rs` 为准）：\n\n- State：`meta`, `metaAndAssetCtxs`, `extraAgents`, `clearinghouseState`, `activeAssetData`, `openOrders`, `frontendOpenOrders`, `orderStatus`, `userFees`, `unifiedBalances`, `accountNonces`, `marketSnapshot`, `exchangeStatus`\n- Indexer：`allMids`, `recentTrades`, `l2Book`, `webData2`, `candleSnapshot`, `historicalOrders`, `userFills`, `userFillsByTime`, `userFunding`, `fundingHistory`, `userNonFundingLedgerUpdates`\n\nWS 订阅：`assetCtxs` / `clearinghouseState` 走状态服务，其余走 indexer。\n\nWS 订阅见各服务分组下的“WebSocket 订阅”一节（与 REST 同源，按服务归属展示）。"
+    "version": "c14aa14fe7e47af6cd561fd0105b30fa7b573a80",
+    "description": "前端唯一入口：`POST /info`、`POST /exchange`、`GET /ws` 均打网关，由网关按 type/订阅分流到三后端，网关不改业务字段、不回退。\n\n## 版本矩阵（本次构建拉取）\n\n| 服务 | rev |\n|---|---|\n| `gateway` | `c14aa14fe7e47af6cd561fd0105b30fa7b573a80` |\n| `exchange-apiserver` | `ef23fbc3ade2196065deb439316f05667831f444` |\n| `bybchain-api-server` | `5e1073e20c053fe8d0ab6676210ea63395680974` |\n| `biya-indexer` | `731ec3b31f33caf98e1a24eac39b69740c56510d` |\n\n网关按 `type` 分流（以本次构建的 `src/routing.rs` 为准）：\n\n- State：`meta`, `metaAndAssetCtxs`, `extraAgents`, `clearinghouseState`, `activeAssetData`, `openOrders`, `frontendOpenOrders`, `orderStatus`, `userFees`, `unifiedBalances`, `accountNonces`, `marketSnapshot`, `exchangeStatus`\n- Indexer：`allMids`, `recentTrades`, `l2Book`, `webData2`, `candleSnapshot`, `historicalOrders`, `userFills`, `userFillsByTime`, `userFunding`, `fundingHistory`, `userNonFundingLedgerUpdates`\n\nWS 订阅：`assetCtxs` / `clearinghouseState` 走状态服务，其余走 indexer。\n\nWS 订阅见各服务分组下的“WebSocket 订阅”一节（与 REST 同源，按服务归属展示）。"
   },
   "tags": [
     {
@@ -272,7 +272,8 @@
             "description": "用户 nonce，必须大于 0。"
           },
           "signature": {
-            "$ref": "#/components/schemas/Exchange__SignatureWire"
+            "$ref": "#/components/schemas/Exchange__SignatureWire",
+            "description": "L1 签名 {r, s, v}；r/s 为 0x 前缀 hex（不足 32 字节自动左补零），v 为 27/28。"
           },
           "vaultAddress": {
             "type": "string",
@@ -320,20 +321,24 @@
         ],
         "properties": {
           "type": {
-            "const": "order"
+            "const": "order",
+            "description": "动作名常量 order。"
           },
           "orders": {
             "type": "array",
             "minItems": 1,
             "items": {
               "$ref": "#/components/schemas/Exchange__LimitOrder"
-            }
+            },
+            "description": "限价单数组，逐个送交易池。"
           },
           "grouping": {
             "type": "string",
-            "example": "na"
+            "example": "na",
+            "description": "订单分组，通常填 na。"
           }
-        }
+        },
+        "description": "批量提交限价单（L1 agent 签名）。"
       },
       "Exchange__LimitOrder": {
         "type": "object",
@@ -386,9 +391,11 @@
                       "Alo"
                     ]
                   }
-                }
+                },
+                "description": "限价单：tif 为 Gtc/Ioc/Alo。"
               }
-            }
+            },
+            "description": "订单类型容器，限价单填 limit。"
           },
           "c": {
             "type": "string",
@@ -404,7 +411,8 @@
         ],
         "properties": {
           "type": {
-            "const": "cancel"
+            "const": "cancel",
+            "description": "动作名常量 cancel。"
           },
           "cancels": {
             "type": "array",
@@ -416,16 +424,19 @@
               ],
               "properties": {
                 "a": {
-                  "type": "integer"
+                  "type": "integer",
+                  "description": "资产索引。"
                 },
                 "o": {
                   "type": "integer",
-                  "description": "链上 oid。"
+                  "description": "订单 oid。"
                 }
               }
-            }
+            },
+            "description": "撤单数组，每项按 oid 精确撤单。"
           }
-        }
+        },
+        "description": "按 oid 撤单（L1 agent 签名）。"
       },
       "Exchange__CancelByCloidAction": {
         "type": "object",
@@ -435,7 +446,8 @@
         ],
         "properties": {
           "type": {
-            "const": "cancelByCloid"
+            "const": "cancelByCloid",
+            "description": "动作名常量 cancelByCloid。"
           },
           "cancels": {
             "type": "array",
@@ -447,15 +459,19 @@
               ],
               "properties": {
                 "asset": {
-                  "type": "integer"
+                  "type": "integer",
+                  "description": "资产索引。"
                 },
                 "cloid": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "客户端订单号（16 字节 hex，0x 前缀）。"
                 }
               }
-            }
+            },
+            "description": "撤单数组，每项按 cloid 精确撤单。"
           }
-        }
+        },
+        "description": "按 cloid 撤单（L1 agent 签名）。"
       },
       "Exchange__CancelAllAction": {
         "type": "object",
@@ -464,9 +480,11 @@
         ],
         "properties": {
           "type": {
-            "const": "cancelAll"
+            "const": "cancelAll",
+            "description": "动作名常量 cancelAll。"
           }
-        }
+        },
+        "description": "撤销全部挂单（L1 agent 签名）。"
       },
       "Exchange__UpdateLeverageAction": {
         "type": "object",
@@ -478,18 +496,23 @@
         ],
         "properties": {
           "type": {
-            "const": "updateLeverage"
+            "const": "updateLeverage",
+            "description": "动作名常量 updateLeverage。"
           },
           "asset": {
-            "type": "integer"
+            "type": "integer",
+            "description": "资产索引（与 meta 的 universe 下标一致）。"
           },
           "isCross": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "true 全仓，false 逐仓。"
           },
           "leverage": {
-            "type": "integer"
+            "type": "integer",
+            "description": "杠杆倍数，如 10 表示 10x。"
           }
-        }
+        },
+        "description": "调整某资产的杠杆倍数与保证金模式（L1 agent 签名）。"
       },
       "Exchange__BatchModifyAction": {
         "type": "object",
@@ -499,7 +522,8 @@
         ],
         "properties": {
           "type": {
-            "const": "batchModify"
+            "const": "batchModify",
+            "description": "动作名常量 batchModify。"
           },
           "modifies": {
             "type": "array",
@@ -511,15 +535,19 @@
               ],
               "properties": {
                 "oid": {
-                  "type": "integer"
+                  "type": "integer",
+                  "description": "被替换旧单的 oid。"
                 },
                 "order": {
-                  "$ref": "#/components/schemas/Exchange__LimitOrder"
+                  "$ref": "#/components/schemas/Exchange__LimitOrder",
+                  "description": "新订单（与 order 动作的 orders 元素同形）。"
                 }
               }
-            }
+            },
+            "description": "改单数组，每项按 oid 撤掉旧单并提交 order 作为新单。"
           }
-        }
+        },
+        "description": "批量改单：按 oid 逐个替换为新订单（L1 agent 签名）。"
       },
       "Exchange__UsdSendAction": {
         "type": "object",
@@ -534,22 +562,28 @@
         ],
         "properties": {
           "type": {
-            "const": "usdSend"
+            "const": "usdSend",
+            "description": "动作名常量 usdSend。"
           },
           "hyperliquidChain": {
-            "type": "string"
+            "type": "string",
+            "description": "链名，如 Mainnet。"
           },
           "signatureChainId": {
-            "type": "string"
+            "type": "string",
+            "description": "EIP-712 签名链 ID（hex）。"
           },
           "destination": {
-            "type": "string"
+            "type": "string",
+            "description": "收款地址（20 字节 hex）。"
           },
           "amount": {
-            "type": "string"
+            "type": "string",
+            "description": "转账金额字符串，如 \"1.0\"。"
           },
           "time": {
-            "type": "integer"
+            "type": "integer",
+            "description": "动作时间毫秒戳，必须等于外层 nonce。"
           }
         }
       },
@@ -566,22 +600,28 @@
         ],
         "properties": {
           "type": {
-            "const": "withdraw3"
+            "const": "withdraw3",
+            "description": "动作名常量 withdraw3。"
           },
           "hyperliquidChain": {
-            "type": "string"
+            "type": "string",
+            "description": "链名，如 Mainnet。"
           },
           "signatureChainId": {
-            "type": "string"
+            "type": "string",
+            "description": "EIP-712 签名链 ID（hex）。"
           },
           "destination": {
-            "type": "string"
+            "type": "string",
+            "description": "提现代收地址（20 字节 hex）。"
           },
           "amount": {
-            "type": "string"
+            "type": "string",
+            "description": "提现金额字符串，如 \"1.0\"。"
           },
           "time": {
-            "type": "integer"
+            "type": "integer",
+            "description": "动作时间毫秒戳，必须等于外层 nonce。"
           }
         }
       },
@@ -597,22 +637,28 @@
         ],
         "properties": {
           "type": {
-            "const": "approveAgent"
+            "const": "approveAgent",
+            "description": "动作名常量 approveAgent。"
           },
           "hyperliquidChain": {
-            "type": "string"
+            "type": "string",
+            "description": "链名，如 Mainnet。"
           },
           "signatureChainId": {
-            "type": "string"
+            "type": "string",
+            "description": "EIP-712 签名链 ID（hex）。"
           },
           "agentAddress": {
-            "type": "string"
+            "type": "string",
+            "description": "被授权的 agent 地址（20 字节 hex）。"
           },
           "agentName": {
-            "type": "string"
+            "type": "string",
+            "description": "agent 备注名，可为 null。"
           },
           "nonce": {
-            "type": "integer"
+            "type": "integer",
+            "description": "授权 nonce，必须等于外层 nonce。"
           }
         }
       },
@@ -2139,7 +2185,7 @@
   },
   "x-backend-revs": {
     "exchange-apiserver": "ef23fbc3ade2196065deb439316f05667831f444",
-    "bybchain-api-server": "7c7a18982882b7f7ff551d24b8aea7ef093a2ce9",
+    "bybchain-api-server": "5e1073e20c053fe8d0ab6676210ea63395680974",
     "biya-indexer": "731ec3b31f33caf98e1a24eac39b69740c56510d"
   },
   "x-ws-subscriptions": [
