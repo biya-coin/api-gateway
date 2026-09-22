@@ -6,7 +6,7 @@
       "tag": "Exchange",
       "git": "git@github.com:biya-coin/exchange-apiserver.git",
       "branch": "dev",
-      "rev": "4294a35fad7c0f13df2e1c820cc9eb824125ad96",
+      "rev": "5a370b51e646587d729080f250e09e6e1ad93c8a",
       "spec_path": "docs/openapi.json",
       "ws_path": null,
       "live_openapi": "http://host.docker.internal:36014/openapi.json"
@@ -16,7 +16,7 @@
       "tag": "State",
       "git": "git@github.com:biya-coin/bybchain-api-server.git",
       "branch": "dev",
-      "rev": "5e1073e20c053fe8d0ab6676210ea63395680974",
+      "rev": "49859f3e51ad0e039baed0f00fb66f3cadfe7548",
       "spec_path": "docs/openapi.json",
       "ws_path": "docs/ws-subscriptions.json",
       "live_openapi": "http://host.docker.internal:36020/openapi.json"

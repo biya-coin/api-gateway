@@ -1,16 +1,16 @@
 {
-  "gateway_rev": "24a90fccbde887fdfa62e333dae600b169c86dda",
-  "fetched_at": "2026-09-21T04:19:30.741140+00:00",
+  "gateway_rev": "22674bcee1ee9b039bfe0874a7ad02f2b642c799",
+  "fetched_at": "2026-09-22T08:34:22.683754+00:00",
   "backends": [
     {
       "service": "exchange-apiserver",
-      "rev": "4294a35fad7c0f13df2e1c820cc9eb824125ad96",
-      "source": "git:dev@4294a35fad7c0f13df2e1c820cc9eb824125ad96"
+      "rev": "5a370b51e646587d729080f250e09e6e1ad93c8a",
+      "source": "git:dev@5a370b51e646587d729080f250e09e6e1ad93c8a"
     },
     {
       "service": "bybchain-api-server",
-      "rev": "5e1073e20c053fe8d0ab6676210ea63395680974",
-      "source": "git:dev@5e1073e20c053fe8d0ab6676210ea63395680974"
+      "rev": "49859f3e51ad0e039baed0f00fb66f3cadfe7548",
+      "source": "git:dev@49859f3e51ad0e039baed0f00fb66f3cadfe7548"
     },
     {
       "service": "biya-indexer",

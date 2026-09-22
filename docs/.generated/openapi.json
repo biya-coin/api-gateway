@@ -12,8 +12,8 @@
   ],
   "info": {
     "title": "BIYA DEX API（网关聚合）",
-    "version": "24a90fccbde887fdfa62e333dae600b169c86dda",
-    "description": "前端唯一入口：`POST /info`、`POST /exchange`、`GET /ws` 均打网关，由网关按 type/订阅分流到三后端，网关不改业务字段、不回退。\n\n## 版本矩阵（本次构建拉取）\n\n| 服务 | rev |\n|---|---|\n| `gateway` | `24a90fccbde887fdfa62e333dae600b169c86dda` |\n| `exchange-apiserver` | `4294a35fad7c0f13df2e1c820cc9eb824125ad96` |\n| `bybchain-api-server` | `5e1073e20c053fe8d0ab6676210ea63395680974` |\n| `biya-indexer` | `731ec3b31f33caf98e1a24eac39b69740c56510d` |\n\n网关按 `type` 分流（以本次构建的 `src/routing.rs` 为准）：\n\n- State：`meta`, `metaAndAssetCtxs`, `extraAgents`, `clearinghouseState`, `activeAssetData`, `openOrders`, `frontendOpenOrders`, `orderStatus`, `userFees`, `unifiedBalances`, `accountNonces`, `marketSnapshot`, `exchangeStatus`\n- Indexer：`allMids`, `recentTrades`, `l2Book`, `webData2`, `candleSnapshot`, `historicalOrders`, `userFills`, `userFillsByTime`, `userFunding`, `fundingHistory`, `userNonFundingLedgerUpdates`\n\nWS 订阅：`assetCtxs` / `clearinghouseState` 走状态服务，其余走 indexer。\n\nWS 订阅见各服务分组下的“WebSocket 订阅”一节（与 REST 同源，按服务归属展示）。"
+    "version": "22674bcee1ee9b039bfe0874a7ad02f2b642c799",
+    "description": "前端唯一入口：`POST /info`、`POST /exchange`、`GET /ws` 均打网关，由网关按 type/订阅分流到三后端，网关不改业务字段、不回退。\n\n## 版本矩阵（本次构建拉取）\n\n| 服务 | rev |\n|---|---|\n| `gateway` | `22674bcee1ee9b039bfe0874a7ad02f2b642c799` |\n| `exchange-apiserver` | `5a370b51e646587d729080f250e09e6e1ad93c8a` |\n| `bybchain-api-server` | `49859f3e51ad0e039baed0f00fb66f3cadfe7548` |\n| `biya-indexer` | `731ec3b31f33caf98e1a24eac39b69740c56510d` |\n\n网关按 `type` 分流（以本次构建的 `src/routing.rs` 为准）：\n\n- State：`meta`, `metaAndAssetCtxs`, `extraAgents`, `clearinghouseState`, `activeAssetData`, `openOrders`, `frontendOpenOrders`, `orderStatus`, `userFees`, `unifiedBalances`, `accountNonces`, `marketSnapshot`, `exchangeStatus`\n- Indexer：`allMids`, `recentTrades`, `l2Book`, `webData2`, `candleSnapshot`, `historicalOrders`, `userFills`, `userFillsByTime`, `userFunding`, `fundingHistory`, `userNonFundingLedgerUpdates`\n\nWS 订阅：`assetCtxs` / `clearinghouseState` 走状态服务，其余走 indexer。\n\nWS 订阅见各服务分组下的“WebSocket 订阅”一节（与 REST 同源，按服务归属展示）。"
   },
   "tags": [
     {
@@ -935,7 +935,7 @@
             ]
           }
         },
-        "description": "单个订单状态；只查活单，终态返回 unknownOid。"
+        "description": "单个订单状态；活单直接返回，终态订单从账本历史返回（保留最近 300 笔，价格/数量/方向为占位值）。"
       },
       "State__InfoResponse": {
         "description": "响应形状随请求 type 变化：meta→State__MetaResponse；metaAndAssetCtxs→[meta, ctxs] 二元数组；allMids→{coin: mid} 对象；l2Book→State__L2BookResponse；clearinghouseState→State__ClearinghouseStateResponse；openOrders→State__OpenOrderResponse 数组；frontendOpenOrders→State__NodeDataOrder 数组；extraAgents→State__ExtraAgentResponse 数组；activeAssetData→State__ActiveAssetDataResponse；userFees→State__UserFeesResponse；recentTrades→State__RecentTradeResponse 数组；exchangeStatus→State__ExchangeStatusResponse；orderStatus→State__OrderStatusResponse；webData2→State__WebData2Response。",
@@ -2184,8 +2184,8 @@
     }
   },
   "x-backend-revs": {
-    "exchange-apiserver": "4294a35fad7c0f13df2e1c820cc9eb824125ad96",
-    "bybchain-api-server": "5e1073e20c053fe8d0ab6676210ea63395680974",
+    "exchange-apiserver": "5a370b51e646587d729080f250e09e6e1ad93c8a",
+    "bybchain-api-server": "49859f3e51ad0e039baed0f00fb66f3cadfe7548",
     "biya-indexer": "731ec3b31f33caf98e1a24eac39b69740c56510d"
   },
   "x-ws-subscriptions": [
