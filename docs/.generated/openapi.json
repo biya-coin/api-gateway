@@ -12,8 +12,8 @@
   ],
   "info": {
     "title": "BIYA DEX API（网关聚合）",
-    "version": "22674bcee1ee9b039bfe0874a7ad02f2b642c799",
-    "description": "前端唯一入口：`POST /info`、`POST /exchange`、`GET /ws` 均打网关，由网关按 type/订阅分流到三后端，网关不改业务字段、不回退。\n\n## 版本矩阵（本次构建拉取）\n\n| 服务 | rev |\n|---|---|\n| `gateway` | `22674bcee1ee9b039bfe0874a7ad02f2b642c799` |\n| `exchange-apiserver` | `5a370b51e646587d729080f250e09e6e1ad93c8a` |\n| `bybchain-api-server` | `49859f3e51ad0e039baed0f00fb66f3cadfe7548` |\n| `biya-indexer` | `731ec3b31f33caf98e1a24eac39b69740c56510d` |\n\n网关按 `type` 分流（以本次构建的 `src/routing.rs` 为准）：\n\n- State：`meta`, `metaAndAssetCtxs`, `extraAgents`, `clearinghouseState`, `activeAssetData`, `openOrders`, `frontendOpenOrders`, `orderStatus`, `userFees`, `unifiedBalances`, `accountNonces`, `marketSnapshot`, `exchangeStatus`\n- Indexer：`allMids`, `recentTrades`, `l2Book`, `webData2`, `candleSnapshot`, `historicalOrders`, `userFills`, `userFillsByTime`, `userFunding`, `fundingHistory`, `userNonFundingLedgerUpdates`\n\nWS 订阅：`assetCtxs` / `clearinghouseState` 走状态服务，其余走 indexer。\n\nWS 订阅见各服务分组下的“WebSocket 订阅”一节（与 REST 同源，按服务归属展示）。"
+    "version": "ed3e9630ad4805b305ea85c6d1e812f67b5e75bc",
+    "description": "前端唯一入口：`POST /info`、`POST /exchange`、`GET /ws` 均打网关，由网关按 type/订阅分流到三后端，网关不改业务字段、不回退。\n\n## 版本矩阵（本次构建拉取）\n\n| 服务 | rev |\n|---|---|\n| `gateway` | `ed3e9630ad4805b305ea85c6d1e812f67b5e75bc` |\n| `exchange-apiserver` | `5a370b51e646587d729080f250e09e6e1ad93c8a` |\n| `bybchain-api-server` | `e3f510d6bf8f8ff1d1e5fc27737b01d7a857c332` |\n| `biya-indexer` | `e95c8f60f0b8001432259235706578b28ba4cf1e` |\n\n网关按 `type` 分流（以本次构建的 `src/routing.rs` 为准）：\n\n- State：`meta`, `metaAndAssetCtxs`, `extraAgents`, `clearinghouseState`, `activeAssetData`, `openOrders`, `frontendOpenOrders`, `orderStatus`, `userFees`, `unifiedBalances`, `accountNonces`, `marketSnapshot`, `exchangeStatus`, `l2Book`\n- Indexer：`allMids`, `recentTrades`, `webData2`, `candleSnapshot`, `historicalOrders`, `userFills`, `userFillsByTime`, `userFunding`, `fundingHistory`, `userNonFundingLedgerUpdates`\n\nWS 订阅：`assetCtxs` / `clearinghouseState` 走状态服务，其余走 indexer。\n\nWS 订阅见各服务分组下的“WebSocket 订阅”一节（与 REST 同源，按服务归属展示）。"
   },
   "tags": [
     {
@@ -22,11 +22,11 @@
     },
     {
       "name": "State",
-      "description": "状态服务：当前状态查询。\n\n## WebSocket 订阅（2 种）\n\n订阅消息 `{\"method\":\"subscribe\",\"subscription\":{\"type\":...}}`，推送帧为 `{\"channel\":...,\"data\":...}`。\n\n| 订阅 | 参数 | 推送 channel | 数据 | 来源 |\n|---|---|---|---|---|\n| `assetCtxs` | `dex?` | `assetCtxs` | {dex, ctxs:[...]}（ctxs 顺序与 meta.universe 一致，客户端按下标配对币种；dex 原样回显） | 自加扩展 |\n| `clearinghouseState` | `user`, `dex?` | `clearinghouseState` | {dex, user, clearinghouseState:{...}}（账户状态，内容变化时推送） | 自加扩展 |"
+      "description": "状态服务：当前状态查询。\n\n## WebSocket 订阅（3 种）\n\n订阅消息 `{\"method\":\"subscribe\",\"subscription\":{\"type\":...}}`，推送帧为 `{\"channel\":...,\"data\":...}`。\n\n| 订阅 | 参数 | 推送 channel | 数据 | 来源 |\n|---|---|---|---|---|\n| `assetCtxs` | `dex?` | `assetCtxs` | {dex, ctxs:[...]}（ctxs 顺序与 meta.universe 一致，客户端按下标配对币种；dex 原样回显） | 自加扩展 |\n| `clearinghouseState` | `user`, `dex?` | `clearinghouseState` | {dex, user, clearinghouseState:{...}}（账户状态，内容变化时推送） | 自加扩展 |\n| `l2Book` | `coin`, `nSigFigs?`, `nLevels?`, `mantissa?` | `l2Book` | L2 聚合快照（节点内存簿，买/卖各最多 20 档，先聚合再截断）；内容变化时推送，帧格式与官方一致 | 官方 |"
     },
     {
       "name": "Indexer",
-      "description": "Indexer：历史、订单簿与行情查询。\n\n## WebSocket 订阅（17 种）\n\n订阅消息 `{\"method\":\"subscribe\",\"subscription\":{\"type\":...}}`，推送帧为 `{\"channel\":...,\"data\":...}`。\n\n| 订阅 | 参数 | 推送 channel | 数据 | 来源 |\n|---|---|---|---|---|\n| `trades` | `coin` | `trades` | 指定市场成交数组 | 官方 |\n| `l2Book` | `coin`, `nSigFigs?`, `nLevels?`, `mantissa?` | `l2Book` | L2 快照及变化；订阅成功可能先回一次快照 | 官方 |\n| `l4Book` | `coin` | `l4Book` | L4 订单簿 | 官方 |\n| `bbo` | `coin` | `bbo` | 最优买卖报价 | 官方 |\n| `bookDiffs` | `coin` | `bookDiffs` | 订单簿差异 | 自加扩展 |\n| `activeAssetCtx` | `coin` | `activeAssetCtx` | {coin, ctx: PerpAssetCtx}（标记价/资金费/持仓量） | 官方 |\n| `activeSpotAssetCtx` | `coin` | `activeSpotAssetCtx` | {coin, ctx: SpotAssetCtx} | 官方 |\n| `allMids` | — | `allMids` | {mids:{coin:px}}（SDK AllMidsData） | 官方 |\n| `candle` | `coin`, `interval` | `candle` | {t,T,s,i,o,c,h,l,v,n}（SDK candle wire） | 官方 |\n| `orderUpdates` | `user` | `orderUpdates` | 用户订单状态更新（与 REST historicalOrders 同源的 node_order_statuses 广播过滤） | 官方 |\n| `userFills` | `user`, `aggregateByTime?` | `userFills` | {user, isSnapshot, fills:[...]} | 官方 |\n| `userEvents` | `user` | `user` | fills/funding/liquidation/nonUserCancel（注意入站 channel 名为 user） | 官方 |\n| `userFundings` | `user` | `userFundings` | {user, isSnapshot, fundings} | 官方 |\n| `userNonFundingLedgerUpdates` | `user` | `userNonFundingLedgerUpdates` | {user, isSnapshot, nonFundingLedgerUpdates} | 官方 |\n| `userHistoricalOrders` | `user` | `userHistoricalOrders` | {user, orderHistory:[{order,status,statusTimestamp}]}（条目与 REST historicalOrders 完全一致；非官方扩展，标准 HL SDK 不会发送） | 自加扩展 |\n| `openOrders` | `user`, `dex?` | `openOrders` | 用户当前订单变化（轮询节点 frontendOpenOrders 中继；经网关仍走 indexer） | 自加扩展 |\n| `activeAssetData` | `user`, `coin` | `activeAssetData` | {user,coin,leverage,maxTradeSzs,availableToTrade,markPx} | 官方 |"
+      "description": "Indexer：历史、订单簿与行情查询。\n\n## WebSocket 订阅（16 种）\n\n订阅消息 `{\"method\":\"subscribe\",\"subscription\":{\"type\":...}}`，推送帧为 `{\"channel\":...,\"data\":...}`。\n\n| 订阅 | 参数 | 推送 channel | 数据 | 来源 |\n|---|---|---|---|---|\n| `trades` | `coin` | `trades` | 指定市场成交数组 | 官方 |\n| `l4Book` | `coin` | `l4Book` | L4 订单簿 | 官方 |\n| `bbo` | `coin` | `bbo` | 最优买卖报价 | 官方 |\n| `bookDiffs` | `coin` | `bookDiffs` | 订单簿差异 | 自加扩展 |\n| `activeAssetCtx` | `coin` | `activeAssetCtx` | {coin, ctx: PerpAssetCtx}（标记价/资金费/持仓量） | 官方 |\n| `activeSpotAssetCtx` | `coin` | `activeSpotAssetCtx` | {coin, ctx: SpotAssetCtx} | 官方 |\n| `allMids` | — | `allMids` | {mids:{coin:px}}（SDK AllMidsData） | 官方 |\n| `candle` | `coin`, `interval` | `candle` | {t,T,s,i,o,c,h,l,v,n}（SDK candle wire） | 官方 |\n| `orderUpdates` | `user` | `orderUpdates` | 用户订单状态更新（与 REST historicalOrders 同源的 node_order_statuses 广播过滤） | 官方 |\n| `userFills` | `user`, `aggregateByTime?` | `userFills` | {user, isSnapshot, fills:[...]} | 官方 |\n| `userEvents` | `user` | `user` | fills/funding/liquidation/nonUserCancel（注意入站 channel 名为 user） | 官方 |\n| `userFundings` | `user` | `userFundings` | {user, isSnapshot, fundings} | 官方 |\n| `userNonFundingLedgerUpdates` | `user` | `userNonFundingLedgerUpdates` | {user, isSnapshot, nonFundingLedgerUpdates} | 官方 |\n| `userHistoricalOrders` | `user` | `userHistoricalOrders` | {user, orderHistory:[{order,status,statusTimestamp}]}（条目与 REST historicalOrders 完全一致；非官方扩展，标准 HL SDK 不会发送） | 自加扩展 |\n| `openOrders` | `user`, `dex?` | `openOrders` | 用户当前订单变化（轮询节点 frontendOpenOrders 中继；经网关仍走 indexer） | 自加扩展 |\n| `activeAssetData` | `user`, `coin` | `activeAssetData` | {user,coin,leverage,maxTradeSzs,availableToTrade,markPx} | 官方 |"
     }
   ],
   "paths": {
@@ -737,6 +737,9 @@
           },
           {
             "$ref": "#/components/schemas/State__OrderStatusRequest"
+          },
+          {
+            "$ref": "#/components/schemas/State__L2BookRequest"
           }
         ],
         "discriminator": {
@@ -1594,9 +1597,11 @@
           "time",
           "levels"
         ],
+        "description": "L2 聚合订单簿快照。",
         "properties": {
           "coin": {
-            "type": "string"
+            "type": "string",
+            "description": "币种。"
           },
           "time": {
             "type": "integer",
@@ -1625,10 +1630,12 @@
         ],
         "properties": {
           "px": {
-            "type": "string"
+            "type": "string",
+            "description": "价格字符串。"
           },
           "sz": {
-            "type": "string"
+            "type": "string",
+            "description": "该价位挂单总量字符串。"
           },
           "n": {
             "type": "integer",
@@ -1823,6 +1830,35 @@
           }
         }
       },
+      "State__L2BookRequest": {
+        "type": "object",
+        "required": [
+          "type",
+          "coin"
+        ],
+        "description": "L2 聚合订单簿（节点内存簿，买/卖各最多 20 档）。",
+        "properties": {
+          "type": {
+            "const": "l2Book"
+          },
+          "coin": {
+            "type": "string",
+            "description": "币种，如 BTCUSDC。"
+          },
+          "nSigFigs": {
+            "type": "integer",
+            "description": "可选有效数字位数。"
+          },
+          "mantissa": {
+            "type": "integer",
+            "description": "可选尾数。"
+          },
+          "nLevels": {
+            "type": "integer",
+            "description": "可选，返回档位数上限，先聚合再截断。"
+          }
+        }
+      },
       "Indexer__InfoRequest": {
         "description": "13 种本地类型联合，discriminator 为 type。",
         "oneOf": [
@@ -1834,9 +1870,6 @@
           },
           {
             "$ref": "#/components/schemas/Indexer__CandleSnapshotRequest"
-          },
-          {
-            "$ref": "#/components/schemas/Indexer__L2BookRequest"
           },
           {
             "$ref": "#/components/schemas/Indexer__FundingHistoryRequest"
@@ -1925,36 +1958,6 @@
           }
         },
         "description": "K 线快照。"
-      },
-      "Indexer__L2BookRequest": {
-        "type": "object",
-        "required": [
-          "type",
-          "coin"
-        ],
-        "properties": {
-          "type": {
-            "const": "l2Book",
-            "description": "唯一真相源是本地订单簿引擎，不是节点内存簿。"
-          },
-          "coin": {
-            "type": "string",
-            "description": "币种，如 BTCUSDC。"
-          },
-          "nSigFigs": {
-            "type": "integer",
-            "description": "可选，有上限校验。"
-          },
-          "mantissa": {
-            "type": "integer",
-            "description": "可选，有上限校验。"
-          },
-          "nLevels": {
-            "type": "integer",
-            "description": "可选，有上限校验。"
-          }
-        },
-        "description": "L2 聚合订单簿（本地订单簿引擎）。"
       },
       "Indexer__FundingHistoryRequest": {
         "type": "object",
@@ -2185,8 +2188,8 @@
   },
   "x-backend-revs": {
     "exchange-apiserver": "5a370b51e646587d729080f250e09e6e1ad93c8a",
-    "bybchain-api-server": "49859f3e51ad0e039baed0f00fb66f3cadfe7548",
-    "biya-indexer": "731ec3b31f33caf98e1a24eac39b69740c56510d"
+    "bybchain-api-server": "e3f510d6bf8f8ff1d1e5fc27737b01d7a857c332",
+    "biya-indexer": "e95c8f60f0b8001432259235706578b28ba4cf1e"
   },
   "x-ws-subscriptions": [
     {
@@ -2211,16 +2214,6 @@
       "service": "bybchain-api-server"
     },
     {
-      "type": "trades",
-      "official": true,
-      "params": [
-        "coin"
-      ],
-      "pushChannel": "trades",
-      "data": "指定市场成交数组",
-      "service": "biya-indexer"
-    },
-    {
       "type": "l2Book",
       "official": true,
       "params": [
@@ -2230,7 +2223,17 @@
         "mantissa?"
       ],
       "pushChannel": "l2Book",
-      "data": "L2 快照及变化；订阅成功可能先回一次快照",
+      "data": "L2 聚合快照（节点内存簿，买/卖各最多 20 档，先聚合再截断）；内容变化时推送，帧格式与官方一致",
+      "service": "bybchain-api-server"
+    },
+    {
+      "type": "trades",
+      "official": true,
+      "params": [
+        "coin"
+      ],
+      "pushChannel": "trades",
+      "data": "指定市场成交数组",
       "service": "biya-indexer"
     },
     {

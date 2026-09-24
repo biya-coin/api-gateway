@@ -101,9 +101,11 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <a class="nav-item" data-id="post-State-userFees" data-keys="userFees State 状态服务" href="#post-State-userFees"><span class="badge post">POST</span><span class="nav-label">userFees</span></a>
 <a class="nav-item" data-id="post-State-exchangeStatus" data-keys="exchangeStatus State 状态服务" href="#post-State-exchangeStatus"><span class="badge post">POST</span><span class="nav-label">exchangeStatus</span></a>
 <a class="nav-item" data-id="post-State-orderStatus" data-keys="orderStatus State 状态服务" href="#post-State-orderStatus"><span class="badge post">POST</span><span class="nav-label">orderStatus</span></a>
+<a class="nav-item" data-id="post-State-l2Book" data-keys="l2Book State 状态服务" href="#post-State-l2Book"><span class="badge post">POST</span><span class="nav-label">l2Book</span></a>
 <div class="nav-sec">WS 订阅</div>
 <a class="nav-item" data-id="ws-State-assetCtxs" data-keys="assetCtxs ws State" href="#ws-State-assetCtxs"><span class="badge ws">WS</span><span class="nav-label">assetCtxs</span></a>
 <a class="nav-item" data-id="ws-State-clearinghouseState" data-keys="clearinghouseState ws State" href="#ws-State-clearinghouseState"><span class="badge ws">WS</span><span class="nav-label">clearinghouseState</span></a>
+<a class="nav-item" data-id="ws-State-l2Book" data-keys="l2Book ws State" href="#ws-State-l2Book"><span class="badge ws">WS</span><span class="nav-label">l2Book</span></a>
 </div>
 <div class="nav-group" data-service="Indexer">
 <div class="nav-group-title">Indexer<span>Indexer</span></div>
@@ -111,7 +113,6 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <a class="nav-item" data-id="post-Indexer-webData2" data-keys="webData2 Indexer Indexer" href="#post-Indexer-webData2"><span class="badge post">POST</span><span class="nav-label">webData2</span></a>
 <a class="nav-item" data-id="post-Indexer-allMids" data-keys="allMids Indexer Indexer" href="#post-Indexer-allMids"><span class="badge post">POST</span><span class="nav-label">allMids</span></a>
 <a class="nav-item" data-id="post-Indexer-candleSnapshot" data-keys="candleSnapshot Indexer Indexer" href="#post-Indexer-candleSnapshot"><span class="badge post">POST</span><span class="nav-label">candleSnapshot</span></a>
-<a class="nav-item" data-id="post-Indexer-l2Book" data-keys="l2Book Indexer Indexer" href="#post-Indexer-l2Book"><span class="badge post">POST</span><span class="nav-label">l2Book</span></a>
 <a class="nav-item" data-id="post-Indexer-fundingHistory" data-keys="fundingHistory Indexer Indexer" href="#post-Indexer-fundingHistory"><span class="badge post">POST</span><span class="nav-label">fundingHistory</span></a>
 <a class="nav-item" data-id="post-Indexer-userFillsByTime" data-keys="userFillsByTime Indexer Indexer" href="#post-Indexer-userFillsByTime"><span class="badge post">POST</span><span class="nav-label">userFillsByTime</span></a>
 <a class="nav-item" data-id="post-Indexer-userFills" data-keys="userFills Indexer Indexer" href="#post-Indexer-userFills"><span class="badge post">POST</span><span class="nav-label">userFills</span></a>
@@ -121,7 +122,6 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <a class="nav-item" data-id="post-Indexer-historicalOrders" data-keys="historicalOrders Indexer Indexer" href="#post-Indexer-historicalOrders"><span class="badge post">POST</span><span class="nav-label">historicalOrders</span></a>
 <div class="nav-sec">WS 订阅</div>
 <a class="nav-item" data-id="ws-Indexer-trades" data-keys="trades ws Indexer" href="#ws-Indexer-trades"><span class="badge ws">WS</span><span class="nav-label">trades</span></a>
-<a class="nav-item" data-id="ws-Indexer-l2Book" data-keys="l2Book ws Indexer" href="#ws-Indexer-l2Book"><span class="badge ws">WS</span><span class="nav-label">l2Book</span></a>
 <a class="nav-item" data-id="ws-Indexer-l4Book" data-keys="l4Book ws Indexer" href="#ws-Indexer-l4Book"><span class="badge ws">WS</span><span class="nav-label">l4Book</span></a>
 <a class="nav-item" data-id="ws-Indexer-bbo" data-keys="bbo ws Indexer" href="#ws-Indexer-bbo"><span class="badge ws">WS</span><span class="nav-label">bbo</span></a>
 <a class="nav-item" data-id="ws-Indexer-bookDiffs" data-keys="bookDiffs ws Indexer" href="#ws-Indexer-bookDiffs"><span class="badge ws">WS</span><span class="nav-label">bookDiffs</span></a>
@@ -142,8 +142,8 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <p class="lede">前端唯一入口：<code>POST /info</code>、<code>POST /exchange</code>、<code>GET /ws</code> 均打网关，由网关按 type / 订阅分流到三后端，网关不改业务字段、不回退。左侧选接口，右侧看说明、改参数、直接发送。</p>
 <p>共 <b>22</b> 个 POST 接口、<b>19</b> 个 WS 订阅。</p>
 <h2>版本矩阵（本次构建拉取）</h2>
-<table class="kv"><thead><tr><th>服务</th><th>rev</th></tr></thead><tbody><tr><td><code>gateway</code></td><td><code>22674bcee1ee</code></td></tr><tr><td><code>exchange-apiserver</code></td><td><code>5a370b51e646</code></td></tr><tr><td><code>bybchain-api-server</code></td><td><code>49859f3e51ad</code></td></tr><tr><td><code>biya-indexer</code></td><td><code>731ec3b31f33</code></td></tr></tbody></table>
-<p class="note">构建时间 2026-09-22T08:34:22.683754+00:00。文档内容与上表 rev 严格对应；发版即重拉，旧页面不复用。</p>
+<table class="kv"><thead><tr><th>服务</th><th>rev</th></tr></thead><tbody><tr><td><code>gateway</code></td><td><code>ed3e9630ad48</code></td></tr><tr><td><code>exchange-apiserver</code></td><td><code>5a370b51e646</code></td></tr><tr><td><code>bybchain-api-server</code></td><td><code>e3f510d6bf8f</code></td></tr><tr><td><code>biya-indexer</code></td><td><code>e95c8f60f0b8</code></td></tr></tbody></table>
+<p class="note">构建时间 2026-09-24T08:58:13.287787+00:00。文档内容与上表 rev 严格对应；发版即重拉，旧页面不复用。</p>
 <h2>测试指南</h2>
 <ul class="guide">
 <li>每个 POST 接口自带填好参数的测试用例，改完点发送，结果原样展示（含业务错误体）。</li>
@@ -813,6 +813,35 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 }</textarea>
 <pre class="code try-view hidden"></pre>
 <div class="try-bar"><button class="copybtn hidden">复制当前预览</button></div>
+</div></section><section id="post-State-l2Book" class="card">
+<div class="crumb">State · POST /info</div>
+<h2><span class="badge post">POST</span> l2Book <span class="route">经网关走 <b>状态服务</b>。</span></h2>
+<p>L2 聚合订单簿（节点内存簿，买/卖各最多 20 档）。</p>
+<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>coin</code> <b class="req">*</b></td><td><code>string</code></td><td>币种，如 BTCUSDC。</td></tr><tr><td><code>nSigFigs</code></td><td><code>integer</code></td><td>可选有效数字位数。</td></tr><tr><td><code>mantissa</code></td><td><code>integer</code></td><td>可选尾数。</td></tr><tr><td><code>nLevels</code></td><td><code>integer</code></td><td>可选，返回档位数上限，先聚合再截断。</td></tr></tbody></table>
+<h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果。</td></tr><tr><td><code>400</code></td><td>未知 type 或参数错误。</td></tr><tr><td><code>501</code></td><td>type 可解析但尚未实现，或 dex 不是默认 dex。</td></tr><tr><td><code>503</code></td><td>副本尚未同步就绪。</td></tr></tbody></table><p class="resp-label">State__L2BookResponse</p><pre class="code">{
+  &quot;coin&quot;: &quot;BTCUSDC&quot;,
+  &quot;time&quot;: 0,
+  &quot;levels&quot;: [
+    [
+      {
+        &quot;px&quot;: &quot;&quot;,
+        &quot;sz&quot;: &quot;&quot;,
+        &quot;n&quot;: 0
+      }
+    ]
+  ]
+}</pre>
+<h3>测试用例</h3><div class="try" data-kind="post" data-id="post-State-l2Book">
+<div class="try-bar"><label>服务器 <select class="try-server"></select></label>
+<div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
+<button class="send">发送</button><span class="try-meta"></span></div>
+<pre class="code try-resp hidden"></pre>
+<textarea class="try-body" spellcheck="false">{
+  &quot;type&quot;: &quot;l2Book&quot;,
+  &quot;coin&quot;: &quot;BTCUSDC&quot;
+}</textarea>
+<pre class="code try-view hidden"></pre>
+<div class="try-bar"><button class="copybtn hidden">复制当前预览</button></div>
 </div></section><section id="post-Indexer-webData2" class="card">
 <div class="crumb">Indexer · POST /info</div>
 <h2><span class="badge post">POST</span> webData2 <span class="route">经网关走 <b>Indexer</b>。</span></h2>
@@ -865,23 +894,6 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
   &quot;type&quot;: &quot;candleSnapshot&quot;,
   &quot;coin&quot;: &quot;BTCUSDC&quot;,
   &quot;interval&quot;: &quot;1h&quot;
-}</textarea>
-<pre class="code try-view hidden"></pre>
-<div class="try-bar"><button class="copybtn hidden">复制当前预览</button></div>
-</div></section><section id="post-Indexer-l2Book" class="card">
-<div class="crumb">Indexer · POST /info</div>
-<h2><span class="badge post">POST</span> l2Book <span class="route">经网关走 <b>Indexer</b>。</span></h2>
-<p>L2 聚合订单簿（本地订单簿引擎）。</p>
-<h3>入参</h3><table class="kv"><thead><tr><th>参数</th><th>类型</th><th>说明</th></tr></thead><tbody><tr><td><code>coin</code> <b class="req">*</b></td><td><code>string</code></td><td>币种，如 BTCUSDC。</td></tr><tr><td><code>nSigFigs</code></td><td><code>integer</code></td><td>可选，有上限校验。</td></tr><tr><td><code>mantissa</code></td><td><code>integer</code></td><td>可选，有上限校验。</td></tr><tr><td><code>nLevels</code></td><td><code>integer</code></td><td>可选，有上限校验。</td></tr></tbody></table>
-<h3>响应</h3><table class="kv"><thead><tr><th>状态码</th><th>含义</th></tr></thead><tbody><tr><td><code>200</code></td><td>查询结果；历史存储未启用时历史类返回 []。</td></tr><tr><td><code>400</code></td><td>请求参数错误，或时间范围超出留存窗口。</td></tr><tr><td><code>404</code></td><td>非 indexer info type。</td></tr></tbody></table><p class="note">本地订单簿引擎的盘口快照。</p>
-<h3>测试用例</h3><div class="try" data-kind="post" data-id="post-Indexer-l2Book">
-<div class="try-bar"><label>服务器 <select class="try-server"></select></label>
-<div class="modetabs"><button class="mode on" data-mode="json">JSON</button><button class="mode" data-mode="curl">cURL</button><button class="mode" data-mode="ts">TypeScript</button></div>
-<button class="send">发送</button><span class="try-meta"></span></div>
-<pre class="code try-resp hidden"></pre>
-<textarea class="try-body" spellcheck="false">{
-  &quot;type&quot;: &quot;l2Book&quot;,
-  &quot;coin&quot;: &quot;BTCUSDC&quot;
 }</textarea>
 <pre class="code try-view hidden"></pre>
 <div class="try-bar"><button class="copybtn hidden">复制当前预览</button></div>
@@ -1055,6 +1067,27 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
   }
 }</textarea>
 <pre class="code ws-log">等待连接…</pre>
+</div></section><section id="ws-State-l2Book" class="card">
+<div class="crumb">State · WebSocket /ws</div>
+<h2><span class="badge ws">WS</span> l2Book <span class="route">官方订阅 · 经网关走 <b>Indexer</b>。</span></h2>
+<p>GET /ws（单连接多路复用）：订阅 {&quot;method&quot;:&quot;subscribe&quot;,&quot;subscription&quot;:{&quot;type&quot;: ... }}，心跳 {&quot;method&quot;:&quot;ping&quot;} 回 {&quot;channel&quot;:&quot;pong&quot;}</p>
+<table class="kv"><thead><tr><th>参数</th><th>推送 channel</th><th>数据</th></tr></thead>
+<tbody><tr><td><code>coin, nSigFigs?, nLevels?, mantissa?</code></td><td><code>l2Book</code></td><td>L2 聚合快照（节点内存簿，买/卖各最多 20 档，先聚合再截断）；内容变化时推送，帧格式与官方一致</td></tr></tbody></table>
+<h3>订阅测试</h3>
+<div class="try" data-kind="ws" data-id="ws-State-l2Book">
+<div class="try-bar"><label>服务器 <select class="try-ws-server"></select></label>
+<button class="ws-connect">连接并订阅</button><button class="ws-ping">心跳</button><button class="ws-close">断开</button></div>
+<textarea class="try-body" spellcheck="false">{
+  &quot;method&quot;: &quot;subscribe&quot;,
+  &quot;subscription&quot;: {
+    &quot;method&quot;: &quot;subscribe&quot;,
+    &quot;subscription&quot;: {
+      &quot;type&quot;: &quot;l2Book&quot;,
+      &quot;coin&quot;: &quot;BTCUSDC&quot;
+    }
+  }
+}</textarea>
+<pre class="code ws-log">等待连接…</pre>
 </div></section><section id="ws-Indexer-trades" class="card">
 <div class="crumb">Indexer · WebSocket /ws</div>
 <h2><span class="badge ws">WS</span> trades <span class="route">官方订阅 · 经网关走 <b>Indexer</b>。</span></h2>
@@ -1071,27 +1104,6 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
     &quot;method&quot;: &quot;subscribe&quot;,
     &quot;subscription&quot;: {
       &quot;type&quot;: &quot;trades&quot;,
-      &quot;coin&quot;: &quot;BTCUSDC&quot;
-    }
-  }
-}</textarea>
-<pre class="code ws-log">等待连接…</pre>
-</div></section><section id="ws-Indexer-l2Book" class="card">
-<div class="crumb">Indexer · WebSocket /ws</div>
-<h2><span class="badge ws">WS</span> l2Book <span class="route">官方订阅 · 经网关走 <b>Indexer</b>。</span></h2>
-<p>GET /ws（单连接多路复用）：订阅 {&quot;method&quot;:&quot;subscribe&quot;,&quot;subscription&quot;:{&quot;type&quot;: ... }}，心跳 {&quot;method&quot;:&quot;ping&quot;} 回 {&quot;channel&quot;:&quot;pong&quot;}</p>
-<table class="kv"><thead><tr><th>参数</th><th>推送 channel</th><th>数据</th></tr></thead>
-<tbody><tr><td><code>coin, nSigFigs?, nLevels?, mantissa?</code></td><td><code>l2Book</code></td><td>L2 快照及变化；订阅成功可能先回一次快照</td></tr></tbody></table>
-<h3>订阅测试</h3>
-<div class="try" data-kind="ws" data-id="ws-Indexer-l2Book">
-<div class="try-bar"><label>服务器 <select class="try-ws-server"></select></label>
-<button class="ws-connect">连接并订阅</button><button class="ws-ping">心跳</button><button class="ws-close">断开</button></div>
-<textarea class="try-body" spellcheck="false">{
-  &quot;method&quot;: &quot;subscribe&quot;,
-  &quot;subscription&quot;: {
-    &quot;method&quot;: &quot;subscribe&quot;,
-    &quot;subscription&quot;: {
-      &quot;type&quot;: &quot;l2Book&quot;,
       &quot;coin&quot;: &quot;BTCUSDC&quot;
     }
   }
@@ -1415,7 +1427,7 @@ button.send:hover,.ws-connect:hover{background:var(--accent-ink);}
 <pre class="code ws-log">等待连接…</pre>
 </div></section></main></div>
 <script>
-var STORE = {"posts": {"post-Exchange-exchange": {"path": "/exchange"}, "post-State-meta": {"path": "/info"}, "post-State-metaAndAssetCtxs": {"path": "/info"}, "post-State-clearinghouseState": {"path": "/info"}, "post-State-openOrders": {"path": "/info"}, "post-State-frontendOpenOrders": {"path": "/info"}, "post-State-extraAgents": {"path": "/info"}, "post-State-activeAssetData": {"path": "/info"}, "post-State-userFees": {"path": "/info"}, "post-State-exchangeStatus": {"path": "/info"}, "post-State-orderStatus": {"path": "/info"}, "post-Indexer-webData2": {"path": "/info"}, "post-Indexer-allMids": {"path": "/info"}, "post-Indexer-candleSnapshot": {"path": "/info"}, "post-Indexer-l2Book": {"path": "/info"}, "post-Indexer-fundingHistory": {"path": "/info"}, "post-Indexer-userFillsByTime": {"path": "/info"}, "post-Indexer-userFills": {"path": "/info"}, "post-Indexer-recentTrades": {"path": "/info"}, "post-Indexer-userFunding": {"path": "/info"}, "post-Indexer-userNonFundingLedgerUpdates": {"path": "/info"}, "post-Indexer-historicalOrders": {"path": "/info"}, "post-Exchange-exchange-order": {"path": "/exchange"}, "post-Exchange-exchange-cancel": {"path": "/exchange"}, "post-Exchange-exchange-cancelByCloid": {"path": "/exchange"}, "post-Exchange-exchange-cancelAll": {"path": "/exchange"}, "post-Exchange-exchange-updateLeverage": {"path": "/exchange"}, "post-Exchange-exchange-batchModify": {"path": "/exchange"}, "post-Exchange-exchange-usdSend": {"path": "/exchange"}, "post-Exchange-exchange-withdraw3": {"path": "/exchange"}, "post-Exchange-exchange-approveAgent": {"path": "/exchange"}}, "httpServers": ["https://dev.dex-api.biya.io", "http://127.0.0.1:36016"], "wsUrls": ["wss://dev.dex-api.biya.io/ws", "ws://127.0.0.1:36016/ws"]};
+var STORE = {"posts": {"post-Exchange-exchange": {"path": "/exchange"}, "post-State-meta": {"path": "/info"}, "post-State-metaAndAssetCtxs": {"path": "/info"}, "post-State-clearinghouseState": {"path": "/info"}, "post-State-openOrders": {"path": "/info"}, "post-State-frontendOpenOrders": {"path": "/info"}, "post-State-extraAgents": {"path": "/info"}, "post-State-activeAssetData": {"path": "/info"}, "post-State-userFees": {"path": "/info"}, "post-State-exchangeStatus": {"path": "/info"}, "post-State-orderStatus": {"path": "/info"}, "post-State-l2Book": {"path": "/info"}, "post-Indexer-webData2": {"path": "/info"}, "post-Indexer-allMids": {"path": "/info"}, "post-Indexer-candleSnapshot": {"path": "/info"}, "post-Indexer-fundingHistory": {"path": "/info"}, "post-Indexer-userFillsByTime": {"path": "/info"}, "post-Indexer-userFills": {"path": "/info"}, "post-Indexer-recentTrades": {"path": "/info"}, "post-Indexer-userFunding": {"path": "/info"}, "post-Indexer-userNonFundingLedgerUpdates": {"path": "/info"}, "post-Indexer-historicalOrders": {"path": "/info"}, "post-Exchange-exchange-order": {"path": "/exchange"}, "post-Exchange-exchange-cancel": {"path": "/exchange"}, "post-Exchange-exchange-cancelByCloid": {"path": "/exchange"}, "post-Exchange-exchange-cancelAll": {"path": "/exchange"}, "post-Exchange-exchange-updateLeverage": {"path": "/exchange"}, "post-Exchange-exchange-batchModify": {"path": "/exchange"}, "post-Exchange-exchange-usdSend": {"path": "/exchange"}, "post-Exchange-exchange-withdraw3": {"path": "/exchange"}, "post-Exchange-exchange-approveAgent": {"path": "/exchange"}}, "httpServers": ["https://dev.dex-api.biya.io", "http://127.0.0.1:36016"], "wsUrls": ["wss://dev.dex-api.biya.io/ws", "ws://127.0.0.1:36016/ws"]};
 function $(s, r){ return (r||document).querySelector(s); }
 function $all(s, r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); }
 // nav search + active state

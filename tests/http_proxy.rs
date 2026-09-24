@@ -236,6 +236,7 @@ async fn all_24_approved_info_types_reach_their_only_upstream() {
                 "accountNonces",
                 "marketSnapshot",
                 "exchangeStatus",
+                "l2Book",
             ]
         );
         assert_eq!(
@@ -243,7 +244,6 @@ async fn all_24_approved_info_types_reach_their_only_upstream() {
             &[
                 "allMids",
                 "recentTrades",
-                "l2Book",
                 "webData2",
                 "candleSnapshot",
                 "historicalOrders",

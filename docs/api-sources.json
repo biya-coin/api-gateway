@@ -16,7 +16,7 @@
       "tag": "State",
       "git": "git@github.com:biya-coin/bybchain-api-server.git",
       "branch": "dev",
-      "rev": "49859f3e51ad0e039baed0f00fb66f3cadfe7548",
+      "rev": "e3f510d6bf8f8ff1d1e5fc27737b01d7a857c332",
       "spec_path": "docs/openapi.json",
       "ws_path": "docs/ws-subscriptions.json",
       "live_openapi": "http://host.docker.internal:36020/openapi.json"
@@ -26,7 +26,7 @@
       "tag": "Indexer",
       "git": "git@github.com:biya-coin/biya-indexer.git",
       "branch": "main",
-      "rev": "731ec3b31f33caf98e1a24eac39b69740c56510d",
+      "rev": "e95c8f60f0b8001432259235706578b28ba4cf1e",
       "spec_path": "docs/openapi.json",
       "ws_path": "docs/ws-subscriptions.json",
       "live_openapi": "http://host.docker.internal:36018/openapi.json"

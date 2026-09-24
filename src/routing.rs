@@ -9,7 +9,6 @@ pub enum InfoBackend {
 pub const INDEXER_TYPES: &[&str] = &[
     "allMids",
     "recentTrades",
-    "l2Book",
     "webData2",
     "candleSnapshot",
     "historicalOrders",
@@ -34,12 +33,13 @@ pub const STATE_TYPES: &[&str] = &[
     "accountNonces",
     "marketSnapshot",
     "exchangeStatus",
+    "l2Book",
 ];
 
 /// WS subscription ownership is independent from POST /info ownership.
 pub fn websocket_backend(subscription_type: &str) -> InfoBackend {
     match subscription_type {
-        "assetCtxs" | "clearinghouseState" => InfoBackend::State,
+        "assetCtxs" | "clearinghouseState" | "l2Book" => InfoBackend::State,
         _ => InfoBackend::Indexer,
     }
 }
@@ -74,11 +74,10 @@ mod tests {
 
     #[test]
     fn websocket_types_have_one_owner() {
-        for kind in ["assetCtxs", "clearinghouseState"] {
+        for kind in ["assetCtxs", "clearinghouseState", "l2Book"] {
             assert_eq!(websocket_backend(kind), InfoBackend::State);
         }
         for kind in [
-            "l2Book",
             "allMids",
             "activeAssetCtx",
             "openOrders",

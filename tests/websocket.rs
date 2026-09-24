@@ -280,7 +280,7 @@ async fn subscriptions_and_unsubscriptions_have_one_owner_on_the_same_connection
                 let message = subscription(method, kind);
                 client.send(message.clone()).await.unwrap();
                 assert_eq!(receive(&mut client).await, message);
-                let owner = if matches!(kind, "assetCtxs" | "clearinghouseState") {
+                let owner = if matches!(kind, "assetCtxs" | "clearinghouseState" | "l2Book") {
                     &mut state
                 } else {
                     &mut indexer
@@ -338,7 +338,7 @@ async fn json_and_rfc_heartbeats_are_not_duplicated_or_misrouted() {
         );
         assert!(indexer.connections.try_recv().is_err());
         assert!(state.connections.try_recv().is_err());
-        for kind in ["assetCtxs", "l2Book"] {
+        for kind in ["assetCtxs", "allMids"] {
             client.send(subscription("subscribe", kind)).await.unwrap();
             receive(&mut client).await;
         }
@@ -413,7 +413,7 @@ async fn state_only_subscription_needs_no_indexer_and_missing_state_never_falls_
             assert_error(&mut client, "upstream_not_configured", "state").await;
         }
         assert!(indexer.connections.try_recv().is_err());
-        let message = subscription("subscribe", "l2Book");
+        let message = subscription("subscribe", "allMids");
         client.send(message.clone()).await.unwrap();
         assert_eq!(receive(&mut client).await, message);
         gateway.shutdown().await;
@@ -556,7 +556,7 @@ async fn lazy_handshake_errors_are_reported_without_fallback_and_other_backend_s
             called.recv().await.unwrap();
             assert!(called.try_recv().is_err());
             assert!(indexer.connections.try_recv().is_err());
-            let message = subscription("subscribe", "l2Book");
+            let message = subscription("subscribe", "allMids");
             client.send(message.clone()).await.unwrap();
             assert_eq!(receive(&mut client).await, message);
             gateway.shutdown().await;
@@ -678,7 +678,7 @@ async fn client_close_reaches_both_backends_and_releases_capacity() {
         cfg.websocket.max_connections = 1;
         let gateway = Service::gateway(cfg).await;
         let mut client = connect(&gateway).await;
-        for kind in ["l2Book", "assetCtxs"] {
+        for kind in ["allMids", "assetCtxs"] {
             client.send(subscription("subscribe", kind)).await.unwrap();
             receive(&mut client).await;
         }
@@ -723,7 +723,7 @@ async fn upstream_close_or_disconnect_closes_frontend_and_other_backend_without_
             cfg.upstreams.state_ws = Some(state.service.endpoint());
             let gateway = Service::gateway(cfg).await;
             let mut client = connect(&gateway).await;
-            for kind in ["l2Book", "clearinghouseState"] {
+            for kind in ["allMids", "clearinghouseState"] {
                 client.send(subscription("subscribe", kind)).await.unwrap();
                 receive(&mut client).await;
             }
@@ -772,7 +772,7 @@ async fn shutdown_and_idle_timeout_close_all_upstream_connections() {
             cfg.upstreams.state_ws = Some(state.service.endpoint());
             let gateway = Service::gateway(cfg).await;
             let mut client = connect(&gateway).await;
-            for kind in ["l2Book", "assetCtxs"] {
+            for kind in ["allMids", "assetCtxs"] {
                 client.send(subscription("subscribe", kind)).await.unwrap();
                 receive(&mut client).await;
             }

@@ -37,6 +37,7 @@
 | `accountNonces` | 通常包含 `user` | 查询账户 nonce |
 | `marketSnapshot` | 通常包含市场标识 | 查询市场状态快照 |
 | `exchangeStatus` | 由状态服务定义 | 查询交易状态；参数及响应语义由状态 APIServer 负责 |
+| `l2Book` | `coin`，可选 `nSigFigs`、`nLevels`、`mantissa` | 查询 L2 聚合订单簿（节点内存簿） |
 
 网关当前只按 `type` 选择后端，其余请求字段原样转发，不在网关重新解析或组装业务响应。
 
@@ -67,7 +68,7 @@
 
 ### 2.2 状态服务的边界
 
-- 除 HTTP 查询外，网关将 `assetCtxs`、`clearinghouseState` 的 WS 订阅／取消订阅发往状态服务 `/ws`。后端入口及数据推送由状态服务团队实现，网关不使用 HTTP 轮询代替订阅。
+- 除 HTTP 查询外，网关将 `assetCtxs`、`clearinghouseState`、`l2Book` 的 WS 订阅／取消订阅发往状态服务 `/ws`。后端入口及数据推送由状态服务团队实现，网关不使用 HTTP 轮询代替订阅。
 - `GET /healthz` 是网关自身存活检查，不会转发到状态服务。
 - 以下类型不属于当前网关开放的状态查询白名单：`stateInfo`、`block`、`bridgeSnapshot`、`bridgeDepositStatus`、`bridgeWithdrawalStatus`、`accountOverview`、`userRateLimit`。
 - 状态服务源码还包含其他内部或未由网关开放的查询类型。它们不能直接通过网关访问，除非先更新网关路由白名单。
@@ -81,6 +82,7 @@
 | --- | --- | --- |
 | `assetCtxs` | 可选 `dex` | 状态服务 `/ws` |
 | `clearinghouseState` | `user`；可选 `dex` | 状态服务 `/ws` |
+| `l2Book` | `coin`；可选 `nSigFigs`、`nLevels`、`mantissa` | 状态服务 `/ws` |
 
 ```json
 {"method":"subscribe","subscription":{"type":"assetCtxs","dex":""}}
@@ -103,7 +105,6 @@ Indexer 同时负责 HTTP 查询和 WebSocket 实时订阅。
 | --- | --- | --- |
 | `allMids` | 通常无额外参数 | 查询全部市场的中间价 |
 | `recentTrades` | 通常包含市场标识 | 查询最近成交 |
-| `l2Book` | `coin`，可选 `nSigFigs`、`nLevels`、`mantissa` | 查询 L2 聚合订单簿 |
 | `webData2` | `user` | 返回前端页面加载所需的账户和市场聚合数据 |
 | `candleSnapshot` | `coin`、`interval`、时间范围 | 查询 K 线快照 |
 | `historicalOrders` | `user` | 查询用户近期历史订单 |
@@ -117,7 +118,7 @@ Indexer 自己负责订单状态索引、历史文件读取、订单簿快照和
 
 ### 3.2 WebSocket `/ws` 订阅
 
-前端通过 `GET /ws` 发起 HTTP/1.1 Upgrade。网关按订阅消息选择后端，不再将整条连接透明代理到 indexer。以下类型仍转 indexer；`assetCtxs`、`clearinghouseState` 已迁至状态服务。
+前端通过 `GET /ws` 发起 HTTP/1.1 Upgrade。网关按订阅消息选择后端，不再将整条连接透明代理到 indexer。以下类型仍转 indexer；`assetCtxs`、`clearinghouseState`、`l2Book` 已迁至状态服务。
 
 客户端发送的基本格式是：
 
@@ -137,7 +138,6 @@ Indexer 自己负责订单状态索引、历史文件读取、订单簿快照和
 | 订阅 `type` | 必要参数 | 推送内容 |
 | --- | --- | --- |
 | `trades` | `coin` | 指定市场的成交 |
-| `l2Book` | `coin`；可选 `nSigFigs`、`nLevels`、`mantissa` | L2 订单簿快照及变化 |
 | `l4Book` | `coin` | 指定市场的 L4 订单簿 |
 | `bbo` | `coin` | 最优买卖报价 |
 | `bookDiffs` | `coin` | 订单簿差异 |
@@ -159,13 +159,13 @@ Indexer 自己负责订单状态索引、历史文件读取、订单簿快照和
 | `openOrders` | `user`；可选 `dex` | 用户当前订单变化 |
 | `activeAssetData` | `user`、`coin` | 用户在指定市场的交易状态变化 |
 
-上述 **17 种**订阅仍由 indexer 处理，另外 **2 种**转状态服务。Indexer 内部即使仍支持这两种订阅，网关也不会向它发送。其他字符串订阅类型继续交给 indexer 判断是否支持。网关只汇集两条后端连接的消息，不缓存或聚合业务数据。
+上述 **16 种**订阅仍由 indexer 处理，另外 **3 种**转状态服务。Indexer 内部即使仍支持这两种订阅，网关也不会向它发送。其他字符串订阅类型继续交给 indexer 判断是否支持。网关只汇集两条后端连接的消息，不缓存或聚合业务数据。
 
 ### 3.3 Indexer 订阅行为边界
 
-- `l2Book` 和 `l4Book` 在订阅成功时可能先返回一次快照，然后继续推送变化。
+- `l4Book` 在订阅成功时可能先返回一次快照，然后继续推送变化（`l2Book` 已迁至状态服务，行为见状态服务文档）。
 - `userFills`、`userEvents`、资金费和账本类订阅需要合法的 42 字符 `0x` 用户地址。
-- `l2Book` 的 `nSigFigs`、`nLevels` 和 `mantissa` 有 indexer 自身的校验及上限。
+- `l2Book` 的 `nSigFigs`、`nLevels` 和 `mantissa` 由状态服务按 `/info` 同名接口规则校验（先聚合再截断）。
 - `candle` 的 `interval` 必须是 indexer 支持的时间周期。
 - 订阅去重和业务订阅数量限制由后端与客户端负责；网关限制连接数、消息大小和写入时间，不自动重连。
 - 前端订阅为 JSON 文本；网关处理分片，不协商压缩扩展或子协议，两个后端都需接受普通无压缩 WS。
